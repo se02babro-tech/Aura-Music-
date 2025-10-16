@@ -11,12 +11,12 @@
   "description": "By Horizon",
   "icons": [
     {
-      "src": "https://github.com/se02babro-tech/Aura-Music-/tree/main/Image/icon-192x192.png",
-      "sizes": "500x500",
+      "src": "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/Image/icon-192x192.png",
+      "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://github.com/se02babro-tech/Aura-Music-/tree/main/Image/icon-512x512.png",
+      "src": "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/Image/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
