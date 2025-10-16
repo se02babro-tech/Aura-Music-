@@ -1559,6 +1559,17 @@
         // --- Inizializzazione Applicazione ---
 
         async function initializeAppContent() {
+            
+            // =========================================================
+            // *** INIEZIONE DINAMICA DEL MANIFEST PWA (RICHIESTA) ***
+            // =========================================================
+            const pwaLink = document.createElement('link');
+            pwaLink.rel = 'manifest';
+            pwaLink.href = 'manifest.json'; // Assumi che manifest.json sia nella radice
+            document.head.appendChild(pwaLink);
+            console.log("Manifest PWA collegato dinamicamente.");
+            // =========================================================
+
             loadLocalData();
             await fetchTracks();
             await loadRemoteStories(); 
