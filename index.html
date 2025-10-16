@@ -110,6 +110,44 @@
             right: 20px;
             z-index: 200;
         }
+        
+        /* NUOVI STILI PER BOLLE STORIE (Instagram Style) */
+        .story-bubble {
+            width: 70px; /* Dimensioni fisse per la bolla */
+            height: 70px;
+            padding: 2px; /* Spazio per l'anello */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            position: relative;
+            /* L'anello "Unwatched" è definito dal background:linear-gradient nel JS */
+            flex-shrink: 0;
+        }
+        .story-bubble-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: var(--ryzn-bg-color); /* Sfondo scuro interno */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem; /* Dimensione Emoji */
+            border: 3px solid var(--ryzn-bg-color); /* Anello interno per separare dall'esterno */
+        }
+        .story-bubble-watched {
+            background: rgba(255, 255, 255, 0.1); /* Anello grigio "Watched" */
+        }
+        /* Nasconde la scrollbar orizzontale */
+        .scrollbar-hide {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;  /* Chrome, Safari and Opera */
+        }
     </style>
 </head>
 <body class="ryzn-bg">
@@ -117,7 +155,7 @@
     <div id="toast-container"></div>
 
     <div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4 modal">
-        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
             <h3 id="auth-title" class="text-2xl font-bold mb-6 accent-text text-center">Accedi ad Aura Music</h3>
             
             <input type="email" id="auth-email" placeholder="Email" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-3">
@@ -230,7 +268,37 @@
             </div>
         </div>
     </div>
+    
+    <div id="story-player-modal" class="fixed inset-0 bg-black z-[200] hidden flex items-center justify-center modal">
+        <div class="absolute inset-0 flex items-center justify-center">
+            <video id="story-video-player" class="w-full h-full object-cover" autoplay playsinline></video>
+        </div>
+        
+        <div class="absolute inset-x-0 top-0 p-4 pt-6 flex flex-col justify-start z-10">
+            <div id="story-progress-bar-container" class="flex space-x-1 mb-3">
+                </div>
+            <div id="story-info" class="flex items-center space-x-3 text-white">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xl bg-gray-700">
+                    <span id="story-emoji">🎃</span>
+                </div>
+                <div>
+                    <p id="story-username" class="font-bold text-sm">Utente</p>
+                    <p id="story-track-title" class="text-xs text-gray-300"></p>
+                </div>
+            </div>
+        </div>
 
+        <div class="absolute inset-y-0 w-1/2 left-0 z-20" onclick="prevStory()"></div>
+        <div class="absolute inset-y-0 w-1/2 right-0 z-20" onclick="nextStory()"></div>
+
+        <button onclick="closeStoryPlayer()" class="absolute top-4 right-4 text-white/80 hover:text-white transition z-30">
+            <i data-lucide="x" class="w-8 h-8"></i>
+        </button>
+
+        <button id="story-play-pause-button" onclick="toggleStoryPlayPause()" class="absolute inset-0 flex items-center justify-center text-white z-10 transition-opacity opacity-0">
+            <i data-lucide="play" class="w-20 h-20 fill-current"></i>
+        </button>
+    </div>
     <div class="container-app">
         
         <header class="flex justify-between items-center mb-8">
@@ -307,12 +375,46 @@
 
         <section id="stories-section" class="section-page">
              <div class="flex justify-between items-center mb-6">
-                 <h2 class="text-3xl font-bold">Storie Aura</h2>
-            </div>
+                 <h2 class="text-3xl font-bold">Storie Aura (Video)</h2>
+                 </div>
              
-             <div id="stories-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                 <p id="no-stories-message" class="text-center p-4 text-gray-500 col-span-full">Nessuna storia trovata nel manifesto remoto.</p>
+             <div id="stories-bubble-container" class="flex space-x-6 mb-10 overflow-x-auto pb-2 scrollbar-hide">
+                 <p id="no-stories-message" class="text-center p-4 text-gray-500">Nessuna storia video trovata nel manifesto remoto.</p>
              </div>
+             <hr class="border-white/10 my-10">
+
+            <h2 class="text-3xl font-bold mt-12 mb-6">📣 Eventi Aura Live</h2>
+            
+            <div id="aura-events-feed" class="space-y-6">
+                
+                <div class="depth-glass p-6 rounded-xl border-l-4 accent-border flex items-start space-x-4">
+                    <i data-lucide="rocket" class="w-8 h-8 accent-text flex-shrink-0"></i>
+                    <div>
+                        <h3 class="text-xl font-bold mb-1">Lancio Ufficiale Aura!</h3>
+                        <p class="text-sm text-gray-400 mb-2">🗓️ **31 Ottobre** - Un nuovo universo sonoro prende vita.</p>
+                        <p class="text-white/90">Celebra con noi il lancio ufficiale di Aura Music. Ascolta playlist esclusive e sblocca il badge "Early Adopter". La musica non sarà più la stessa.</p>
+                    </div>
+                </div>
+
+                <div class="depth-glass p-6 rounded-xl border-l-4 border-red-500 flex items-start space-x-4">
+                    <i data-lucide="gift" class="w-8 h-8 text-red-400 flex-shrink-0"></i>
+                    <div>
+                        <h3 class="text-xl font-bold mb-1">Xmas Music Contest 🎄</h3>
+                        <p class="text-sm text-gray-400 mb-2">🎶 Dicembre - Invia la tua cover o brano originale a tema natalizio.</p>
+                        <p class="text-white/90">Il vincitore sarà in rotazione esclusiva sulla homepage per tutto Gennaio. È il momento di far sentire la tua "Vibe Natalizia"!</p>
+                    </div>
+                </div>
+
+                <div class="depth-glass p-6 rounded-xl border-l-4 border-blue-500 flex items-start space-x-4">
+                    <i data-lucide="sparkles" class="w-8 h-8 text-blue-400 flex-shrink-0"></i>
+                    <div>
+                        <h3 class="text-xl font-bold mb-1">New Year Concert: L'Alba del Suono</h3>
+                        <p class="text-sm text-gray-400 mb-2">🎉 **1 Gennaio** - Streaming Live.</p>
+                        <p class="text-white/90">Un'esperienza immersiva unica con artisti misteriosi in esclusiva per la community di Aura. Preparati per un viaggio sonoro indimenticabile per iniziare l'anno.</p>
+                    </div>
+                </div>
+
+            </div>
         </section>
 
         </div> 
@@ -352,8 +454,9 @@
 
     <script>
         // --- Dati & Configurazione ---
-        const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/";
-        const STORIES_MANIFEST_URL = GITHUB_RAW_BASE + "user_stories.json"; 
+        // PERCORSO AGGIUSTATO PER PUNTARE ALLA RADICE RAW DEL REPOSITORY
+        const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/"; 
+        const STORIES_MANIFEST_URL = GITHUB_RAW_BASE + "User_videos.json"; 
         const TRACKS_MANIFEST_URL = GITHUB_RAW_BASE + "tracks.json";
         
         let AURA_MAP = []; 
@@ -380,10 +483,19 @@
         let progressInterval = null;
         let currentVolume = 0.8;
         let trackIdToAdd = null; 
+        
+        // NUOVI DATI PER LE STORIE VIDEO
+        const HALLOWEEN_EMOJIS = ["🎃", "👻", "🦇", "🕷️", "🕸️", "🔮", "⚰️", "💀", "🕯️", "🧟"];
+        const STORY_COLORS = ["#8B0000", "#4B0082", "#006400", "#FF8C00", "#2F4F4F"]; // Varianti scure
+        let currentStoryIndex = 0;
+        let storyVideoPlayer;
+        let storyProgressInterval = null;
+        let storyTimer;
+        let storyWatchedStatus = new Set(); // Per tenere traccia delle storie viste
 
         
         // --- Funzioni Helper ---
-
+        // I percorsi per cover e audio sono corretti, puntano alle sottodirettory
         function getCoverUrl(title) {
             const filename = title.replace(/[^\w\s\-\(\)]/g, '').replace(/\s+/g, '_'); 
             return GITHUB_RAW_BASE + `Covers/${filename}.jpg`; 
@@ -432,6 +544,7 @@
                 localStorage.setItem('aura_liked_tracks', JSON.stringify(Array.from(likedTracks)));
                 localStorage.setItem('aura_user_playlists', JSON.stringify(userPlaylists));
                 localStorage.setItem('aura_logged_in_user', JSON.stringify(loggedInUser));
+                localStorage.setItem('aura_story_watched', JSON.stringify(Array.from(storyWatchedStatus)));
             } catch (e) {
                 console.error("Errore nel salvataggio locale:", e);
                 showToast("Errore: Impossibile salvare i dati localmente.", 'error');
@@ -455,11 +568,16 @@
                 } else {
                     loggedInUser = null;
                 }
+                const savedWatchedStories = localStorage.getItem('aura_story_watched');
+                if (savedWatchedStories) {
+                     storyWatchedStatus = new Set(JSON.parse(savedWatchedStories).map(Number));
+                }
             } catch (e) {
                 console.error("Errore nel caricamento locale:", e);
                 likedTracks = new Set();
                 userPlaylists = [];
                 loggedInUser = null;
+                storyWatchedStatus = new Set();
             }
         }
 
@@ -483,8 +601,9 @@
             volumeSliderImmersive = document.getElementById('volume-slider-immersive');
             progressBarContainer = document.getElementById('progress-bar-container');
             progressBarImmersiveContainer = document.getElementById('progress-bar-immersive-container');
-            // Elementi Loop Rimanenti solo in Immersive Mode
             loopButtonImmersive = document.getElementById('loop-button-immersive');
+            // NUOVO ELEMENTO
+            storyVideoPlayer = document.getElementById('story-video-player');
             
             if (progressBarContainer) {
                 progressBarContainer.addEventListener('click', (e) => handleSeek(e, false));
@@ -557,10 +676,8 @@
                 item.classList.remove('active');
             });
             const activeItem = document.getElementById(`nav-${sectionId}`);
-            // Rimosso: const activeItemMobile = document.getElementById(`nav-${sectionId}-mobile`);
-
+            
             if (activeItem) { activeItem.classList.add('active'); }
-            // Rimosso: if (activeItemMobile) { activeItemMobile.classList.add('active'); }
         }
 
         // --- Funzioni Player (Howler.js) ---
@@ -585,8 +702,13 @@
 
         function togglePlayIcon(isPaused) {
              const iconName = isPaused ? 'play' : 'pause';
-             playIcon.setAttribute('data-lucide', iconName);
-             immersivePlayIcon.setAttribute('data-lucide', iconName);
+             // FIX: Aggiunto controllo per nullità
+             if (playIcon) {
+                 playIcon.setAttribute('data-lucide', iconName);
+             }
+             if (immersivePlayIcon) {
+                 immersivePlayIcon.setAttribute('data-lucide', iconName);
+             }
              lucide.createIcons();
         }
 
@@ -603,7 +725,6 @@
             }
             
             if (currentHowl && currentTrackData && currentTrackData.id === track.id && currentHowl.playing()) {
-                // showToast(`Riproduzione: ${track.title}`, 'info'); 
                 return;
             }
 
@@ -621,11 +742,11 @@
                 onplay: () => {
                     togglePlayIcon(false);
                     setupProgressInterval();
-                    updateMediaSession(); // AGGIUNTO: Aggiorna la Media Session quando parte la riproduzione
+                    updateMediaSession();
                 },
                 onpause: () => {
                     togglePlayIcon(true);
-                    updateMediaSession(); // AGGIUNTO: Aggiorna la Media Session in pausa
+                    updateMediaSession();
                 },
                 onend: () => { 
                     if (!isLooping) {
@@ -671,7 +792,6 @@
         function updateLoopButton(isLoop) {
             const colorClass = isLoop ? 'accent-text' : 'text-white/50';
             
-            // Aggiorna solo il bottone Immersive, non il PIP
             if (loopButtonImmersive) {
                 loopButtonImmersive.className = `text-white/70 hover:text-white transition ${colorClass}`;
             }
@@ -680,7 +800,7 @@
         window.setVolume = function(volume) {
              currentVolume = parseFloat(volume);
              if (currentHowl) {
-                 currentHowl.volume(currentVolume);
+                 howl.volume(currentVolume);
              }
              if (volumeSlider) volumeSlider.value = currentVolume;
              if (volumeSliderImmersive) volumeSliderImmersive.value = currentVolume;
@@ -707,7 +827,6 @@
 
         window.skipBackward = function() {
             if (!currentTrackData || AURA_MAP.length === 0) return;
-            // Se la traccia è riprodotta da più di 3 secondi, riparti dall'inizio (standard)
             if (currentHowl.seek() > 3) {
                  currentHowl.seek(0);
                  currentHowl.play();
@@ -715,7 +834,6 @@
             }
             
             const currentIndex = AURA_MAP.findIndex(t => t.id === currentTrackData.id);
-            // Torna alla traccia precedente. Il modulo assicura un ciclo infinito.
             const prevIndex = (currentIndex - 1 + AURA_MAP.length) % AURA_MAP.length;
             playTrack(AURA_MAP[prevIndex].id);
         }
@@ -757,7 +875,6 @@
         function updateMediaSession() {
              if ('mediaSession' in navigator && currentTrackData) {
                  
-                 // Imposta i metadati
                  navigator.mediaSession.metadata = new MediaMetadata({
                     title: currentTrackData.title,
                     artist: currentTrackData.artist,
@@ -767,7 +884,6 @@
                     ]
                  });
 
-                 // Gestisce le azioni (play, pause, avanti, indietro)
                  navigator.mediaSession.setActionHandler('play', () => { 
                     currentHowl.play(); 
                     updateMediaSession();
@@ -776,16 +892,13 @@
                     currentHowl.pause(); 
                     updateMediaSession();
                  });
-                 // I pulsanti Avanti/Indietro/Loop appaiono qui!
                  navigator.mediaSession.setActionHandler('nexttrack', () => { skipForward(); });
                  navigator.mediaSession.setActionHandler('previoustrack', () => { skipBackward(); });
                  
-                 // (Opzionale) Implementare seekto per far funzionare lo slider nel widget
                  navigator.mediaSession.setActionHandler('seekto', (details) => {
                      currentHowl.seek(details.seekTime);
                  });
                  
-                 // Imposta la posizione (per la barra di avanzamento nativa)
                  if ('setPositionState' in navigator.mediaSession) {
                     navigator.mediaSession.setPositionState({
                         duration: currentHowl.duration(),
@@ -815,8 +928,6 @@
                     rgb: track.rgb || '249 148 40', 
                 }));
                 
-                // showToast(`Caricate ${AURA_MAP.length} tracce dal manifesto.`, 'success'); 
-
             } catch (error) {
                 console.error("Errore nel caricamento del manifesto tracce (tracks.json):", error);
                 showToast("Errore: Impossibile caricare le tracce dal manifesto. Controlla tracks.json.", 'error');
@@ -834,13 +945,17 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
-                remoteStories = data;
-                remoteStories.forEach(story => {
-                     story.trackId = parseInt(story.trackId); 
-                });
-                // showToast(`Caricate ${remoteStories.length} storie da GitHub.`, 'info'); 
+                
+                // Assicurati che ogni storia abbia un ID univoco (index + 1) e video_url
+                remoteStories = data.map((story, index) => ({
+                    id: index + 1,
+                    ...story,
+                    trackId: parseInt(story.trackId),
+                    // CORREZIONE: Mappatura del campo 'videoUrl' (dal JSON) a 'video_url' (interno)
+                    video_url: story.videoUrl || '' 
+                }));
             } catch (error) {
-                console.warn("Impossibile caricare storie da GitHub (user_stories.json).", error);
+                console.warn("Impossibile caricare storie da GitHub (User_videos.json).", error);
                 remoteStories = [];
             }
         }
@@ -905,88 +1020,264 @@
              }
         }
         
-        // --- Storie ---
-        
-        function populateStoryTrackSelect() {
-            const select = document.getElementById('story-track-select');
-            select.innerHTML = '<option value="" disabled selected>Scegli una Canzone...</option>';
-            
-            AURA_MAP.forEach(track => {
-                const option = document.createElement('option');
-                option.value = track.id;
-                option.textContent = `${track.title} - ${track.artist}`;
-                select.appendChild(option);
-            });
-        }
-        
-        window.openUploadStoryModal = function() {
-             // Mantenuto per non rompere il codice, ma l'accesso è disabilitato dal bottone rimosso
-            if (!loggedInUser) {
-                 showToast("Devi essere loggato per tentare il caricamento di una storia.", 'error');
-                 openAuthModal('login');
-                 return;
-            }
-            populateStoryTrackSelect();
-            document.getElementById('upload-story-modal').classList.remove('hidden'); 
-            document.getElementById('story-text-input').value = ''; 
-            lucide.createIcons();
-        }
-
-        window.closeUploadStoryModal = function() {
-            document.getElementById('upload-story-modal').classList.add('hidden');
-        }
-
-        window.uploadStory = function() {
-            // Logica disabilitata, solo console warning
-            showToast("Il caricamento storie è disabilitato. Contatta un Admin per aggiornare il manifesto.", 'info');
-            closeUploadStoryModal();
-        }
+        // --- Storie (Nuova Logica Video) ---
         
         function renderStories() {
-            const storiesList = document.getElementById('stories-list');
+            const container = document.getElementById('stories-bubble-container');
+            const message = document.getElementById('no-stories-message');
             
-            const allStories = remoteStories.sort((a, b) => b.id - a.id); 
-            
-            if (allStories.length === 0) {
-                 storiesList.innerHTML = '<p id="no-stories-message" class="text-center p-4 text-gray-500 col-span-full">Nessuna storia trovata nel manifesto remoto.</p>';
+            if (remoteStories.length === 0) {
+                 container.innerHTML = `<p class="text-center p-4 text-gray-500 col-span-full" id="no-stories-message">Nessuna storia video trovata nel manifesto remoto.</p>`;
                  return;
             }
 
-            storiesList.innerHTML = allStories.map(story => {
-                const track = AURA_MAP.find(t => t.id === story.trackId); 
-                
-                if (!track) {
-                    return `
-                        <div class="depth-glass p-4 rounded-xl space-y-3 bg-red-900/40">
-                            <p class="font-bold">Errore di Associazione Audio</p>
-                            <p class="text-sm text-gray-300">Storia di ${story.userName}</p>
-                        </div>`;
-                }
+            // Rimuovi il messaggio se ci sono storie
+            if (message) message.style.display = 'none';
+
+            container.innerHTML = remoteStories.map((story, index) => {
+                const emoji = HALLOWEEN_EMOJIS[index % HALLOWEEN_EMOJIS.length];
+                const color1 = STORY_COLORS[index % STORY_COLORS.length];
+                const color2 = STORY_COLORS[(index + 1) % STORY_COLORS.length];
+                const watchedClass = storyWatchedStatus.has(index) ? 'story-bubble-watched' : '';
                 
                 return `
-                    <div class="depth-glass p-4 rounded-xl space-y-3">
-                        <div class="flex items-center space-x-2 text-sm text-gray-400">
-                            <i data-lucide="user" class="w-4 h-4 accent-text"></i>
-                            <span class="font-bold accent-text">${story.userName}</span>
-                            <span>- ${story.timestamp || 'Data sconosciuta'}</span>
-                        </div>
-                        <p class="text-base text-white mb-3">${story.text}</p>
-                        <div onclick="playTrack(${track.id})" class="flex items-center space-x-3 p-2 bg-white/5 rounded-lg hover:bg-white/10 transition cursor-pointer">
-                            <img src="${track.cover}" alt="Cover" class="w-10 h-10 rounded-md object-cover">
-                            <div>
-                                <p class="font-semibold text-sm">${track.title}</p>
-                                <p class="text-xs text-gray-400">${track.artist}</p>
+                    <div class="flex flex-col items-center">
+                        <div class="story-bubble ${watchedClass}" 
+                             style="${!storyWatchedStatus.has(index) ? `background: linear-gradient(45deg, ${color1}, ${color2});` : ''}"
+                             onclick="openStoryPlayer(${index})">
+                            <div class="story-bubble-inner" style="background-color: var(--ryzn-bg-color); border-color: var(--ryzn-bg-color);">
+                                <span role="img" aria-label="Halloween emoji">${emoji}</span>
                             </div>
                         </div>
+                        <p class="text-xs mt-1 max-w-[70px] truncate">${story.userName}</p>
                     </div>
                 `;
             }).join('');
-
+            
             lucide.createIcons();
         }
 
+        window.openStoryPlayer = function(startIndex) {
+            if (remoteStories.length === 0) {
+                showToast("Nessuna storia disponibile.", 'info');
+                return;
+            }
+            
+            document.getElementById('story-player-modal').classList.remove('hidden');
+            currentStoryIndex = startIndex;
+            playCurrentStory();
+        }
 
-        // --- Like ---
+        window.closeStoryPlayer = function() {
+            document.getElementById('story-player-modal').classList.add('hidden');
+            
+            // Mette in pausa il brano di sottofondo (se attivo)
+            if (currentHowl) {
+                currentHowl.pause();
+            }
+
+            if (storyVideoPlayer) {
+                storyVideoPlayer.pause();
+                // *** PULIZIA AGGIUNTA: Azzeramento esplicito dei listener ***
+                storyVideoPlayer.onended = null;
+                storyVideoPlayer.onerror = null;
+                storyVideoPlayer.oncanplaythrough = null;
+                storyVideoPlayer.onplay = null; 
+                
+                storyVideoPlayer.currentTime = 0;
+                // Rimuove la sorgente e ricarica per fermare definitivamente lo stream audio/video
+                storyVideoPlayer.src = '';
+                storyVideoPlayer.load();
+            }
+            clearInterval(storyProgressInterval);
+            clearTimeout(storyTimer);
+            renderStories(); // Aggiorna le bolle in background al momento della chiusura
+            saveLocalData();
+        }
+
+        function playCurrentStory() {
+            if (currentStoryIndex < 0 || currentStoryIndex >= remoteStories.length) {
+                closeStoryPlayer();
+                return;
+            }
+
+            const story = remoteStories[currentStoryIndex];
+            const track = AURA_MAP.find(t => t.id === story.trackId);
+            const videoUrl = story.video_url; // Usa 'video_url' che ora è mappato correttamente
+
+            if (!videoUrl) {
+                if (currentStoryIndex === remoteStories.length - 1) {
+                     closeStoryPlayer();
+                     return;
+                }
+                showToast("Errore: La storia non ha un video URL valido. Passa alla prossima.", 'error');
+                // Chiamata immediata per saltare la storia non valida
+                nextStory(); 
+                return;
+            }
+            
+            // 0. Pulisci e azzera tutti i listener precedenti all'inizio del ciclo di setup
+            storyVideoPlayer.onended = null;
+            storyVideoPlayer.onerror = null;
+            storyVideoPlayer.oncanplaythrough = null;
+            storyVideoPlayer.onplay = null; 
+
+            // 1. Aggiorna UI
+            const emoji = HALLOWEEN_EMOJIS[currentStoryIndex % HALLOWEEN_EMOJIS.length];
+            document.getElementById('story-emoji').textContent = emoji;
+            document.getElementById('story-username').textContent = story.userName;
+            document.getElementById('story-track-title').textContent = track ? `${track.title} - ${track.artist}` : 'Brano Sconosciuto';
+
+            // 2. Setup Video Player
+            storyVideoPlayer.src = videoUrl;
+            storyVideoPlayer.poster = track ? track.cover : ''; 
+            storyVideoPlayer.style.opacity = 1;
+            storyVideoPlayer.muted = false; 
+            storyVideoPlayer.loop = false;
+            storyVideoPlayer.currentTime = 0;
+            
+            storyVideoPlayer.load(); // Richiede al player di caricare la risorsa
+
+            storyVideoPlayer.oncanplaythrough = () => {
+                // Il video è pronto per essere riprodotto
+                storyVideoPlayer.play().catch(e => {
+                    console.warn("Autoplay bloccato o errore di riproduzione:", e);
+                    // Se l'autoplay è bloccato (comune sui mobile), lo comunichiamo e mostriamo il pulsante
+                    showToast("Tocca lo schermo per riprodurre il video.", 'info');
+                    document.getElementById('story-play-pause-button').style.opacity = '1'; 
+                    clearInterval(storyProgressInterval);
+                });
+            };
+            
+            // Gestione degli errori di caricamento/decodifica del video
+            storyVideoPlayer.onerror = (e) => {
+                console.error("Errore di riproduzione/caricamento video (Invisibile all'utente):", e);
+                
+                // Chiudi completamente se è l'ultima storia a generare errore
+                if (currentStoryIndex === remoteStories.length - 1) {
+                     closeStoryPlayer(); 
+                     return;
+                }
+
+                // Passa immediatamente alla prossima storia per evitare il loop di avvio/errore.
+                nextStory(); 
+            };
+
+
+            // 3. Setup Progress Bar
+            renderStoryProgressBars();
+            
+            // 4. Mark as Watched
+            storyWatchedStatus.add(currentStoryIndex);
+
+            // 5. Gestisci la fine della storia
+            storyVideoPlayer.onended = nextStory;
+
+            // 6. Avvia il progresso (all'avvio effettivo della riproduzione)
+            storyVideoPlayer.onplay = storyProgressPlayer;
+        }
+        
+        function renderStoryProgressBars() {
+            const container = document.getElementById('story-progress-bar-container');
+            container.innerHTML = remoteStories.map((_, index) => `
+                <div id="story-progress-${index}" class="h-[3px] bg-white/50 rounded-full flex-grow">
+                    <div id="story-progress-bar-${index}" class="h-full bg-white rounded-full" 
+                         style="width: ${index < currentStoryIndex ? '100%' : '0'};
+                                transition: width 0.1s linear;">
+                    </div>
+                </div>
+            `).join('');
+            
+             // La barra corrente deve iniziare da 0
+             const currentBar = document.getElementById(`story-progress-bar-${currentStoryIndex}`);
+             if(currentBar) currentBar.style.width = '0%';
+        }
+
+        function storyProgressPlayer() {
+            const progressBar = document.getElementById(`story-progress-bar-${currentStoryIndex}`);
+            if (!progressBar) return;
+
+            clearInterval(storyProgressInterval);
+            
+            storyProgressInterval = setInterval(() => {
+                if (storyVideoPlayer.paused || storyVideoPlayer.duration <= 0) {
+                    return; 
+                }
+                const duration = storyVideoPlayer.duration;
+                const currentTime = storyVideoPlayer.currentTime;
+                
+                if (duration > 0) {
+                    const percentage = (currentTime / duration) * 100;
+                    progressBar.style.width = `${percentage}%`;
+                }
+            }, 50); 
+        }
+
+        window.nextStory = function() {
+            if (currentHowl) currentHowl.pause();
+            if (storyVideoPlayer) storyVideoPlayer.pause();
+            currentStoryIndex++;
+            if (currentStoryIndex >= remoteStories.length) {
+                closeStoryPlayer();
+            } else {
+                playCurrentStory();
+            }
+        }
+
+        window.prevStory = function() {
+            if (currentHowl) currentHowl.pause();
+            if (storyVideoPlayer) storyVideoPlayer.pause();
+            
+            if (storyVideoPlayer && storyVideoPlayer.currentTime > 1) {
+                // Se la storia è riprodotta per più di 1 secondo, riparti dall'inizio della storia corrente
+                storyVideoPlayer.currentTime = 0;
+                playCurrentStory();
+                return;
+            }
+            
+            currentStoryIndex--;
+            if (currentStoryIndex < 0) {
+                 currentStoryIndex = 0;
+                 playCurrentStory(); 
+            } else {
+                playCurrentStory();
+            }
+        }
+        
+        window.toggleStoryPlayPause = function() {
+            const button = document.getElementById('story-play-pause-button');
+            const icon = button.querySelector('i');
+            
+            if (storyVideoPlayer.paused) {
+                storyVideoPlayer.play();
+                button.style.opacity = '0';
+                icon.setAttribute('data-lucide', 'pause');
+            } else {
+                storyVideoPlayer.pause();
+                button.style.opacity = '1';
+                icon.setAttribute('data-lucide', 'play');
+            }
+            lucide.createIcons();
+        }
+        
+        document.getElementById('story-player-modal').addEventListener('click', (e) => {
+            const button = document.getElementById('story-play-pause-button');
+            
+            // Gestione tap per Play/Pause
+            if (e.target.closest('.absolute.inset-y-0.w-1\\/2') || e.target.closest('#story-player-modal button')) return;
+            
+            // Play/Pause se si clicca al centro
+            if (storyVideoPlayer.paused) {
+                toggleStoryPlayPause(); 
+            } else {
+                 storyVideoPlayer.pause();
+                 button.style.opacity = '1'; // Rendi visibile l'icona di pausa
+                 lucide.createIcons();
+            }
+        });
+
+
+        // Funzioni non modificate...
 
         window.toggleLike = function(optionalTrackId) {
             const trackId = optionalTrackId || currentTrackData?.id;
@@ -1021,7 +1312,6 @@
                 likeButton.classList.toggle('text-red-400', isLiked);
                 likeButton.classList.toggle('text-white/50', !isLiked);
              }
-             // Aggiorna anche il bottone immersive
              const likeButtonImmersive = document.getElementById('like-button-immersive');
              if(likeButtonImmersive) {
                  likeButtonImmersive.classList.toggle('text-red-400', isLiked);
@@ -1047,8 +1337,6 @@
             lucide.createIcons();
         }
         
-        // --- Search ---
-
         window.openSearchModal = function() {
             document.getElementById('search-modal').classList.remove('hidden');
             document.getElementById('search-input').focus();
@@ -1088,8 +1376,6 @@
                 </div>
             `).join('');
         }
-
-        // --- Discover & Moods ---
 
         function renderMoodGrid() {
             const container = document.getElementById('mood-grid');
@@ -1135,8 +1421,6 @@
             lucide.createIcons();
         }
 
-        // --- Playlist (Sessioni) ---
-        
         window.openCreatePlaylistModal = function() {
             if (!loggedInUser) {
                  showToast("Devi essere loggato per creare sessioni.", 'error');
