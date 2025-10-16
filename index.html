@@ -1557,6 +1557,22 @@
 
 
         // --- Inizializzazione Applicazione ---
+        
+        // --- Registrazione Service Worker per PWA (NUOVO BLOCCO) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('SW registrato:', registration.scope);
+                        // L'installazione è ora possibile se soddisfatti tutti i criteri PWA (HTTPS, Manifest, SW)
+                    })
+                    .catch(error => {
+                        console.error('Registrazione SW fallita:', error);
+                    });
+            });
+        }
+        // ------------------------------------------------------------
+
 
         async function initializeAppContent() {
             
