@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Music | Beyond the Sound</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap'); 
+
+        :root { 
+            --ryzn-color-hex: #f99428; 
+            --ryzn-color-rgb: 249 148 40; 
+            --ryzn-color-dark: #cc6d07;
+            --ryzn-text-light: #fbfbfb;
+            --ryzn-text-muted: #a0a0a0;
+        } 
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #0c0c0c; 
+            color: var(--ryzn-text-light); 
+            overflow-x: hidden; 
+            touch-action: pan-y; 
+            transition: background-color 0.8s ease-in-out; 
+            padding-bottom: 5rem; 
+        }
+        .depth-glass { 
+            background-color: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            transition: all 0.3s ease-in-out; 
+        }
+        .player-bar { 
+            position: fixed; bottom: 4.5rem; left: 0; width: 100%; padding: 0.75rem; z-index: 50; 
+            background-color: #0c0c0c; 
+            border-top: 1px solid rgba(var(--ryzn-color-rgb), 0.2); 
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+        }
+        .accent-text { color: var(--ryzn-color-hex); }
+        .accent-bg { background-color: var(--ryzn-color-hex); }
+        .accent-hover:hover { background-color: var(--ryzn-color-dark); }
+        .accent-border { border-color: var(--ryzn-color-hex); }
+
+        .aura-glow { 
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; 
+            box-shadow: 0 0 40px 10px rgba(var(--ryzn-color-rgb), 0.7), 0 0 80px 20px rgba(var(--ryzn-color-rgb), 0.3); 
+            opacity: 0.5; 
+            transition: all 1.2s cubic-bezier(0.25, 0.1, 0.25, 1); 
+            animation: breathe 8s infinite alternate ease-in-out; 
+        }
+        @keyframes breathe { from { transform: scale(0.99); opacity: 0.45; } to { transform: scale(1.01); opacity: 0.55; } }
+        
+        #main-content { min-height: calc(100vh - 5rem); padding-bottom: 8rem; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .section-page { animation: fadeIn 0.5s ease-out; display: none; }
+        .section-page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0.7; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        #toast-container { position: fixed; bottom: 9rem; right: 1rem; z-index: 90; }
+        .toast { animation: toastIn 0.5s forwards, toastOut 0.5s 4.5s forwards; }
+        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+
+        /* Nuovo Footer Nav Bar */
+        .bottom-nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4.5rem; 
+            background-color: #0c0c0c;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 60;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 1rem;
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--ryzn-text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+        }
+        .nav-item.active {
+            color: var(--ryzn-color-hex);
+        }
+        .nav-item.active .lucide {
+            transform: scale(1.1);
+            color: var(--ryzn-color-hex) !important;
+        }
+        .nav-item .lucide {
+            margin-bottom: 0.25rem;
+            transition: transform 0.2s ease-in-out;
+            color: var(--ryzn-text-muted);
+        }
+
+        /* Stili per il Logo Aura */
+        .logo-aura {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            font-size: 2.25rem; 
+            line-height: 1;
+            position: relative;
+            display: inline-block;
+            background: linear-gradient(45deg, var(--ryzn-color-hex), #FFD700); 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 8px rgba(var(--ryzn-color-rgb), 0.5); 
+            transition: all 0.5s ease-in-out;
+        }
+        .logo-aura::after {
+            content: '🎵'; 
+            position: absolute;
+            top: -0.25em; 
+            right: -0.8em; 
+            font-size: 0.6em; 
+            background: linear-gradient(45deg, #09ff00, #32CD32); 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0.8;
+            transition: all 0.5s ease-in-out;
+        }
+        
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        title: ['Montserrat', 'sans-serif'],
+                    },
+                    colors: {
+                        'ryzn-bg': '#0c0c0c',
+                        'ryzn-accent': 'var(--ryzn-color-hex)', 
+                        'halloween-green': '#09ff00', 
+                    }
+                }
+            }
+        }
+    </script>
+    
+</head>
+<body class="overflow-y-auto">
+
+    <div class="aura-glow"></div>
+
+    <div id="main-content" class="p-6 md:p-10 relative">
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-4">
+                <h1 class="logo-aura">Aura</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                 <button onclick="openSearchModal()" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
+                    <i data-lucide="search" class="w-6 h-6"></i>
+                 </button>
+                 <button id="auth-button-header" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
+                    <i data-lucide="user" class="w-6 h-6"></i>
+                 </button>
+            </div>
+        </header>
+
+        <section id="music-section" class="section-page active">
+            
+            <p class="text-xl font-bold mb-4">Music</p>
+
+            <div class="depth-glass p-5 rounded-2xl flex items-center justify-between accent-bg/40 accent-border mb-8" style="background-color: rgba(var(--ryzn-color-rgb), 0.25);">
+                <div>
+                    <p class="text-sm accent-text font-semibold mb-1">Halloween Event</p>
+                    <p class="text-lg font-bold text-white">Pronto per i brividi? Inizia la tua sessione spettrale!</p>
+                </div>
+                <button onclick="playTrack(1)" class="p-3 accent-bg rounded-full hover:scale-105 transition shadow-lg shadow-ryzn-accent/50">
+                    <i data-lucide="ghost" class="w-6 h-6 text-ryzn-bg fill-ryzn-bg"></i>
+                </button>
+            </div>
+            
+            <h2 class="text-xl font-bold mb-4 flex items-center">Featured Tracks</h2>
+            <div id="discover-results" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                </div>
+            
+            <h2 class="text-xl font-bold mb-4 flex items-center">News</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="depth-glass p-4 rounded-xl border-l-4" style="border-color: #09ff00;">
+                    <p class="text-base font-bold mb-1">Ritorna "Night Drive 3"</p>
+                    <p class="text-sm text-gray-400">La playlist synthwave più richiesta è stata aggiornata per la stagione.</p>
+                </div>
+                <div class="depth-glass p-4 rounded-xl border-l-4 accent-border">
+                    <p class="text-base font-bold mb-1">Aura Live: Evento Ottobre</p>
+                    <p class="text-sm text-gray-400">Ascolta i set dal vivo dei DJ più spettrali questo weekend!</p>
+                </div>
+                <div class="depth-glass p-4 rounded-xl border-l-4 border-white/50">
+                    <p class="text-base font-bold mb-1">Nuovi Podcast Indie</p>
+                    <p class="text-sm text-gray-400">Scopri la nostra selezione di nuovi podcast sulla cultura pop e il mistero.</p>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-bold mb-4 flex items-center">Filter by Mood</h2>
+            <div id="mood-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                </div>
+        </section>
+
+        <section id="library-section" class="section-page">
+             <h2 class="text-2xl font-bold mb-4">Brani Salvati</h2>
+             <div id="liked-tracks-list" class="depth-glass p-4 rounded-xl space-y-2">
+                 <p class="text-center text-gray-500">Nessun brano salvato. Metti un cuore ❤️!</p>
+             </div>
+        </section>
+
+        <section id="playlists-section" class="section-page">
+            <div class="flex justify-between items-center mb-4">
+                 <h2 class="text-2xl font-bold">Le Tue Sessioni Musicali</h2>
+                 <button onclick="openCreatePlaylistModal()" class="flex items-center px-4 py-2 accent-bg rounded-full text-sm font-semibold accent-hover transition">
+                    <i data-lucide="plus" class="w-4 h-4 mr-1"></i> Nuova Sessione
+                 </button>
+            </div>
+             
+             <div id="playlists-list" class="space-y-4">
+                 <p id="no-playlists-message" class="text-center p-4 text-gray-500">Non hai ancora creato playlist.</p>
+             </div>
+        </section>
+        
+        <section id="profile-section" class="section-page">
+             <h2 class="text-2xl font-bold mb-4">Il Tuo Profilo</h2>
+             <div class="depth-glass p-6 rounded-2xl">
+                 <p class="text-lg font-semibold mb-2">Benvenuto su Aura Music!</p>
+                 <p class="text-gray-400 mb-4">Qui puoi gestire le tue impostazioni e il tuo account.</p>
+                 <p id="profile-info" class="text-sm font-mono truncate mb-4">Stato: Disconnesso</p>
+                 <button onclick="handleLogout()" class="px-5 py-2 accent-bg rounded-full text-white font-bold accent-hover transition">
+                    Disconnetti
+                 </button>
+             </div>
+        </section>
+
+
+    </div>
+
+    <div onclick="enterImmersiveMode()" class="player-bar depth-glass flex items-center justify-between p-4 shadow-2xl shadow-black/50 cursor-pointer">
+        <div class="flex items-center space-x-3 w-1/3 min-w-[150px]">
+            <img id="player-cover" src="https://placehold.co/50x50/374151/f99428?text=A" alt="Copertina" class="w-12 h-12 rounded-lg object-cover">
+            <div class="hidden md:block">
+                <p id="player-title" class="text-sm font-semibold truncate">Tocca per Sessione Live</p>
+                <p id="player-artist" class="text-xs text-gray-400 truncate">Aura Music</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center w-1/3">
+            <div class="flex space-x-4 items-center mb-1">
+                <button onclick="event.stopPropagation(); skipBackward()" class="text-white/70 hover:text-white transition">
+                    <i data-lucide="skip-back" class="w-5 h-5"></i>
+                </button>
+                <button onclick="event.stopPropagation(); togglePlayPause()" class="p-2 accent-bg rounded-full hover:scale-110 transition shadow-md">
+                    <i id="play-icon" data-lucide="play" class="w-6 h-6 text-ryzn-bg fill-ryzn-bg"></i>
+                </button>
+                <button onclick="event.stopPropagation(); skipForward()" class="text-white/70 hover:text-white transition">
+                    <i data-lucide="skip-forward" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="progress-bar-container" class="w-full h-1 bg-white/20 rounded-full mt-1 hidden md:block cursor-pointer">
+                <div id="progress-bar" class="h-full accent-bg rounded-full" style="width: 0%;"></div>
+            </div>
+        </div>
+        
+        <div class="flex items-center justify-end space-x-4 w-1/3">
+            <div class="flex items-center space-x-2 hidden lg:flex">
+                <i data-lucide="volume-2" class="w-5 h-5 text-white/70"></i>
+                <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8" class="w-20" oninput="setVolume(this.value)" style="accent-color: var(--ryzn-color-hex);">
+            </div>
+            <button id="like-button" onclick="event.stopPropagation(); toggleLike()" class="text-white/50 hover:text-red-400 transition">
+                <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+            </button>
+        </div>
+    </div>
+
+    <nav class="bottom-nav-bar depth-glass">
+        <div id="nav-music" onclick="showSection('music')" class="nav-item active">
+            <i data-lucide="music" class="w-6 h-6"></i>
+            <span>Musica</span>
+        </div>
+        <div id="nav-library" onclick="showSection('library')" class="nav-item">
+            <i data-lucide="heart" class="w-6 h-6"></i>
+            <span>Salvati</span>
+        </div>
+        <div id="nav-playlists" onclick="showSection('playlists')" class="nav-item">
+            <i data-lucide="list-music" class="w-6 h-6"></i>
+            <span>Playlist</span>
+        </div>
+        <div id="nav-profile" onclick="showSection('profile')" class="nav-item">
+            <i data-lucide="user" class="w-6 h-6"></i>
+            <span>Profilo</span>
+        </div>
+    </nav>
+
+    <div id="immersive-mode" class="fixed inset-0 bg-ryzn-bg z-[100] hidden flex-col items-center justify-center p-6 text-center">
+        <div class="aura-glow"></div> 
+        
+        <div class="relative w-full max-w-md h-full flex flex-col items-center justify-center">
+            
+            <button onclick="exitImmersiveMode()" class="absolute top-0 right-0 p-3 text-white/50 hover:text-white transition z-10">
+                <i data-lucide="minimize" class="w-6 h-6"></i>
+            </button>
+
+            <div class="mb-8">
+                 <img id="immersive-cover" src="https://placehold.co/300x300/374151/f99428?text=Aura" alt="Copertina Immersiva" class="w-64 h-64 md:w-80 md:h-80 rounded-2xl shadow-2xl depth-glass object-cover">
+            </div>
+
+            <h2 id="immersive-title" class="text-3xl font-bold mb-1 truncate w-full max-w-sm">Nessuna Traccia</h2>
+            <p id="immersive-artist" class="text-xl text-gray-400 mb-10 truncate w-full max-w-sm">Artista...</p>
+            
+            <div id="vibe-score-display" class="mb-6 text-lg font-semibold accent-text">Vibe Score: -</div>
+
+            <div id="progress-bar-immersive-container" class="w-full max-w-sm h-1 bg-white/20 rounded-full cursor-pointer mb-8">
+                <div id="progress-bar-immersive" class="h-full accent-bg rounded-full" style="width: 0%;"></div>
+            </div>
+
+            <div class="flex space-x-8 items-center">
+                <button onclick="skipBackward()" class="text-white/70 hover:text-white transition">
+                    <i data-lucide="skip-back" class="w-8 h-8"></i>
+                </button>
+                <button onclick="togglePlayPause(true)" class="p-4 accent-bg rounded-full hover:scale-105 transition shadow-xl shadow-ryzn-accent/50">
+                    <i id="immersive-play-icon" data-lucide="play" class="w-10 h-10 text-ryzn-bg fill-ryzn-bg"></i>
+                </button>
+                <button onclick="skipForward()" class="text-white/70 hover:text-white transition">
+                    <i data-lucide="skip-forward" class="w-8 h-8"></i>
+                </button>
+            </div>
+             <div class="flex items-center space-x-2 mt-8 w-full max-w-xs">
+                <i data-lucide="volume-2" class="w-6 h-6 text-white/70"></i>
+                <input type="range" id="volume-slider-immersive" min="0" max="1" step="0.01" value="0.8" class="w-full" oninput="setVolume(this.value)" style="accent-color: var(--ryzn-color-hex);">
+                <i data-lucide="volume-x" class="w-6 h-6 text-white/70"></i>
+            </div>
+            <button onclick="openAddToPlaylistModal()" class="mt-4 p-3 depth-glass rounded-full text-white/70 hover:text-white transition shadow-lg shadow-black/50">
+                <i data-lucide="list-plus" class="w-6 h-6"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div id="toast-container"></div>
+    
+    <div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
+        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+            <h3 id="auth-title" class="text-xl font-bold mb-4 accent-text">Accedi ad Aura Music</h3>
+            <input type="email" id="auth-email" placeholder="Email" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-3">
+            <input type="password" id="auth-password" placeholder="Password" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-4">
+            
+            <button id="auth-main-button" onclick="handleAuthAction('login')" class="w-full py-3 accent-bg accent-hover rounded-lg text-white font-bold transition mb-3">
+                Accedi
+            </button>
+            <p class="text-sm text-center text-gray-400">
+                Non hai un account? 
+                <span id="auth-switch-link" onclick="switchAuthMode('register')" class="accent-text hover:text-white cursor-pointer font-semibold">Registrati</span>
+            </p>
+            <div class="flex justify-center mt-4"><button onclick="closeAuthModal()" class="px-4 py-2 text-gray-400 hover:text-white transition">Annulla</button></div>
+        </div>
+    </div>
+    
+    <div id="create-playlist-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
+        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+            <h3 class="text-xl font-bold mb-4 accent-text">Crea Nuova Sessione</h3>
+            <input type="text" id="playlist-name-input" placeholder="Nome della Sessione" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-4">
+            
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeCreatePlaylistModal()" class="px-4 py-2 text-gray-400 hover:text-white transition rounded-lg">Annulla</button>
+                <button onclick="createPlaylist()" class="px-4 py-2 accent-bg rounded-lg text-white font-bold accent-hover transition">Crea</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="add-to-playlist-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
+        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+            <h3 class="text-xl font-bold mb-4 accent-text">Aggiungi a Sessione</h3>
+            
+            <div id="playlist-selection-list" class="max-h-60 overflow-y-auto space-y-2 mb-4">
+                <p class="text-center text-gray-500">Nessuna sessione trovata.</p>
+            </div>
+            
+            <div class="flex justify-end">
+                <button onclick="closeAddToPlaylistModal()" class="px-4 py-2 text-gray-400 hover:text-white transition rounded-lg">Annulla</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-modal" class="fixed inset-0 bg-ryzn-bg/95 backdrop-blur-sm z-[200] hidden flex-col p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold accent-text">Cerca in Aura</h3>
+            <button onclick="closeSearchModal()" class="p-2 text-white/70 hover:text-white transition">
+                <i data-lucide="x" class="w-8 h-8"></i>
+            </button>
+        </div>
+        
+        <input type="text" id="search-input" oninput="performSearch()" placeholder="Brani, Artisti o Mood..." class="w-full p-4 rounded-lg bg-white/10 border-2 accent-border focus:ring-2 focus:ring-ryzn-accent text-white placeholder-gray-500 mb-6 text-lg">
+        
+        <div id="search-results" class="flex-grow overflow-y-auto space-y-3">
+            <p class="text-center text-gray-500">Inizia a digitare per cercare.</p>
+        </div>
+    </div>
+
+
+    <script>
+        // --- Dati & Configurazione ---
+        const DEMO_AUDIO_URL = "https://cdn.rawgit.com/goldfire/howler.js/master/examples/audio/sound.ogg";
+        const AURA_MAP = [
+            { id: 1, title: "Lighthouse Echo", artist: "Ember Shore", mood: "Spettrale", color: "#800080", rgb: "128 0 128", vibe: 78, cover: "https://placehold.co/150x150/5C0601/f99428?text=GHOST", src: [DEMO_AUDIO_URL] },
+            { id: 2, title: "Electric Nightwave", artist: "Vortex Signal", mood: "Party", color: "#FFD700", rgb: "255 215 0", vibe: 92, cover: "https://placehold.co/150x150/1C1C1C/09ff00?text=CLUB", src: [DEMO_AUDIO_URL] },
+            { id: 3, title: "Deep Focus Session", artist: "Leda Tapes", mood: "Ambient", color: "#32CD32", rgb: "50 205 50", vibe: 55, cover: "https://placehold.co/150x150/471D59/AA77F2?text=FOCUS", src: [DEMO_AUDIO_URL] },
+            { id: 4, title: "Midnight Drive (Lo-Fi)", artist: "Charon Labs", mood: "Chill", color: "#1E90FF", rgb: "30 144 255", vibe: 68, cover: "https://placehold.co/150x150/361459/f99428?text=LOFI", src: [DEMO_AUDIO_URL] },
+            { id: 5, title: "Zen Garden Flow", artist: "Koto Beats", mood: "Spettrale", color: "#FF4500", rgb: "255 69 0", vibe: 85, cover: "https://placehold.co/150x150/991b1b/fecaca?text=RED", src: [DEMO_AUDIO_URL] },
+            { id: 6, title: "Rhythm Reactor", artist: "Pulse", mood: "Party", color: "#FF1493", rgb: "255 20 147", vibe: 98, cover: "https://placehold.co/150x150/1d4ed8/bfdbfe?text=BLUE", src: [DEMO_AUDIO_URL] },
+        ];
+        
+        const MOOD_STYLES = {
+            "Spettrale": "bg-[#5C0601]/50 border-red-800 text-red-300",
+            "Party": "bg-yellow-900/40 border-yellow-500 text-yellow-300",
+            "Ambient": "bg-green-900/40 border-green-500 text-green-300",
+            "Chill": "bg-blue-900/40 border-blue-500 text-blue-300"
+        };
+        
+        let currentTrackData = null;
+        let currentHowl = null;
+        let likedTracks = new Set();
+        let userPlaylists = [];
+        let activeFilter = 'All';
+
+        let progressBar, progressBarImmersive, playIcon, immersivePlayIcon, playerTitle, playerArtist, playerCover, immersiveCover, immersiveTitle, immersiveArtist, likeButton, vibeScoreDisplay, volumeSlider, volumeSliderImmersive, progressBarContainer, progressBarImmersiveContainer;
+
+        let progressInterval = null;
+        let currentVolume = 0.8;
+
+        // --- Funzioni di Salvataggio Locale ---
+
+        function saveLocalData() {
+            try {
+                // Converte Set in Array per il salvataggio JSON
+                localStorage.setItem('aura_liked_tracks', JSON.stringify(Array.from(likedTracks)));
+                localStorage.setItem('aura_user_playlists', JSON.stringify(userPlaylists));
+            } catch (e) {
+                console.error("Errore nel salvataggio locale:", e);
+                showToast("Errore: Impossibile salvare i dati localmente.", 'error');
+            }
+        }
+
+        function loadLocalData() {
+            try {
+                const savedTracks = localStorage.getItem('aura_liked_tracks');
+                if (savedTracks) {
+                    // Riconverte Array in Set dopo il caricamento
+                    likedTracks = new Set(JSON.parse(savedTracks));
+                }
+                const savedPlaylists = localStorage.getItem('aura_user_playlists');
+                if (savedPlaylists) {
+                    userPlaylists = JSON.parse(savedPlaylists);
+                }
+            } catch (e) {
+                console.error("Errore nel caricamento locale:", e);
+                likedTracks = new Set();
+                userPlaylists = [];
+            }
+        }
+
+
+        // --- Inizializzazione DOM e Listener ---
+
+        function getDOMElements() {
+            progressBar = document.getElementById('progress-bar');
+            progressBarImmersive = document.getElementById('progress-bar-immersive');
+            playIcon = document.getElementById('play-icon');
+            immersivePlayIcon = document.getElementById('immersive-play-icon');
+            playerTitle = document.getElementById('player-title');
+            playerArtist = document.getElementById('player-artist');
+            playerCover = document.getElementById('player-cover');
+            immersiveCover = document.getElementById('immersive-cover');
+            immersiveTitle = document.getElementById('immersive-title');
+            immersiveArtist = document.getElementById('immersive-artist');
+            likeButton = document.getElementById('like-button');
+            vibeScoreDisplay = document.getElementById('vibe-score-display');
+            volumeSlider = document.getElementById('volume-slider');
+            volumeSliderImmersive = document.getElementById('volume-slider-immersive');
+            progressBarContainer = document.getElementById('progress-bar-container');
+            progressBarImmersiveContainer = document.getElementById('progress-bar-immersive-container');
+            
+            if (progressBarContainer) {
+                progressBarContainer.addEventListener('click', (e) => handleSeek(e, false));
+            }
+            if (progressBarImmersiveContainer) {
+                progressBarImmersiveContainer.addEventListener('click', (e) => handleSeek(e, true));
+            }
+
+            document.getElementById('profile-info').textContent = 'Stato: Disconnesso';
+            document.getElementById('auth-button-header').onclick = () => openAuthModal('login');
+        }
+
+
+        // --- Funzioni di Sistema ---
+
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const color = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'accent-bg';
+
+            const toast = document.createElement('div');
+            toast.className = `toast depth-glass p-4 rounded-xl shadow-lg ${color} text-white mb-3 max-w-xs`;
+            toast.innerHTML = `<p class="font-semibold">${message}</p>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+        // --- Gestione Sezioni ---
+
+        window.showSection = function(sectionId) {
+            document.querySelectorAll('.section-page').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            const targetSection = document.getElementById(`${sectionId}-section`);
+            if (targetSection) {
+                 targetSection.classList.add('active');
+            } else {
+                 console.error(`Sezione non trovata: ${sectionId}-section`);
+                 return; 
+            }
+            
+            activateNavItem(sectionId);
+
+            if (sectionId === 'library') { renderLikedTracks(); }
+            if (sectionId === 'playlists') { renderPlaylists(); }
+            if (sectionId === 'music') { 
+                renderMoodGrid(); 
+                renderDiscoverResults(activeFilter); 
+            }
+
+            lucide.createIcons();
+        }
+        
+        function activateNavItem(sectionId) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const activeItem = document.getElementById(`nav-${sectionId}`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+        }
+
+        // --- Funzioni Player (Howler.js) ---
+
+        function updateProgress() {
+            if (currentHowl && currentHowl.playing()) {
+                const seek = currentHowl.seek() || 0;
+                const duration = currentHowl.duration();
+                const percent = (seek / duration) * 100;
+                progressBar.style.width = `${percent}%`;
+                progressBarImmersive.style.width = `${percent}%`;
+            } else if (currentHowl && !currentHowl.playing()) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+        }
+        
+        function setupProgressInterval() {
+             if (progressInterval) clearInterval(progressInterval);
+             progressInterval = setInterval(updateProgress, 200);
+        }
+        
+        function togglePlayIcon(isPaused) {
+             const iconName = isPaused ? 'play' : 'pause';
+             playIcon.setAttribute('data-lucide', iconName);
+             immersivePlayIcon.setAttribute('data-lucide', iconName);
+        }
+
+        window.playTrack = function(trackId) {
+            const track = AURA_MAP.find(t => t.id === trackId);
+            if (!track) {
+                showToast("Traccia non trovata.", 'error'); 
+                return;
+            }
+            
+            if (currentHowl && currentTrackData && currentTrackData.id === track.id && currentHowl.playing()) {
+                showToast(`Riproduzione: ${track.title}`, 'info');
+                return;
+            }
+
+            currentTrackData = track;
+            
+            if (currentHowl) {
+                currentHowl.unload();
+            }
+            
+            currentHowl = new Howl({
+                src: track.src,
+                loop: true,
+                html5: true,
+                volume: currentVolume,
+                onplay: () => {
+                    togglePlayIcon(false);
+                    setupProgressInterval();
+                    showToast(`In riproduzione: ${track.title}`, 'success');
+                },
+                onpause: () => {
+                    togglePlayIcon(true);
+                    showToast(`Pausa: ${track.title}`, 'info');
+                },
+                onloaderror: (id, error) => {
+                    console.error("Errore caricamento audio:", error);
+                    showToast("Errore: Impossibile caricare l'audio.", 'error');
+                }
+            });
+
+            playerTitle.textContent = track.title;
+            playerArtist.textContent = track.artist;
+            playerCover.src = track.cover;
+            immersiveTitle.textContent = track.title;
+            immersiveArtist.textContent = track.artist;
+            immersiveCover.src = track.cover;
+            vibeScoreDisplay.textContent = `Vibe Score: ${track.vibe}/100`;
+
+            updateAmbientLight(track.color, track.rgb); 
+            updateLikeButton(track.id);
+            
+            lucide.createIcons();
+
+            currentHowl.play();
+        }
+        
+        window.setVolume = function(volume) {
+             currentVolume = parseFloat(volume);
+             if (currentHowl) {
+                 currentHowl.volume(currentVolume);
+             }
+             if (volumeSlider) volumeSlider.value = currentVolume;
+             if (volumeSliderImmersive) volumeSliderImmersive.value = currentVolume;
+        }
+
+        window.togglePlayPause = function(isImmersive = false) {
+            if (currentHowl === null) {
+                playTrack(AURA_MAP[0].id); 
+                return;
+            }
+            currentHowl.playing() ? currentHowl.pause() : currentHowl.play();
+        }
+        
+        window.skipForward = function() {
+            if (!currentTrackData) return;
+            const currentIndex = AURA_MAP.findIndex(t => t.id === currentTrackData.id);
+            const nextIndex = (currentIndex + 1) % AURA_MAP.length;
+            playTrack(AURA_MAP[nextIndex].id);
+        }
+
+        window.skipBackward = function() {
+            if (!currentTrackData) return;
+            if (currentHowl.seek() > 3) {
+                 currentHowl.seek(0);
+                 currentHowl.play();
+                 return;
+            }
+            
+            const currentIndex = AURA_MAP.findIndex(t => t.id === currentTrackData.id);
+            const prevIndex = (currentIndex - 1 + AURA_MAP.length) % AURA_MAP.length;
+            playTrack(AURA_MAP[prevIndex].id);
+        }
+        
+        function handleSeek(e, isImmersive) {
+             if (!currentHowl || !currentHowl.duration()) return;
+             
+             const container = isImmersive ? progressBarImmersiveContainer : progressBarContainer;
+             if (!container) return; 
+             
+             const rect = container.getBoundingClientRect();
+             const x = e.clientX - rect.left; 
+             const width = rect.width;
+             const percentage = x / width;
+             const newSeek = currentHowl.duration() * percentage;
+             currentHowl.seek(newSeek);
+             updateProgress();
+             e.stopPropagation();
+        }
+
+
+        // --- Ambient Light / Dynamic Theming ---
+        function updateAmbientLight(hexColor, rgbColor) {
+            document.documentElement.style.setProperty('--ryzn-color-hex', hexColor);
+            document.documentElement.style.setProperty('--ryzn-color-rgb', rgbColor);
+            const r = parseInt(rgbColor.split(' ')[0]) * 0.8;
+            const g = parseInt(rgbColor.split(' ')[1]) * 0.8;
+            const b = parseInt(rgbColor.split(' ')[2]) * 0.8;
+            document.documentElement.style.setProperty('--ryzn-color-dark', `rgb(${r}, ${g}, ${b})`);
+            const logo = document.querySelector('.logo-aura');
+            if (logo) {
+                logo.style.background = `linear-gradient(45deg, ${hexColor}, #FFD700)`;
+                logo.style.webkitBackgroundClip = 'text';
+                logo.style.webkitTextFillColor = 'transparent';
+                logo.style.textShadow = `0 0 8px rgba(${rgbColor.replace(/ /g, ', ')}, 0.5)`;
+            }
+        }
+
+        // --- Logica Modali e Like ---
+        
+        // Funzioni Autenticazione (Simulate)
+        window.handleAuthAction = async function(type) { 
+            closeAuthModal(); 
+            await new Promise(resolve => setTimeout(resolve, 300));
+            userId = 'Utente Demo';
+            showToast(`${type === 'login' ? 'Accesso' : 'Registrazione'} simulata riuscita!`, 'success');
+            document.getElementById('profile-info').textContent = `Connesso come: ${userId}`;
+            document.getElementById('auth-button-header').onclick = () => showSection('profile'); 
+            lucide.createIcons();
+        }
+        window.handleLogout = async function() { 
+            userId = 'Anonimo';
+            document.getElementById('profile-info').textContent = 'Stato: Disconnesso';
+            document.getElementById('auth-button-header').onclick = () => openAuthModal('login');
+            showToast("Disconnessione effettuata.", 'info');
+            lucide.createIcons();
+        }
+
+        function openAuthModal(mode) { 
+            document.getElementById('auth-modal').classList.remove('hidden'); 
+            switchAuthMode(mode); 
+            lucide.createIcons(); 
+        }
+        function closeAuthModal() { document.getElementById('auth-modal').classList.add('hidden'); }
+        
+        function switchAuthMode(mode) { 
+             const authTitle = document.getElementById('auth-title');
+             const authMainButton = document.getElementById('auth-main-button');
+             const authSwitchLink = document.getElementById('auth-switch-link');
+             
+             if (mode === 'login') {
+                 authTitle.textContent = 'Accedi ad Aura Music';
+                 authMainButton.textContent = 'Accedi';
+                 authMainButton.onclick = () => handleAuthAction('login');
+                 authSwitchLink.textContent = 'Registrati';
+                 authSwitchLink.onclick = () => switchAuthMode('register');
+             } else {
+                 authTitle.textContent = 'Registrati ad Aura Music';
+                 authMainButton.textContent = 'Registrati';
+                 authMainButton.onclick = () => handleAuthAction('register');
+                 authSwitchLink.textContent = 'Accedi';
+                 authSwitchLink.onclick = () => switchAuthMode('login');
+             }
+        }
+        
+        window.openCreatePlaylistModal = function() { 
+            document.getElementById('create-playlist-modal').classList.remove('hidden'); 
+            document.getElementById('playlist-name-input').value = ''; 
+            lucide.createIcons(); 
+        }
+        window.closeCreatePlaylistModal = function() { document.getElementById('create-playlist-modal').classList.add('hidden'); }
+        
+        window.createPlaylist = function() { 
+            const playlistName = document.getElementById('playlist-name-input').value.trim();
+            if (playlistName) {
+                if (userPlaylists.some(p => p.name.toLowerCase() === playlistName.toLowerCase())) {
+                    showToast(`La sessione "${playlistName}" esiste già.`, 'error');
+                    return;
+                }
+                
+                userPlaylists.push({ id: Date.now(), name: playlistName, tracks: [] });
+                saveLocalData(); 
+                showToast(`Sessione "${playlistName}" creata!`, 'success');
+                closeCreatePlaylistModal();
+                
+                renderPlaylists(); 
+            } else {
+                showToast("Il nome della playlist non può essere vuoto.", 'error');
+            }
+        }
+        
+        // NUOVA FUNZIONE: Apertura Modale Aggiungi a Playlist
+        window.openAddToPlaylistModal = function() {
+            if (!currentTrackData) {
+                showToast("Nessun brano in riproduzione da aggiungere.", 'error');
+                return;
+            }
+            
+            const modal = document.getElementById('add-to-playlist-modal');
+            const list = document.getElementById('playlist-selection-list');
+            
+            list.innerHTML = '';
+            
+            if (userPlaylists.length === 0) {
+                list.innerHTML = `
+                    <p class="text-center text-gray-500">Non hai ancora creato sessioni.</p>
+                    <button onclick="closeAddToPlaylistModal(); openCreatePlaylistModal();" class="w-full py-2 accent-bg rounded-lg text-white font-bold accent-hover transition mt-3">
+                        Crea una Sessione
+                    </button>
+                `;
+            } else {
+                list.innerHTML = userPlaylists.map(p => {
+                    const isAlreadyAdded = p.tracks.some(t => t.id === currentTrackData.id);
+                    const disabledClass = isAlreadyAdded ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer';
+                    const icon = isAlreadyAdded ? 'check' : 'plus';
+                    const action = isAlreadyAdded ? '' : `onclick="addTrackToPlaylist(${p.id})"`;
+                    
+                    return `
+                        <div ${action} class="flex items-center justify-between p-3 rounded-lg transition ${disabledClass}">
+                            <p class="font-semibold">${p.name}</p>
+                            <i data-lucide="${icon}" class="w-5 h-5 accent-text"></i>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        window.closeAddToPlaylistModal = function() {
+            document.getElementById('add-to-playlist-modal').classList.add('hidden');
+        }
+
+        // NUOVA FUNZIONE: Aggiunta brano a Playlist
+        window.addTrackToPlaylist = function(playlistId) {
+            if (!currentTrackData) return;
+            
+            const trackToAdd = currentTrackData;
+            const playlist = userPlaylists.find(p => p.id === playlistId);
+            
+            if (playlist) {
+                // Check if track is already in the playlist (double-check for safety)
+                const isAlreadyAdded = playlist.tracks.some(t => t.id === trackToAdd.id);
+                
+                if (isAlreadyAdded) {
+                    showToast(`"${trackToAdd.title}" è già nella sessione "${playlist.name}".`, 'info');
+                } else {
+                    // Save only necessary data
+                    const trackDataForPlaylist = {
+                        id: trackToAdd.id,
+                        title: trackToAdd.title,
+                        artist: trackToAdd.artist,
+                        cover: trackToAdd.cover,
+                        src: trackToAdd.src,
+                    };
+                    playlist.tracks.push(trackDataForPlaylist);
+                    saveLocalData();
+                    showToast(`Aggiunto "${trackToAdd.title}" a "${playlist.name}"!`, 'success');
+                }
+            }
+            closeAddToPlaylistModal();
+            // Re-render playlists if we are in the playlists section
+            if (document.getElementById('playlists-section').classList.contains('active')) {
+                renderPlaylists();
+            }
+        }
+
+
+        function renderPlaylists() {
+            const playlistsList = document.getElementById('playlists-list');
+            
+            playlistsList.innerHTML = '';
+            
+            if (userPlaylists.length === 0) {
+                playlistsList.innerHTML = '<p id="no-playlists-message" class="text-center p-4 text-gray-500">Non hai ancora creato playlist.</p>';
+            } else {
+                playlistsList.innerHTML = userPlaylists.map(p => `
+                    <div class="depth-glass p-4 rounded-xl flex justify-between items-center hover:bg-white/10 transition">
+                        <div>
+                            <p class="font-bold">${p.name}</p>
+                            <p class="text-sm text-gray-400">${p.tracks.length} brani</p>
+                        </div>
+                        <button class="p-2 rounded-full hover:bg-white/20 transition"><i data-lucide="play" class="w-5 h-5"></i></button>
+                    </div>
+                `).join('');
+            }
+            lucide.createIcons(); 
+        }
+
+        window.enterImmersiveMode = function() {
+            if (currentTrackData === null) { playTrack(AURA_MAP[0].id); } 
+            document.getElementById('immersive-mode').classList.remove('hidden');
+            document.getElementById('immersive-mode').classList.add('flex');
+            document.body.style.overflow = 'hidden'; 
+            lucide.createIcons(); 
+        }
+
+        window.exitImmersiveMode = function() {
+            document.getElementById('immersive-mode').classList.add('hidden');
+            document.getElementById('immersive-mode').classList.remove('flex');
+            document.body.style.overflow = 'auto'; 
+        }
+        
+        function updateLikeButton(trackId) {
+             const isLiked = likedTracks.has(trackId);
+             if (likeButton) {
+                likeButton.classList.toggle('text-red-400', isLiked);
+                likeButton.classList.toggle('text-white/50', !isLiked);
+             }
+        }
+
+        window.toggleLike = function() {
+            if (currentTrackData) {
+                const title = currentTrackData.title;
+                if (likedTracks.has(currentTrackData.id)) {
+                    likedTracks.delete(currentTrackData.id);
+                    showToast(`Rimosso "${title}" dai brani salvati.`, 'info');
+                } else {
+                    likedTracks.add(currentTrackData.id);
+                    showToast(`Aggiunto "${title}" ai brani salvati!`, 'success');
+                }
+                saveLocalData(); 
+                updateLikeButton(currentTrackData.id);
+                if (document.getElementById('library-section').classList.contains('active')) { renderLikedTracks(); }
+            }
+        }
+        
+        function renderLikedTracks() {
+            const likedTracksList = document.getElementById('liked-tracks-list');
+            if (likedTracks.size === 0) {
+                likedTracksList.innerHTML = '<p class="text-center text-gray-500">Nessun brano salvato. Metti un cuore ❤️!</p>';
+            } else {
+                const tracksHtml = Array.from(likedTracks).map(trackId => {
+                    const track = AURA_MAP.find(t => t.id === trackId);
+                    return track ? `
+                        <div onclick="playTrack(${track.id})" class="flex items-center justify-between p-2 hover:bg-white/10 rounded-lg transition cursor-pointer">
+                            <div class="flex items-center space-x-3">
+                                <img src="${track.cover}" alt="${track.title} Cover" class="w-10 h-10 rounded-md object-cover">
+                                <div>
+                                    <p class="font-semibold text-sm">${track.title}</p>
+                                    <p class="text-xs text-gray-400">${track.artist}</p>
+                                </div>
+                            </div>
+                            <button onclick="event.stopPropagation(); toggleLike();" class="text-red-400 p-2 rounded-full hover:bg-white/10 transition">
+                                <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+                            </button>
+                        </div>
+                    ` : '';
+                }).join('');
+                likedTracksList.innerHTML = tracksHtml;
+            }
+            lucide.createIcons();
+        }
+        
+        function renderMoodGrid() {
+            const moodGrid = document.getElementById('mood-grid');
+            const moods = Object.keys(MOOD_STYLES);
+            
+            const allStyle = activeFilter === 'All' ? "accent-bg accent-border text-white" : "bg-gray-800/40 border-gray-700 text-gray-400";
+            let html = `<div onclick="setMoodFilter('All')" class="p-4 rounded-xl text-center font-bold border ${allStyle} cursor-pointer transition shadow-lg hover:shadow-lg">All</div>`; 
+
+            html += moods.map(mood => {
+                const style = MOOD_STYLES[mood];
+                const activeStyle = activeFilter === mood ? style.replace('/50', '/70').replace('/40', '/70') + ' border-white text-white' : style;
+                return `
+                    <div onclick="setMoodFilter('${mood}')" class="p-4 rounded-xl text-center font-bold border ${activeStyle} cursor-pointer transition shadow-lg hover:shadow-lg">#${mood}</div>
+                `;
+            }).join('');
+            
+            moodGrid.innerHTML = html;
+            lucide.createIcons();
+        }
+        
+        window.setMoodFilter = function(mood) {
+            activeFilter = mood;
+            renderMoodGrid(); 
+            renderDiscoverResults(mood); 
+        }
+        
+        function renderDiscoverResults(filter) {
+            const resultsContainer = document.getElementById('discover-results');
+            const filteredTracks = filter === 'All' ? AURA_MAP : AURA_MAP.filter(t => t.mood === filter);
+
+            if (filteredTracks.length === 0) {
+                 resultsContainer.innerHTML = `<p class="col-span-2 md:col-span-4 text-center text-gray-400 p-4">Nessun brano per il filtro: #${filter}</p>`;
+                 return;
+            }
+
+            resultsContainer.innerHTML = filteredTracks.map(track => `
+                 <div onclick="playTrack(${track.id})" class="track-card cursor-pointer space-y-2 group">
+                    <img src="${track.cover}" alt="${track.title} Cover" class="w-full aspect-square rounded-xl shadow-lg border-2 accent-border/50 group-hover:shadow-2xl group-hover:scale-[1.02] transition-transform duration-300 object-cover">
+                    <p class="text-sm font-semibold truncate text-white">${track.title}</p>
+                    <p class="text-xs text-gray-400 truncate">${track.artist}</p>
+                    <p class="text-xs font-mono accent-text">Vibe: ${track.vibe}/100</p>
+                </div>
+            `).join('');
+        }
+
+        // --- Funzioni Modale Ricerca ---
+
+        window.openSearchModal = function() {
+            document.getElementById('search-modal').classList.remove('hidden');
+            document.getElementById('search-modal').classList.add('flex');
+            document.body.style.overflow = 'hidden'; 
+            document.getElementById('search-input').focus();
+            lucide.createIcons();
+            performSearch(); 
+        }
+
+        window.closeSearchModal = function() {
+            document.getElementById('search-modal').classList.add('hidden');
+            document.getElementById('search-modal').classList.remove('flex');
+            document.body.style.overflow = 'auto';
+            document.getElementById('search-input').value = '';
+            document.getElementById('search-results').innerHTML = '<p class="text-center text-gray-500">Inizia a digitare per cercare.</p>';
+        }
+
+        window.performSearch = function() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('search-results');
+            
+            if (query.length === 0) {
+                 resultsContainer.innerHTML = '<p class="text-center text-gray-500">Inizia a digitare per cercare.</p>';
+                 return;
+            }
+
+            const searchResults = AURA_MAP.filter(track => 
+                track.title.toLowerCase().includes(query) ||
+                track.artist.toLowerCase().includes(query) ||
+                track.mood.toLowerCase().includes(query)
+            );
+
+            if (searchResults.length === 0) {
+                resultsContainer.innerHTML = `<p class="text-center text-gray-500">Nessun risultato trovato per "${query}".</p>`;
+            } else {
+                resultsContainer.innerHTML = searchResults.map(track => `
+                    <div onclick="closeSearchModal(); playTrack(${track.id});" class="flex items-center space-x-4 p-3 depth-glass rounded-xl hover:bg-white/10 transition cursor-pointer">
+                        <img src="${track.cover}" alt="Cover" class="w-12 h-12 rounded-lg object-cover">
+                        <div>
+                            <p class="font-semibold truncate">${track.title}</p>
+                            <p class="text-sm text-gray-400">${track.artist} - <span class="accent-text">${track.mood}</span></p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+
+        function initializeAppContent() {
+            // 1. Carica i dati salvati
+            loadLocalData();
+
+            // 2. Ottieni gli elementi DOM
+            getDOMElements();
+
+             // 3. Inizializza con il tema Arancione Zucca
+            updateAmbientLight('#f99428', '249 148 40'); 
+            
+            // 4. Mostra la sezione 'music'
+            showSection('music'); 
+            
+            // 5. Imposta il volume
+            setVolume(currentVolume); 
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeAppContent);
+    </script>
+</body>
+</html>
