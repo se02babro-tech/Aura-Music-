@@ -189,6 +189,7 @@
             
             <h2 class="text-xl font-bold mb-4 flex items-center">Featured Tracks</h2>
             <div id="discover-results" class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                <p class="col-span-2 md:col-span-4 text-center text-gray-400">Caricamento tracce...</p>
                 </div>
             
             <h2 class="text-xl font-bold mb-4 flex items-center">News</h2>
@@ -410,16 +411,14 @@
 
     <script>
         // --- Dati & Configurazione ---
-        const DEMO_AUDIO_URL = "https://cdn.rawgit.com/goldfire/howler.js/master/examples/audio/sound.ogg";
-        const AURA_MAP = [
-            { id: 1, title: "Lighthouse Echo", artist: "Ember Shore", mood: "Spettrale", color: "#800080", rgb: "128 0 128", vibe: 78, cover: "https://placehold.co/150x150/5C0601/f99428?text=GHOST", src: [DEMO_AUDIO_URL] },
-            { id: 2, title: "Electric Nightwave", artist: "Vortex Signal", mood: "Party", color: "#FFD700", rgb: "255 215 0", vibe: 92, cover: "https://placehold.co/150x150/1C1C1C/09ff00?text=CLUB", src: [DEMO_AUDIO_URL] },
-            { id: 3, title: "Deep Focus Session", artist: "Leda Tapes", mood: "Ambient", color: "#32CD32", rgb: "50 205 50", vibe: 55, cover: "https://placehold.co/150x150/471D59/AA77F2?text=FOCUS", src: [DEMO_AUDIO_URL] },
-            { id: 4, title: "Midnight Drive (Lo-Fi)", artist: "Charon Labs", mood: "Chill", color: "#1E90FF", rgb: "30 144 255", vibe: 68, cover: "https://placehold.co/150x150/361459/f99428?text=LOFI", src: [DEMO_AUDIO_URL] },
-            { id: 5, title: "Zen Garden Flow", artist: "Koto Beats", mood: "Spettrale", color: "#FF4500", rgb: "255 69 0", vibe: 85, cover: "https://placehold.co/150x150/991b1b/fecaca?text=RED", src: [DEMO_AUDIO_URL] },
-            { id: 6, title: "Rhythm Reactor", artist: "Pulse", mood: "Party", color: "#FF1493", rgb: "255 20 147", vibe: 98, cover: "https://placehold.co/150x150/1d4ed8/bfdbfe?text=BLUE", src: [DEMO_AUDIO_URL] },
-        ];
         
+        // URL Base per il contenuto RAW dal repository GitHub
+        const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/";
+        
+        // Mappa delle tracce, sarà popolata in modo asincrono da tracks.json
+        let AURA_MAP = [];
+        
+        // Stili fissi per i Mood
         const MOOD_STYLES = {
             "Spettrale": "bg-[#5C0601]/50 border-red-800 text-red-300",
             "Party": "bg-yellow-900/40 border-yellow-500 text-yellow-300",
@@ -437,6 +436,18 @@
 
         let progressInterval = null;
         let currentVolume = 0.8;
+        
+        // Funzione helper per costruire l'URL della Copertina (.jpg)
+        function getCoverUrl(title) {
+            const filename = title.replace(/[^\w\s\-\(\)]/g, '').replace(/\s+/g, '_'); 
+            return GITHUB_RAW_BASE + `Covers/${filename}.jpg`; 
+        }
+
+        // Funzione helper per costruire l'URL dell'Audio (.ogg)
+        function getAudioUrl(title) {
+            const filename = title.replace(/[^\w\s\-\(\)]/g, '').replace(/\s+/g, '_');
+            return GITHUB_RAW_BASE + `audio/${filename}.ogg`; 
+        }
 
         // --- Funzioni di Salvataggio Locale ---
 
@@ -583,6 +594,12 @@
         }
 
         window.playTrack = function(trackId) {
+            // Se AURA_MAP non è ancora caricato, non fare nulla
+            if (AURA_MAP.length === 0) {
+                 showToast("Tracce in caricamento, riprova tra un attimo.", 'info'); 
+                 return;
+            }
+
             const track = AURA_MAP.find(t => t.id === trackId);
             if (!track) {
                 showToast("Traccia non trovata.", 'error'); 
@@ -647,21 +664,26 @@
 
         window.togglePlayPause = function(isImmersive = false) {
             if (currentHowl === null) {
-                playTrack(AURA_MAP[0].id); 
+                // Avvia la prima traccia disponibile se AURA_MAP è pieno
+                if (AURA_MAP.length > 0) {
+                    playTrack(AURA_MAP[0].id); 
+                } else {
+                    showToast("Nessuna traccia caricata.", 'error');
+                }
                 return;
             }
             currentHowl.playing() ? currentHowl.pause() : currentHowl.play();
         }
         
         window.skipForward = function() {
-            if (!currentTrackData) return;
+            if (!currentTrackData || AURA_MAP.length === 0) return;
             const currentIndex = AURA_MAP.findIndex(t => t.id === currentTrackData.id);
             const nextIndex = (currentIndex + 1) % AURA_MAP.length;
             playTrack(AURA_MAP[nextIndex].id);
         }
 
         window.skipBackward = function() {
-            if (!currentTrackData) return;
+            if (!currentTrackData || AURA_MAP.length === 0) return;
             if (currentHowl.seek() > 3) {
                  currentHowl.seek(0);
                  currentHowl.play();
@@ -694,16 +716,19 @@
         function updateAmbientLight(hexColor, rgbColor) {
             document.documentElement.style.setProperty('--ryzn-color-hex', hexColor);
             document.documentElement.style.setProperty('--ryzn-color-rgb', rgbColor);
-            const r = parseInt(rgbColor.split(' ')[0]) * 0.8;
-            const g = parseInt(rgbColor.split(' ')[1]) * 0.8;
-            const b = parseInt(rgbColor.split(' ')[2]) * 0.8;
+            // Assicurati che i colori di default siano usati se non specificati
+            const safeRgbColor = rgbColor || '249 148 40'; 
+            const parts = safeRgbColor.split(' ');
+            const r = parseInt(parts[0] || 249) * 0.8;
+            const g = parseInt(parts[1] || 148) * 0.8;
+            const b = parseInt(parts[2] || 40) * 0.8;
             document.documentElement.style.setProperty('--ryzn-color-dark', `rgb(${r}, ${g}, ${b})`);
             const logo = document.querySelector('.logo-aura');
             if (logo) {
-                logo.style.background = `linear-gradient(45deg, ${hexColor}, #FFD700)`;
+                logo.style.background = `linear-gradient(45deg, ${hexColor || '#f99428'}, #FFD700)`;
                 logo.style.webkitBackgroundClip = 'text';
                 logo.style.webkitTextFillColor = 'transparent';
-                logo.style.textShadow = `0 0 8px rgba(${rgbColor.replace(/ /g, ', ')}, 0.5)`;
+                logo.style.textShadow = `0 0 8px rgba(${safeRgbColor.replace(/ /g, ', ')}, 0.5)`;
             }
         }
 
@@ -780,7 +805,7 @@
             }
         }
         
-        // NUOVA FUNZIONE: Apertura Modale Aggiungi a Playlist
+        // Apertura Modale Aggiungi a Playlist
         window.openAddToPlaylistModal = function() {
             if (!currentTrackData) {
                 showToast("Nessun brano in riproduzione da aggiungere.", 'error');
@@ -823,7 +848,7 @@
             document.getElementById('add-to-playlist-modal').classList.add('hidden');
         }
 
-        // NUOVA FUNZIONE: Aggiunta brano a Playlist
+        // Aggiunta brano a Playlist
         window.addTrackToPlaylist = function(playlistId) {
             if (!currentTrackData) return;
             
@@ -880,7 +905,9 @@
         }
 
         window.enterImmersiveMode = function() {
-            if (currentTrackData === null) { playTrack(AURA_MAP[0].id); } 
+            if (currentTrackData === null && AURA_MAP.length > 0) { playTrack(AURA_MAP[0].id); } 
+            else if (AURA_MAP.length === 0) { showToast("Nessuna traccia disponibile.", 'error'); return; }
+
             document.getElementById('immersive-mode').classList.remove('hidden');
             document.getElementById('immersive-mode').classList.add('flex');
             document.body.style.overflow = 'hidden'; 
@@ -919,12 +946,14 @@
         
         function renderLikedTracks() {
             const likedTracksList = document.getElementById('liked-tracks-list');
-            if (likedTracks.size === 0) {
+            
+            // Filtra solo le tracce che esistono in AURA_MAP
+            const existingLikedTracks = Array.from(likedTracks).map(trackId => AURA_MAP.find(t => t.id === trackId)).filter(t => t);
+
+            if (existingLikedTracks.length === 0) {
                 likedTracksList.innerHTML = '<p class="text-center text-gray-500">Nessun brano salvato. Metti un cuore ❤️!</p>';
             } else {
-                const tracksHtml = Array.from(likedTracks).map(trackId => {
-                    const track = AURA_MAP.find(t => t.id === trackId);
-                    return track ? `
+                const tracksHtml = existingLikedTracks.map(track => `
                         <div onclick="playTrack(${track.id})" class="flex items-center justify-between p-2 hover:bg-white/10 rounded-lg transition cursor-pointer">
                             <div class="flex items-center space-x-3">
                                 <img src="${track.cover}" alt="${track.title} Cover" class="w-10 h-10 rounded-md object-cover">
@@ -933,12 +962,11 @@
                                     <p class="text-xs text-gray-400">${track.artist}</p>
                                 </div>
                             </div>
-                            <button onclick="event.stopPropagation(); toggleLike();" class="text-red-400 p-2 rounded-full hover:bg-white/10 transition">
+                            <button onclick="event.stopPropagation(); toggleLike(${track.id});" class="text-red-400 p-2 rounded-full hover:bg-white/10 transition">
                                 <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
                             </button>
                         </div>
-                    ` : '';
-                }).join('');
+                `).join('');
                 likedTracksList.innerHTML = tracksHtml;
             }
             lucide.createIcons();
@@ -946,12 +974,14 @@
         
         function renderMoodGrid() {
             const moodGrid = document.getElementById('mood-grid');
-            const moods = Object.keys(MOOD_STYLES);
+            
+            // Estrai i mood dinamici da AURA_MAP
+            const uniqueMoods = [...new Set(AURA_MAP.map(t => t.mood))].filter(m => m in MOOD_STYLES);
             
             const allStyle = activeFilter === 'All' ? "accent-bg accent-border text-white" : "bg-gray-800/40 border-gray-700 text-gray-400";
             let html = `<div onclick="setMoodFilter('All')" class="p-4 rounded-xl text-center font-bold border ${allStyle} cursor-pointer transition shadow-lg hover:shadow-lg">All</div>`; 
 
-            html += moods.map(mood => {
+            html += uniqueMoods.map(mood => {
                 const style = MOOD_STYLES[mood];
                 const activeStyle = activeFilter === mood ? style.replace('/50', '/70').replace('/40', '/70') + ' border-white text-white' : style;
                 return `
@@ -1037,21 +1067,56 @@
             }
         }
 
+        // --- NUOVA FUNZIONE: Carica i dati da GitHub (MANIFESTO JSON) ---
+        async function fetchTracks() {
+            const jsonUrl = GITHUB_RAW_BASE + "tracks.json";
+            try {
+                const response = await fetch(jsonUrl);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                // Mappa i dati JSON nel formato AURA_MAP, aggiungendo ID, cover e src
+                AURA_MAP = data.map((track, index) => ({
+                    // L'ID viene generato in base all'ordine nel file JSON
+                    id: index + 1, 
+                    ...track,
+                    cover: getCoverUrl(track.title),
+                    src: [getAudioUrl(track.title)],
+                    // I colori devono essere definiti nel JSON, altrimenti usa un fallback
+                    color: track.color || '#f99428', 
+                    rgb: track.rgb || '249 148 40', 
+                }));
+                
+                showToast(`Caricate ${AURA_MAP.length} tracce dal manifesto.`, 'success');
 
-        function initializeAppContent() {
-            // 1. Carica i dati salvati
+            } catch (error) {
+                console.error("Errore nel caricamento del manifesto tracce (tracks.json):", error);
+                showToast("Errore: Impossibile caricare le tracce dal manifesto. Verifica tracks.json.", 'error');
+            }
+        }
+
+
+        async function initializeAppContent() {
+            // 1. Carica i dati salvati localmente
             loadLocalData();
 
-            // 2. Ottieni gli elementi DOM
+            // 2. Carica le tracce da GitHub
+            await fetchTracks();
+
+            // 3. Ottieni gli elementi DOM
             getDOMElements();
 
-             // 3. Inizializza con il tema Arancione Zucca
-            updateAmbientLight('#f99428', '249 148 40'); 
+             // 4. Inizializza con il tema Arancione Zucca (o il tema della prima traccia)
+            const initialHex = AURA_MAP.length > 0 ? AURA_MAP[0].color : '#f99428';
+            const initialRgb = AURA_MAP.length > 0 ? AURA_MAP[0].rgb : '249 148 40';
+            updateAmbientLight(initialHex, initialRgb); 
             
-            // 4. Mostra la sezione 'music'
+            // 5. Mostra la sezione 'music', che ora renderizzerà i contenuti caricati
             showSection('music'); 
             
-            // 5. Imposta il volume
+            // 6. Imposta il volume
             setVolume(currentVolume); 
         }
 
