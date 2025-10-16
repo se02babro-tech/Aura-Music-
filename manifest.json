@@ -1,0 +1,12 @@
+{
+  "background_color": "#000000",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Aura",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Dev.aura",
+  "start_url": "/",
+  "theme_color": "#000000",
+  "description": "By Horizon"
+}
