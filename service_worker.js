@@ -65,8 +65,55 @@ self.addEventListener('activate', (event) => {
 // 4. Evento 'fetch': Strategia di Caching (Cache-First)
 // =================================================================
 self.addEventListener('fetch', (event) => {
+    self.addEventListener('fetch', (event) => {
+    const url = event.request.url;
+
+    // 🚫 Non intercettare richieste verso YouTube o domini collegati
+    if (
+        url.includes('youtube.com') ||
+        url.includes('ytimg.com') ||
+        url.includes('googlevideo.com')
+    ) {
+        // Lascia che il browser gestisca queste richieste direttamente
+        return;
+    }
+
     // Escludiamo le chiamate ai manifest JSON esterni (per averli sempre aggiornati)
     // e i video (che possono essere molto pesanti).
+    if (event.request.url.includes('tracks.json') || 
+        event.request.url.includes('User_videos.json') || 
+        event.request.destination === 'video') {
+        
+        // Network-only per file remoti e contenuti dinamici
+        return event.respondWith(fetch(event.request));
+    }
+
+    // Strategia Cache-First per tutti gli altri file (App Shell, CSS, JS)
+    event.respondWith(
+        caches.match(event.request)
+            .then((response) => {
+                if (response) {
+                    return response;
+                }
+                
+                return fetch(event.request).then(
+                    (response) => {
+                        if (!response || response.status !== 200 || response.type !== 'basic') {
+                            return response;
+                        }
+
+                        const responseToCache = response.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseToCache);
+                        });
+
+                        return response;
+                    }
+                );
+            })
+    );
+});
+
     if (event.request.url.includes('tracks.json') || 
         event.request.url.includes('User_videos.json') || 
         event.request.destination === 'video') {
