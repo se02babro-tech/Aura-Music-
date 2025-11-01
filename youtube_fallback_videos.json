@@ -1,0 +1,17 @@
+{
+  "items": [
+    {
+      "id": "test123",
+      "snippet": {
+        "title": "Brano di test offline",
+        "channelTitle": "Offline Fallback",
+        "thumbnails": {
+          "medium": { "url": "https://via.placeholder.com/320x180?text=Offline+Video" }
+        }
+      },
+      "contentDetails": {
+        "duration": "PT3M21S"
+      }
+    }
+  ]
+}
