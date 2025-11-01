@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura Music - Esperienza Immersiva</title>
+    <title>Aura Music - YouTube Client (Grafica e API Fix V5)</title>
+    
+    <link rel="icon" href="https://via.placeholder.com/192x192">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192x192">
+    <meta name="theme-color" content="#171717">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    
+    <script src="https://www.youtube.com/iframe_api"></script> 
 
     <style>
-        /* Variabili di Tema Dinamiche */
+        /* Variabili di Tema Dinamiche (Essenziali per la Grafica) */
         :root {
             --ryzn-color-hex: #f99428; /* Arancione di default */
             --ryzn-color-rgb: 249 148 40;
@@ -23,10 +29,10 @@
         .accent-bg { background-color: var(--ryzn-color-hex); }
         .accent-border { border-color: var(--ryzn-color-hex); }
         .accent-hover:hover { filter: brightness(1.2); }
-        .shadow-ryzn-accent\/30 { box-shadow: 0 10px 15px -3px rgba(var(--ryzn-color-rgb), 0.3), 0 4px 6px -2px rgba(var(--ryzn-color-rgb), 0.1); }
-        .fill-ryzn-accent\/30 { fill: rgba(var(--ryzn-color-rgb), 0.3); }
+        .shadow-ryzn-accent\/30 { box-shadow: 0 10px 15px -3px rgba(var(--ryzn-color-rgb) / 0.3), 0 4px 6px -2px rgba(var(--ryzn-color-rgb) / 0.1); }
+        .fill-ryzn-accent\/30 { fill: rgba(var(--ryzn-color-rgb) / 0.3); }
 
-        /* Effetto Glassmorphism (Depth-Glass) */
+        /* Effetto Glassmorphism (Depth-Glass) - FONDAMENTALE PER LA GRAFICA */
         .depth-glass {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
@@ -34,13 +40,9 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Stile Logo con Gradiente Dinamico (NUOVO STILE LOGO) */
-        .logo-aura {
-            font-size: 2.5rem;
-            font-weight: 900;
-        }
+        /* Stile Logo con Gradiente Dinamico */
+        .logo-aura { font-size: 2.5rem; font-weight: 900; }
         .logo-text {
-            /* Applica Gradiente al Testo */
             background: linear-gradient(45deg, var(--ryzn-color-hex), #ffc878);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -48,14 +50,14 @@
             text-fill-color: transparent;
         }
         
-        /* Contenitore Principale e Sezioni */
+        /* Contenitore Principale e Sezioni (Animazioni di Transizione) */
         body {
             background-color: var(--ryzn-bg-color);
             color: white;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-bottom: 96px; /* Spazio per la player-bar */
+            padding-bottom: 96px; 
             overflow-x: hidden;
         }
 
@@ -70,7 +72,7 @@
         .section-page {
             display: none;
             opacity: 0;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.5s ease; /* Transizione per le sezioni */
         }
         .section-page.active {
             display: block;
@@ -92,11 +94,16 @@
             right: 0;
             height: 80px;
             z-index: 100;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out; /* Animazione di entrata */
+        }
+        .player-bar.active {
+             transform: translateY(0);
         }
         
         /* Modal di Ricerca e Autenticazione */
         .modal {
-            animation: fadeIn 0.3s ease-out;
+            animation: fadeIn 0.3s ease-out; /* Animazione Modal */
         }
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -111,11 +118,11 @@
             z-index: 200;
         }
         
-        /* NUOVI STILI PER BOLLE STORIE (Instagram Style) */
+        /* Stili per Bolle Storie (Instagram Style) */
         .story-bubble {
-            width: 70px; /* Dimensioni fisse per la bolla */
+            width: 70px; 
             height: 70px;
-            padding: 2px; /* Spazio per l'anello */
+            padding: 2px; 
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -123,36 +130,58 @@
             cursor: pointer;
             transition: transform 0.2s ease;
             position: relative;
-            /* L'anello "Unwatched" è definito dal background:linear-gradient nel JS */
             flex-shrink: 0;
         }
         .story-bubble-inner {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            background-color: var(--ryzn-bg-color); /* Sfondo scuro interno */
+            background-color: var(--ryzn-bg-color); 
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem; /* Dimensione Emoji */
-            border: 3px solid var(--ryzn-bg-color); /* Anello interno per separare dall'esterno */
+            font-size: 2rem; 
+            border: 3px solid var(--ryzn-bg-color); 
         }
         .story-bubble-watched {
-            background: rgba(255, 255, 255, 0.1); /* Anello grigio "Watched" */
+            background: rgba(255, 255, 255, 0.1); 
         }
         /* Nasconde la scrollbar orizzontale */
         .scrollbar-hide {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;  
+            scrollbar-width: none;  
         }
         .scrollbar-hide::-webkit-scrollbar {
-            display: none;  /* Chrome, Safari and Opera */
+            display: none;  
+        }
+        
+        /* YouTube Player Nascosto per Audio */
+        #yt-player-container {
+            position: absolute;
+            top: -9999px; 
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            opacity: 0;
+        }
+        /* Nuove classi per la Mood Grid */
+        .mood-item {
+             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+        }
+        .mood-item.active {
+             box-shadow: 0 10px 15px -3px rgba(var(--ryzn-color-rgb) / 0.5), 0 4px 6px -2px rgba(var(--ryzn-color-rgb) / 0.1);
         }
     </style>
 </head>
 <body class="ryzn-bg">
 
     <div id="toast-container"></div>
+    
+    <div id="yt-player-container">
+        <div id="ytPlayer"></div>
+    </div>
+
 
     <div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4 modal">
         <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
@@ -173,35 +202,16 @@
     <div id="search-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex flex-col p-4 modal">
         <div class="w-full max-w-2xl mx-auto depth-glass bg-ryzn-bg p-6 rounded-2xl shadow-2xl relative">
             <div class="flex items-center mb-4">
-                <input type="text" id="search-input" oninput="performSearch()" placeholder="Cerca brani, artisti o mood..." class="flex-grow p-3 rounded-l-lg bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none">
+                <input type="text" id="search-input" oninput="performSearch(true)" placeholder="Cerca brani, artisti o mood..." class="flex-grow p-3 rounded-l-lg bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none">
                 <button onclick="performSearch()" class="p-3 accent-bg rounded-r-lg accent-hover"><i data-lucide="search" class="w-6 h-6"></i></button>
             </div>
             <div id="search-results" class="max-h-96 overflow-y-auto space-y-3 p-2">
-                <p class="text-center text-gray-500">Inizia a digitare per cercare.</p>
+                <p class="text-center text-gray-500">Inizia a digitare per cercare musica su YouTube.</p>
             </div>
             <button onclick="closeSearchModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
         </div>
     </div>
-
-    <div id="upload-story-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
-        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
-            <h3 class="text-xl font-bold mb-4 accent-text">Carica Nuova Storia</h3>
-            <p class="text-xs text-gray-400 mb-3">Solo gli amministratori (Admin) possono pubblicare storie sul manifesto remoto.</p>
-
-            <textarea id="story-text-input" placeholder="La tua esperienza o mood... (Max 200 caratteri)" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-3 h-24" maxlength="200"></textarea>
-            
-            <select id="story-track-select" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-4">
-                <option value="" disabled selected>Scegli una Canzone...</option>
-                </select>
-            
-            <div class="flex justify-end space-x-3">
-                <button onclick="closeUploadStoryModal()" class="px-4 py-2 text-gray-400 hover:text-white transition rounded-lg">Annulla</button>
-                <button onclick="uploadStory()" class="px-4 py-2 accent-bg rounded-lg text-white font-bold accent-hover transition">Carica (Admin)</button>
-            </div>
-            <button onclick="closeUploadStoryModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
-        </div>
-    </div>
-
+    
     <div id="create-playlist-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
         <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
             <h3 class="text-xl font-bold mb-4 accent-text">Crea Nuova Sessione</h3>
@@ -225,7 +235,6 @@
         </div>
     </div>
 
-
     <div id="immersive-mode" onclick="exitImmersiveMode()" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-[150] hidden flex-col items-center justify-center p-6 modal">
         <div class="absolute top-6 left-6 flex items-center space-x-4">
             <button onclick="exitImmersiveMode()" class="text-white/80 hover:text-white transition"><i data-lucide="chevron-down" class="w-8 h-8"></i></button>
@@ -233,7 +242,9 @@
         </div>
         
         <div class="flex flex-col items-center space-y-12 max-w-lg w-full">
-            <img id="immersive-cover" src="" alt="Album Cover" class="w-full aspect-square rounded-3xl shadow-2xl shadow-ryzn-accent/30 object-cover">
+            <div id="immersive-yt-player-container" class="w-full aspect-video rounded-3xl shadow-2xl shadow-ryzn-accent/30 overflow-hidden bg-black flex items-center justify-center">
+                 <img id="immersive-cover" src="" alt="Album Cover" class="w-full h-full object-cover">
+            </div>
             
             <div class="text-center">
                 <h3 id="immersive-title" class="text-4xl font-extrabold truncate">Titolo Brano</h3>
@@ -257,14 +268,14 @@
                 <button onclick="event.stopPropagation(); skipForward()" class="text-white/70 hover:text-white transition">
                     <i data-lucide="skip-forward" class="w-8 h-8 fill-current"></i>
                 </button>
+                <button onclick="event.stopPropagation(); toggleLike()" id="like-button-immersive" class="text-white/70 hover:text-red-400 transition">
+                    <i data-lucide="heart" class="w-6 h-6 fill-current"></i>
+                </button>
             </div>
 
             <div class="flex items-center space-x-4 w-full justify-center">
-                 <button onclick="event.stopPropagation(); toggleLike()" id="like-button-immersive" class="text-white/70 hover:text-red-400 transition">
-                    <i data-lucide="heart" class="w-6 h-6 fill-current"></i>
-                </button>
                 <i data-lucide="volume" class="w-6 h-6 text-white/70"></i>
-                <input type="range" id="volume-slider-immersive" min="0" max="1" step="0.01" value="0.8" oninput="setVolume(this.value)" class="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-bg">
+                <input type="range" id="volume-slider-immersive" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-32 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-bg">
             </div>
         </div>
     </div>
@@ -299,6 +310,7 @@
             <i data-lucide="play" class="w-20 h-20 fill-current"></i>
         </button>
     </div>
+
     <div class="container-app">
         
         <header class="flex justify-between items-center mb-8">
@@ -327,7 +339,7 @@
                  <button onclick="openSearchModal()" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
                     <i data-lucide="search" class="w-6 h-6"></i>
                  </button>
-                 <button id="auth-button-header" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
+                 <button id="auth-button-header" onclick="loggedInUser ? showSection('profile') : openAuthModal('login')" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
                     <i data-lucide="user" class="w-6 h-6"></i>
                  </button>
             </div>
@@ -340,8 +352,9 @@
             <div id="mood-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
                 </div>
             
-            <h3 class="text-xl font-semibold mb-4 text-gray-300">Brani in Evidenza</h3>
+            <h3 class="text-xl font-semibold mb-4 text-gray-300">Brani in Evidenza (YouTube Trending)</h3>
             <div id="discover-results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                <p class="text-center text-gray-500 col-span-full">Caricamento brani di tendenza da YouTube...</p>
                 </div>
         </section>
 
@@ -418,19 +431,26 @@
         </section>
 
         </div> 
+    
     <div onclick="enterImmersiveMode()" class="player-bar depth-glass bg-ryzn-bg/80 border-t border-white/10 flex items-center justify-between px-4 sm:px-8 cursor-pointer">
         
         <div class="flex items-center space-x-4 w-1/3">
-            <img id="player-cover" src="" alt="Album Cover" class="w-12 h-12 rounded-md object-cover">
+            <img id="player-cover" src="https://via.placeholder.com/64" alt="Album Cover" class="w-12 h-12 rounded-md object-cover">
             <div class="truncate">
                 <p id="player-title" class="font-bold truncate text-sm">Nessun Brano</p>
-                <p id="player-artist" class="text-xs text-gray-400 truncate">Artista</p>
+                <p id="player-artist" class="text-xs text-gray-400 truncate">Tocca per iniziare</p>
             </div>
         </div>
 
         <div class="flex items-center justify-center space-x-4 w-1/3">
+            <button onclick="event.stopPropagation(); skipBackward()" class="text-white/70 hover:text-white transition hidden md:block">
+                 <i data-lucide="skip-back" class="w-5 h-5 fill-current"></i>
+            </button>
             <button onclick="event.stopPropagation(); togglePlayPause()" class="p-2 accent-bg rounded-full hover:scale-105 transition shadow-lg shadow-ryzn-accent/30">
                 <i id="play-icon" data-lucide="play" class="w-6 h-6 text-ryzn-bg fill-ryzn-bg"></i>
+            </button>
+            <button onclick="event.stopPropagation(); skipForward()" class="text-white/70 hover:text-white transition hidden md:block">
+                 <i data-lucide="skip-forward" class="w-5 h-5 fill-current"></i>
             </button>
         </div>
 
@@ -443,7 +463,7 @@
             </button>
             
             <i data-lucide="volume" class="w-5 h-5 text-white/70 hidden lg:block"></i>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.8" oninput="setVolume(this.value)" class="w-20 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-bg hidden lg:block">
+            <input type="range" id="volume-slider" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-20 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-bg hidden lg:block">
         </div>
 
         <div id="progress-bar-container" class="absolute bottom-0 left-0 w-full h-1 bg-transparent cursor-pointer">
@@ -453,371 +473,345 @@
 
 
     <script>
-        // --- Dati & Configurazione ---
-        // PERCORSO AGGIUSTATO PER PUNTARE ALLA RADICE RAW DEL REPOSITORY
+        // --- CONFIGURAZIONE YOUTUBE ---
+        const YOUTUBE_API_KEY = "AIzaSyBdSCl8vmkgc3rqg6BrLmWEzcxrIRlqARg"; 
+        const YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3/";
+        
+        // --- Dati & Configurazione Locali ---
         const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/"; 
         const STORIES_MANIFEST_URL = GITHUB_RAW_BASE + "User_videos.json"; 
-        const TRACKS_MANIFEST_URL = GITHUB_RAW_BASE + "tracks.json";
         
-        let AURA_MAP = []; 
+        let AURA_MAP = []; // Contiene i metadati dei brani YouTube
+        
+        // --- MODIFICATO: Stili e Icone per Mood Grid Migliorata (Come richiesto) ---
         const MOOD_STYLES = {
-            "Spettrale": "bg-[#5C0601]/50 border-red-800 text-red-300",
-            "Party": "bg-yellow-900/40 border-yellow-500 text-yellow-300",
-            "Ambient": "bg-green-900/40 border-green-500 text-green-300",
-            "Chill": "bg-blue-900/40 border-blue-500 text-blue-300"
+            "Spettrale": "bg-red-900/40 border-red-700 text-red-300",
+            "Party": "bg-yellow-900/40 border-yellow-700 text-yellow-300",
+            "Ambient": "bg-green-900/40 border-green-700 text-green-300",
+            "Chill": "bg-blue-900/40 border-blue-700 text-blue-300"
         };
+        
         const ALL_MOODS = Object.keys(MOOD_STYLES);
+        const YOUTUBE_MOOD_QUERIES = {
+            "Spettrale": "Halloween music spooky",
+            "Party": "best party songs hits",
+            "Ambient": "deep ambient music focus",
+            "Chill": "lofi hip hop beats"
+        };
+        // -------------------------------------------------------------
         
         let currentTrackData = null;
-        let currentHowl = null;
+        let ytPlayer = null; // Oggetto del Player IFrame di YouTube
+        let isPlayerReady = false; // Nuovo flag di stato per il player
+
         let likedTracks = new Set();
         let userPlaylists = [];
         let remoteStories = []; 
-        let activeFilter = 'All';
+        let activeFilter = 'Trending'; // Filtro di default per YouTube
         let isLooping = false;
         let loggedInUser = null;
-        const ADMIN_EMAIL = "admin@aura.music"; 
-
-        let progressBar, progressBarImmersive, playIcon, immersivePlayIcon, playerTitle, playerArtist, playerCover, immersiveCover, immersiveTitle, immersiveArtist, likeButton, vibeScoreDisplay, volumeSlider, volumeSliderImmersive, progressBarContainer, progressBarImmersiveContainer, loopButtonBar, loopButtonImmersive;
+        
+        let progressBar, progressBarImmersive, playIcon, immersivePlayIcon, playerTitle, playerArtist, playerCover, immersiveCover, immersiveTitle, immersiveArtist, likeButton, vibeScoreDisplay, volumeSlider, volumeSliderImmersive, progressBarContainer, progressBarImmersiveContainer, loopButtonImmersive, playerBar;
 
         let progressInterval = null;
-        let currentVolume = 0.8;
+        let currentVolume = 80; // Volume in percentuale (0-100) per YouTube API
         let trackIdToAdd = null; 
         
-        // NUOVI DATI PER LE STORIE VIDEO
+        // Dati Storie Video
         const HALLOWEEN_EMOJIS = ["🎃", "👻", "🦇", "🕷️", "🕸️", "🔮", "⚰️", "💀", "🕯️", "🧟"];
-        const STORY_COLORS = ["#8B0000", "#4B0082", "#006400", "#FF8C00", "#2F4F4F"]; // Varianti scure
+        const STORY_COLORS = ["#8B0000", "#4B0082", "#006400", "#FF8C00", "#2F4F4F"];
         let currentStoryIndex = 0;
         let storyVideoPlayer;
         let storyProgressInterval = null;
-        let storyTimer;
-        let storyWatchedStatus = new Set(); // Per tenere traccia delle storie viste
+        let storyWatchedStatus = new Set(); 
+        
+        // ====================================================================
+        // FUNZIONI YOUTUBE PLAYER API (Punto Critico)
+        // ====================================================================
 
-        
-        // --- Funzioni Helper ---
-        // I percorsi per cover e audio sono corretti, puntano alle sottodirettory
-        function getCoverUrl(title) {
-            const filename = title.replace(/[^\w\s\-\(\)]/g, '').replace(/\s+/g, '_'); 
-            return GITHUB_RAW_BASE + `Covers/${filename}.jpg`; 
+        // Funzione chiamata automaticamente quando la libreria IFrame di YouTube è pronta
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('ytPlayer', {
+                height: '390', 
+                width: '640', 
+                videoId: '', 
+                playerVars: {
+                    'controls': 0, 
+                    'disablekb': 1,
+                    'modestbranding': 1,
+                    'rel': 0,
+                    'showinfo': 0,
+                    'iv_load_policy': 3,
+                    'playsinline': 1,
+                    'enablejsapi': 1,
+                    'origin': window.location.origin
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+        window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady; // Assicura l'accessibilità globale
+
+        // FIX CRITICO: Eseguito solo quando il player è garantito come pronto.
+        function onPlayerReady(event) {
+            console.log("YouTube Player Ready.");
+            isPlayerReady = true; // Imposta il flag
+
+            setVolume(currentVolume); 
+            
+            // Tenta di caricare il primo brano se i dati sono già pronti.
+            if (AURA_MAP.length > 0 && !currentTrackData) {
+                 currentTrackData = AURA_MAP[0];
+            }
+
+            if (currentTrackData) {
+                 // **CHIAMATA SICURA CHE RISOLVE L'ERRORE ORIGINALE**
+                 ytPlayer.cueVideoById(currentTrackData.youtubeId);
+                 updateUI(currentTrackData); 
+            }
         }
 
-        function getAudioUrl(title) {
-            const filename = title.replace(/[^\w\s\-\(\)]/g, '').replace(/\s+/g, '_');
-            return GITHUB_RAW_BASE + `audio/${filename}.ogg`; 
+        function onPlayerStateChange(event) {
+            const state = event.data;
+            if (state === YT.PlayerState.PLAYING) {
+                togglePlayIcon(false); 
+                setupProgressInterval();
+                updateMediaSession();
+                playerBar.classList.add('active'); 
+            } else if (state === YT.PlayerState.PAUSED) {
+                togglePlayIcon(true); 
+                clearInterval(progressInterval);
+                updateMediaSession();
+            } else if (state === YT.PlayerState.ENDED) {
+                clearInterval(progressInterval);
+                if (isLooping) {
+                    ytPlayer.seekTo(0, true);
+                    ytPlayer.playVideo();
+                } else {
+                    skipForward(); 
+                }
+            } 
         }
-        
-        function updateAmbientLight(hexColor, rgbColor) {
-            if (hexColor) {
-                document.documentElement.style.setProperty('--ryzn-color-hex', hexColor);
+
+        // ====================================================================
+        // FUNZIONI DI GESTIONE DATI E API (DINAMICHE)
+        // ====================================================================
+
+        /**
+         * Carica i brani da YouTube in base al filtro/query.
+         */
+        async function fetchTracks(filter = 'Trending') {
+            const resultsContainer = document.getElementById('discover-results');
+            // Questo è un placeholder UI temporaneo
+            resultsContainer.innerHTML = `<p class="text-center text-gray-400 col-span-full"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Caricamento brani YouTube... (${filter})</p>`;
+            lucide.createIcons();
+            
+            let url;
+            let resultsTitle = 'Brani di Tendenza (YouTube)';
+            
+            if (filter === 'Trending') {
+                url = `${YOUTUBE_API_BASE_URL}videos?part=snippet,contentDetails&chart=mostPopular&videoCategoryId=10&regionCode=IT&maxResults=24&key=${YOUTUBE_API_KEY}`;
+            } else {
+                const query = YOUTUBE_MOOD_QUERIES[filter] || 'music official video';
+                resultsTitle = `Mood: ${filter}`;
+                url = `${YOUTUBE_API_BASE_URL}search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=24&key=${YOUTUBE_API_KEY}`;
             }
-            if (rgbColor) {
-                document.documentElement.style.setProperty('--ryzn-color-rgb', rgbColor);
+
+            // Aggiorna titolo della sezione
+            const sectionTitleElement = document.querySelector('#music-section h3:last-of-type');
+            if (sectionTitleElement) {
+                sectionTitleElement.textContent = resultsTitle;
+            }
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`YouTube API Error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                const results = data.items
+                    .filter(item => item.id && (item.id.videoId || item.id))
+                    .map((item, index) => {
+                        const videoId = item.id.videoId || item.id;
+                        const randomVibe = Math.floor(Math.random() * 100) + 1;
+                        const defaultColor = '#f99428';
+                        const defaultRgb = '249 148 40';
+
+                        return {
+                            id: videoId, 
+                            youtubeId: videoId,
+                            title: item.snippet.title,
+                            artist: item.snippet.channelTitle,
+                            cover: item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : 'https://via.placeholder.com/64', 
+                            mood: filter === 'Trending' ? 'Trending' : filter, 
+                            vibe: randomVibe, 
+                            color: defaultColor, 
+                            rgb: defaultRgb, 
+                        };
+                    });
+                
+                AURA_MAP = results;
+                
+                if (AURA_MAP.length > 0 && currentTrackData === null) {
+                    // Carica il primo brano solo la prima volta
+                     currentTrackData = AURA_MAP[0]; 
+                }
+
+                if (isPlayerReady && currentTrackData) {
+                    // Se il player è pronto, assicurati che il brano sia caricato
+                     ytPlayer.cueVideoById(currentTrackData.youtubeId);
+                     updateUI(currentTrackData);
+                } else if (currentTrackData) {
+                    // Se il player non è pronto, aggiorna l'UI in anticipo
+                    updateUI(currentTrackData);
+                }
+
+                renderDiscoverResults(filter); 
+                
+            } catch (error) {
+                console.error("Errore nel caricamento dei brani da YouTube API:", error);
+                resultsContainer.innerHTML = `<p class="text-center text-red-500 col-span-full">Errore: Impossibile caricare i brani da YouTube. Controlla la chiave API e la quota. (Msg: ${error.message})</p>`;
+                AURA_MAP = [];
             }
         }
-        
-        function getTrackElement(track) {
-            const isLiked = likedTracks.has(track.id);
-            return `
-                <div class="depth-glass rounded-xl p-3 hover:bg-white/10 transition cursor-pointer group" onclick="playTrack(${track.id})">
-                    <div class="relative">
-                        <img src="${track.cover}" alt="${track.title} Cover" class="w-full aspect-square rounded-lg object-cover">
-                        <button onclick="event.stopPropagation(); toggleLike(${track.id})" class="absolute top-2 right-2 p-2 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition duration-300 ${isLiked ? 'text-red-400 opacity-100' : 'text-white/70 hover:text-red-400'}">
-                            <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
-                        </button>
-                    </div>
-                    <div class="mt-3">
-                        <p class="font-bold truncate">${track.title}</p>
-                        <p class="text-sm text-gray-400 truncate">${track.artist}</p>
-                        <div class="text-xs text-gray-500 mt-1 flex justify-between items-center">
-                            <span>Mood: ${track.mood || 'N/D'}</span>
-                            <span class="accent-text font-bold">${track.vibe}/100</span>
+
+        /**
+         * Esegue la ricerca tramite YouTube API
+         */
+        window.performSearch = async function(isLiveInput = false) {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const resultsContainer = document.getElementById('search-results');
+            
+            if (query.length < 3 && !isLiveInput) {
+                resultsContainer.innerHTML = '<p class="text-center text-gray-500">Digita almeno 3 caratteri e premi Cerca.</p>';
+                return;
+            } else if (query.length < 3 && isLiveInput) {
+                 resultsContainer.innerHTML = '<p class="text-center text-gray-500">Continua a digitare...</p>';
+                return;
+            }
+            
+            resultsContainer.innerHTML = '<p class="text-center text-gray-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Ricerca in corso...</p>';
+            lucide.createIcons();
+
+            const url = `${YOUTUBE_API_BASE_URL}search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=15&key=${YOUTUBE_API_KEY}`;
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const data = await response.json();
+
+                const results = data.items.map(item => ({
+                     id: item.id.videoId, 
+                     youtubeId: item.id.videoId,
+                     title: item.snippet.title,
+                     artist: item.snippet.channelTitle,
+                     cover: item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : 'https://via.placeholder.com/64',
+                     mood: 'Search Result',
+                     vibe: Math.floor(Math.random() * 100) + 1,
+                     color: '#00bcd4', 
+                     rgb: '0 188 212',
+                }));
+
+                if (results.length === 0) {
+                    resultsContainer.innerHTML = '<p class="text-center text-gray-500">Nessun brano trovato su YouTube.</p>';
+                    return;
+                }
+
+                const newIds = new Set(results.map(r => r.id));
+                AURA_MAP = [
+                    ...results, 
+                    ...AURA_MAP.filter(track => !newIds.has(track.id))
+                ];
+                
+                resultsContainer.innerHTML = results.map(track => `
+                    <div onclick="playTrack('${track.id}'); closeSearchModal()" class="flex items-center space-x-4 p-3 hover:bg-white/10 rounded-lg transition cursor-pointer">
+                        <img src="${track.cover}" alt="Cover" class="w-12 h-12 rounded-md object-cover">
+                        <div>
+                            <p class="font-semibold">${track.title}</p>
+                            <p class="text-sm text-gray-400">${track.artist}</p>
                         </div>
                     </div>
-                </div>
-            `;
-        }
-
-        // --- Funzioni di Salvataggio e Caricamento Locale ---
-
-        function saveLocalData() {
-            try {
-                localStorage.setItem('aura_liked_tracks', JSON.stringify(Array.from(likedTracks)));
-                localStorage.setItem('aura_user_playlists', JSON.stringify(userPlaylists));
-                localStorage.setItem('aura_logged_in_user', JSON.stringify(loggedInUser));
-                localStorage.setItem('aura_story_watched', JSON.stringify(Array.from(storyWatchedStatus)));
-            } catch (e) {
-                console.error("Errore nel salvataggio locale:", e);
-                showToast("Errore: Impossibile salvare i dati localmente.", 'error');
+                `).join('');
+                
+            } catch (error) {
+                console.error("Errore durante la ricerca YouTube:", error);
+                resultsContainer.innerHTML = '<p class="text-center text-red-500">Errore API: verifica la chiave e la quota.</p>';
             }
-        }
-
-        function loadLocalData() {
-            try {
-                const savedTracks = localStorage.getItem('aura_liked_tracks');
-                if (savedTracks) {
-                    likedTracks = new Set(JSON.parse(savedTracks));
-                }
-                const savedPlaylists = localStorage.getItem('aura_user_playlists');
-                if (savedPlaylists) {
-                    userPlaylists = JSON.parse(savedPlaylists);
-                }
-                const savedUser = localStorage.getItem('aura_logged_in_user');
-                if (savedUser && savedUser !== 'null') {
-                    loggedInUser = JSON.parse(savedUser);
-                    updateAuthUI(loggedInUser);
-                } else {
-                    loggedInUser = null;
-                }
-                const savedWatchedStories = localStorage.getItem('aura_story_watched');
-                if (savedWatchedStories) {
-                     storyWatchedStatus = new Set(JSON.parse(savedWatchedStories).map(Number));
-                }
-            } catch (e) {
-                console.error("Errore nel caricamento locale:", e);
-                likedTracks = new Set();
-                userPlaylists = [];
-                loggedInUser = null;
-                storyWatchedStatus = new Set();
-            }
-        }
-
-
-        // --- Inizializzazione DOM e UI ---
-
-        function getDOMElements() {
-            progressBar = document.getElementById('progress-bar');
-            progressBarImmersive = document.getElementById('progress-bar-immersive');
-            playIcon = document.getElementById('play-icon');
-            immersivePlayIcon = document.getElementById('immersive-play-icon');
-            playerTitle = document.getElementById('player-title');
-            playerArtist = document.getElementById('player-artist');
-            playerCover = document.getElementById('player-cover');
-            immersiveCover = document.getElementById('immersive-cover');
-            immersiveTitle = document.getElementById('immersive-title');
-            immersiveArtist = document.getElementById('immersive-artist');
-            likeButton = document.getElementById('like-button');
-            vibeScoreDisplay = document.getElementById('vibe-score-display');
-            volumeSlider = document.getElementById('volume-slider');
-            volumeSliderImmersive = document.getElementById('volume-slider-immersive');
-            progressBarContainer = document.getElementById('progress-bar-container');
-            progressBarImmersiveContainer = document.getElementById('progress-bar-immersive-container');
-            loopButtonImmersive = document.getElementById('loop-button-immersive');
-            // NUOVO ELEMENTO
-            storyVideoPlayer = document.getElementById('story-video-player');
-            
-            if (progressBarContainer) {
-                progressBarContainer.addEventListener('click', (e) => handleSeek(e, false));
-            }
-            if (progressBarImmersiveContainer) {
-                progressBarImmersiveContainer.addEventListener('click', (e) => handleSeek(e, true));
-            }
-
-            updateAuthUI(loggedInUser);
-        }
-        
-        function updateAuthUI(user) {
-             const authButtonHeader = document.getElementById('auth-button-header');
-             const profileInfo = document.getElementById('profile-info');
-             
-             if (user) {
-                profileInfo.textContent = `Connesso come: ${user.email}`;
-                authButtonHeader.onclick = () => showSection('profile'); 
-             } else {
-                profileInfo.textContent = 'Stato: Disconnesso';
-                authButtonHeader.onclick = () => openAuthModal('login');
-             }
-             lucide.createIcons();
-        }
-        
-        window.showToast = function(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const color = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'accent-bg';
-
-            const toast = document.createElement('div');
-            toast.className = `toast depth-glass p-4 rounded-xl shadow-lg ${color} text-white mb-3 max-w-xs`;
-            toast.innerHTML = `<p class="font-semibold">${message}</p>`;
-            
-            container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 5000);
-        }
-
-        // --- Gestione Sezioni ---
-
-        window.showSection = function(sectionId) {
-            document.querySelectorAll('.section-page').forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            const targetSection = document.getElementById(`${sectionId}-section`);
-            if (targetSection) {
-                 targetSection.classList.add('active');
-            } else {
-                 return; 
-            }
-            
-            activateNavItem(sectionId);
-
-            if (sectionId === 'library') { renderLikedTracks(); }
-            if (sectionId === 'playlists') { renderPlaylists(); }
-            if (sectionId === 'stories') { renderStories(); } 
-            if (sectionId === 'music') { 
-                renderMoodGrid(); 
-                renderDiscoverResults(activeFilter); 
-            }
-
             lucide.createIcons();
         }
-        
-        function activateNavItem(sectionId) {
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            const activeItem = document.getElementById(`nav-${sectionId}`);
-            
-            if (activeItem) { activeItem.classList.add('active'); }
-        }
 
-        // --- Funzioni Player (Howler.js) ---
-        
-        function setupProgressInterval() {
-             if (progressInterval) clearInterval(progressInterval);
-             progressInterval = setInterval(updateProgress, 200);
-        }
-        
-        function updateProgress() {
-             if (currentHowl && currentHowl.playing()) {
-                const seek = currentHowl.seek() || 0;
-                const duration = currentHowl.duration();
-                const percent = (seek / duration) * 100;
-                progressBar.style.width = `${percent}%`;
-                progressBarImmersive.style.width = `${percent}%`;
-            } else if (currentHowl && !currentHowl.playing()) {
-                clearInterval(progressInterval);
-                progressInterval = null;
-            }
-        }
-
-        function togglePlayIcon(isPaused) {
-             const iconName = isPaused ? 'play' : 'pause';
-             // FIX: Aggiunto controllo per nullità
-             if (playIcon) {
-                 playIcon.setAttribute('data-lucide', iconName);
-             }
-             if (immersivePlayIcon) {
-                 immersivePlayIcon.setAttribute('data-lucide', iconName);
-             }
-             lucide.createIcons();
-        }
+        // ====================================================================
+        // FUNZIONI DI RIPRODUZIONE PRINCIPALI (YouTube) - FIX AUTOPLAY
+        // ====================================================================
 
         window.playTrack = function(trackId) {
-            if (AURA_MAP.length === 0) {
-                 showToast("Tracce in caricamento, riprova tra un attimo.", 'info'); 
+            if (!isPlayerReady) {
+                 showToast("Il player YouTube non è pronto. Riprova tra un attimo.", 'error'); 
                  return;
             }
 
             const track = AURA_MAP.find(t => t.id === trackId);
-            if (!track) {
-                showToast("Traccia non trovata.", 'error'); 
+            if (!track || !track.youtubeId) {
+                showToast("Traccia non trovata o manca l'ID video YouTube.", 'error'); 
                 return;
             }
             
-            if (currentHowl && currentTrackData && currentTrackData.id === track.id && currentHowl.playing()) {
-                return;
-            }
-
             currentTrackData = track;
             
-            if (currentHowl) {
-                currentHowl.unload();
-            }
-            
-            currentHowl = new Howl({
-                src: track.src,
-                loop: isLooping, 
-                html5: true,
-                volume: currentVolume,
-                onplay: () => {
-                    togglePlayIcon(false);
-                    setupProgressInterval();
-                    updateMediaSession();
-                },
-                onpause: () => {
-                    togglePlayIcon(true);
-                    updateMediaSession();
-                },
-                onend: () => { 
-                    if (!isLooping) {
-                        skipForward();
-                    }
-                },
-                onloaderror: (id, error) => {
-                    console.error("Errore caricamento audio:", error);
-                    showToast("Errore: Impossibile caricare l'audio. Controlla il percorso /audio.", 'error');
-                }
+            // Carica e tenta la riproduzione (può fallire per autoplay)
+            ytPlayer.loadVideoById({
+                videoId: track.youtubeId,
+                startSeconds: 0,
+                suggestedQuality: 'small'
             });
 
-            // Aggiornamento Dati PIP (Cover, Titolo, Artista)
-            playerTitle.textContent = track.title;
-            playerArtist.textContent = track.artist;
-            playerCover.src = track.cover; 
-            
-            // Aggiornamento Dati Immersive
-            immersiveTitle.textContent = track.title;
-            immersiveArtist.textContent = track.artist;
-            immersiveCover.src = track.cover;
-            
-            vibeScoreDisplay.textContent = `Vibe Score: ${track.vibe}/100`;
-
-            updateAmbientLight(track.color, track.rgb); 
-            updateLikeButton(track.id);
-            updateLoopButton(isLooping); 
-            
-            lucide.createIcons();
-
-            currentHowl.play();
-        }
-        
-        window.toggleLoop = function() {
-            isLooping = !isLooping;
-            if (currentHowl) {
-                currentHowl.loop(isLooping);
+            // Gestione del blocco autoplay (CRITICO)
+            const attemptPlay = ytPlayer.playVideo();
+            if (attemptPlay && typeof attemptPlay.catch === 'function') {
+                attemptPlay.catch(e => {
+                    console.warn("Autoplay bloccato. Richiesta interazione utente.");
+                    showToast("Tocca il pulsante PLAY per avviare la riproduzione (blocco browser).", 'error');
+                    togglePlayIcon(true); 
+                });
             }
-            updateLoopButton(isLooping);
-            showToast(isLooping ? 'Ripetizione Attiva' : 'Ripetizione Disattiva', 'info');
-        }
-
-        function updateLoopButton(isLoop) {
-            const colorClass = isLoop ? 'accent-text' : 'text-white/50';
             
-            if (loopButtonImmersive) {
-                loopButtonImmersive.className = `text-white/70 hover:text-white transition ${colorClass}`;
-            }
-        }
-        
-        window.setVolume = function(volume) {
-             currentVolume = parseFloat(volume);
-             if (currentHowl) {
-                 howl.volume(currentVolume);
-             }
-             if (volumeSlider) volumeSlider.value = currentVolume;
-             if (volumeSliderImmersive) volumeSliderImmersive.value = currentVolume;
+            updateUI(track);
+            playerBar.classList.add('active'); // Assicura che la barra appaia
         }
 
         window.togglePlayPause = function() {
-            if (currentHowl === null) {
-                if (AURA_MAP.length > 0) {
-                    playTrack(AURA_MAP[0].id); 
-                } else {
-                    showToast("Nessuna traccia caricata.", 'error');
-                }
+            if (!isPlayerReady) {
+                showToast("Il player YouTube non è pronto.", 'error'); 
                 return;
             }
-            currentHowl.playing() ? currentHowl.pause() : currentHowl.play();
+            
+            if (!currentTrackData) {
+                 if (AURA_MAP.length > 0) {
+                     playTrack(AURA_MAP[0].id);
+                 } else {
+                     showToast("Nessun brano da riprodurre. Prova a cercare qualcosa.", 'info');
+                 }
+                 return;
+            }
+            
+            const playerState = ytPlayer.getPlayerState();
+            
+            if (playerState === YT.PlayerState.PLAYING) {
+                ytPlayer.pauseVideo();
+            } else if (playerState === YT.PlayerState.PAUSED || playerState === YT.PlayerState.CUED || playerState === YT.PlayerState.BUFFERING || playerState === YT.PlayerState.UNSTARTED || playerState === YT.PlayerState.ENDED) {
+                const attemptPlay = ytPlayer.playVideo();
+                if (attemptPlay && typeof attemptPlay.catch === 'function') {
+                    attemptPlay.catch(e => {
+                        console.warn("Autoplay bloccato. Richiesta interazione utente.");
+                        showToast("Per favore, tocca di nuovo PLAY. Il browser ha bloccato l'autoplay.", 'error');
+                    });
+                }
+            } 
         }
-        
+
         window.skipForward = function() {
             if (!currentTrackData || AURA_MAP.length === 0) return;
             const currentIndex = AURA_MAP.findIndex(t => t.id === currentTrackData.id);
@@ -827,9 +821,9 @@
 
         window.skipBackward = function() {
             if (!currentTrackData || AURA_MAP.length === 0) return;
-            if (currentHowl.seek() > 3) {
-                 currentHowl.seek(0);
-                 currentHowl.play();
+            if (ytPlayer.getCurrentTime() > 3) {
+                 ytPlayer.seekTo(0, true);
+                 ytPlayer.playVideo();
                  return;
             }
             
@@ -838,9 +832,51 @@
             playTrack(AURA_MAP[prevIndex].id);
         }
         
+        window.setVolume = function(volume) {
+             currentVolume = parseInt(volume); // Riceve 0-100
+             if (isPlayerReady) {
+                 ytPlayer.setVolume(currentVolume);
+             }
+             if (volumeSlider) volumeSlider.value = currentVolume;
+             if (volumeSliderImmersive) volumeSliderImmersive.value = currentVolume;
+        }
+
+        window.toggleLoop = function() {
+            isLooping = !isLooping;
+            updateLoopButton(isLooping);
+            showToast(isLooping ? 'Ripetizione Attiva' : 'Ripetizione Disattiva', 'info');
+        }
+
+        // ====================================================================
+        // GESTIONE TEMPO / PROGRESS BAR (YouTube)
+        // ====================================================================
+
+        function setupProgressInterval() {
+             if (progressInterval) clearInterval(progressInterval);
+             progressInterval = setInterval(updateProgress, 200);
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds) || seconds < 0) return '0:00';
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${minutes}:${secs}`;
+        }
+        
+        function updateProgress() {
+             if (isPlayerReady) {
+                const currentTime = ytPlayer.getCurrentTime();
+                const duration = ytPlayer.getDuration();
+                const progress = (currentTime / duration) * 100;
+
+                if (progressBar) progressBar.style.width = `${progress}%`;
+                if (progressBarImmersive) progressBarImmersive.style.width = `${progress}%`;
+            }
+        }
+        
         function handleSeek(e, isImmersive) {
-             if (!currentHowl || !currentHowl.duration()) return;
-             
+             if (!isPlayerReady) return;
+
              const container = isImmersive ? progressBarImmersiveContainer : progressBarContainer;
              if (!container) return; 
              
@@ -848,90 +884,132 @@
              const x = e.clientX - rect.left; 
              const width = rect.width;
              const percentage = x / width;
-             const newSeek = currentHowl.duration() * percentage;
-             currentHowl.seek(newSeek);
+             const newSeek = ytPlayer.getDuration() * percentage;
+             
+             if (newSeek >= 0 && newSeek <= ytPlayer.getDuration()) {
+                 ytPlayer.seekTo(newSeek, true);
+             }
+             
              updateProgress();
              e.stopPropagation();
+        }
+
+        // ====================================================================
+        // FUNZIONI UI / MODAL / INIZIALIZZAZIONE (RIPRISTINO GRAFICO E FUNZIONALE)
+        // ====================================================================
+
+        function getDOMElements() {
+            // Player Bar
+            progressBar = document.getElementById('progress-bar');
+            playIcon = document.getElementById('play-icon');
+            playerTitle = document.getElementById('player-title');
+            playerArtist = document.getElementById('player-artist');
+            playerCover = document.getElementById('player-cover');
+            volumeSlider = document.getElementById('volume-slider');
+            progressBarContainer = document.getElementById('progress-bar-container');
+            playerBar = document.querySelector('.player-bar');
+            
+            // Immersive Player
+            progressBarImmersive = document.getElementById('progress-bar-immersive');
+            immersivePlayIcon = document.getElementById('immersive-play-icon');
+            immersiveCover = document.getElementById('immersive-cover');
+            immersiveTitle = document.getElementById('immersive-title');
+            immersiveArtist = document.getElementById('immersive-artist');
+            vibeScoreDisplay = document.getElementById('vibe-score-display');
+            volumeSliderImmersive = document.getElementById('volume-slider-immersive');
+            progressBarImmersiveContainer = document.getElementById('progress-bar-immersive-container');
+            loopButtonImmersive = document.getElementById('loop-button-immersive');
+            
+            // Storie
+            storyVideoPlayer = document.getElementById('story-video-player');
+
+            // Event Listeners per Seek
+            if (progressBarContainer) {
+                progressBarContainer.addEventListener('click', (e) => handleSeek(e, false));
+            }
+            if (progressBarImmersiveContainer) {
+                progressBarImmersiveContainer.addEventListener('click', (e) => handleSeek(e, true));
+            }
+
+            updateAuthUI(loggedInUser);
+        }
+
+        function updateUI(track) {
+            playerTitle.textContent = track.title;
+            playerArtist.textContent = track.artist;
+            playerCover.src = track.cover; 
+            
+            immersiveTitle.textContent = track.title;
+            immersiveArtist.textContent = track.artist;
+            immersiveCover.src = track.cover; 
+            
+            vibeScoreDisplay.textContent = `Vibe Score: ${track.vibe}/100`;
+
+            updateAmbientLight(track.color || '#f99428', track.rgb || '249 148 40'); 
+            updateLikeButton(track.id);
+            
+            // Forza il re-render delle icone Lucide (critico per animazioni)
+            lucide.createIcons();
+        }
+
+        function togglePlayIcon(isPaused) {
+             const iconName = isPaused ? 'play' : 'pause';
+             
+             if (playIcon) {
+                 playIcon.setAttribute('data-lucide', iconName);
+             }
+             if (immersivePlayIcon) {
+                 immersivePlayIcon.setAttribute('data-lucide', iconName);
+             }
+             lucide.createIcons(); // Importante per l'aggiornamento visivo
+        }
+
+        function updateLoopButton(isLoop) {
+            const colorClass = isLoop ? 'accent-text' : 'text-white/70';
+            
+            if (loopButtonImmersive) {
+                loopButtonImmersive.className = `text-white/70 hover:text-white transition ${colorClass}`;
+            }
         }
         
         window.enterImmersiveMode = function() {
             if (currentTrackData === null && AURA_MAP.length > 0) { playTrack(AURA_MAP[0].id); } 
             else if (AURA_MAP.length === 0) { showToast("Nessuna traccia disponibile.", 'error'); return; }
 
+            // Sposta il player YT nel contenitore visibile
+            const immersiveContainer = document.getElementById('immersive-yt-player-container');
+            if(ytPlayer && ytPlayer.a) { 
+                immersiveContainer.innerHTML = ''; 
+                immersiveContainer.appendChild(ytPlayer.a);
+                ytPlayer.a.style.width = '100%';
+                ytPlayer.a.style.height = '100%';
+            }
+
             document.getElementById('immersive-mode').classList.remove('hidden');
             document.getElementById('immersive-mode').classList.add('flex');
             document.body.style.overflow = 'hidden'; 
+            
+            // Assicura che l'icona play/pause sia aggiornata
+            togglePlayIcon(ytPlayer && ytPlayer.getPlayerState() !== YT.PlayerState.PLAYING);
             lucide.createIcons(); 
         }
 
         window.exitImmersiveMode = function() {
+             // Sposta il player YT nel contenitore nascosto
+            const hiddenContainer = document.getElementById('ytPlayer').parentNode;
+            if(ytPlayer && ytPlayer.a) { 
+                hiddenContainer.appendChild(ytPlayer.a);
+                ytPlayer.a.style.width = '1px';
+                ytPlayer.a.style.height = '1px';
+                
+                // Rimetti la copertina nel contenitore immersivo
+                const immersiveContainer = document.getElementById('immersive-yt-player-container');
+                immersiveContainer.innerHTML = `<img id="immersive-cover" src="${currentTrackData.cover}" alt="Album Cover" class="w-full h-full object-cover">`;
+            }
+
             document.getElementById('immersive-mode').classList.add('hidden');
             document.getElementById('immersive-mode').classList.remove('flex');
             document.body.style.overflow = 'auto'; 
-        }
-
-        // --- Media Session API (Widget di Notifica NATIVO) ---
-        
-        function updateMediaSession() {
-             if ('mediaSession' in navigator && currentTrackData) {
-                 
-                 navigator.mediaSession.metadata = new MediaMetadata({
-                    title: currentTrackData.title,
-                    artist: currentTrackData.artist,
-                    album: currentTrackData.mood, 
-                    artwork: [
-                        { src: currentTrackData.cover, sizes: '512x512', type: 'image/jpeg' } 
-                    ]
-                 });
-
-                 navigator.mediaSession.setActionHandler('play', () => { 
-                    currentHowl.play(); 
-                    updateMediaSession();
-                 });
-                 navigator.mediaSession.setActionHandler('pause', () => { 
-                    currentHowl.pause(); 
-                    updateMediaSession();
-                 });
-                 navigator.mediaSession.setActionHandler('nexttrack', () => { skipForward(); });
-                 navigator.mediaSession.setActionHandler('previoustrack', () => { skipBackward(); });
-                 
-                 navigator.mediaSession.setActionHandler('seekto', (details) => {
-                     currentHowl.seek(details.seekTime);
-                 });
-                 
-                 if ('setPositionState' in navigator.mediaSession) {
-                    navigator.mediaSession.setPositionState({
-                        duration: currentHowl.duration(),
-                        playbackRate: currentHowl.rate(),
-                        position: currentHowl.seek()
-                    });
-                 }
-             }
-        }
-
-        // --- Gestione Dati da GitHub (JSON Manifests) ---
-
-        async function fetchTracks() {
-            try {
-                const response = await fetch(TRACKS_MANIFEST_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                
-                AURA_MAP = data.map((track, index) => ({
-                    id: index + 1, 
-                    ...track,
-                    cover: getCoverUrl(track.title),
-                    src: [getAudioUrl(track.title)],
-                    color: track.color || '#f99428', 
-                    rgb: track.rgb || '249 148 40', 
-                }));
-                
-            } catch (error) {
-                console.error("Errore nel caricamento del manifesto tracce (tracks.json):", error);
-                showToast("Errore: Impossibile caricare le tracce dal manifesto. Controlla tracks.json.", 'error');
-            }
         }
         
         async function loadRemoteStories() {
@@ -946,20 +1024,18 @@
                 }
                 const data = await response.json();
                 
-                // Assicurati che ogni storia abbia un ID univoco (index + 1) e video_url
                 remoteStories = data.map((story, index) => ({
                     id: index + 1,
                     ...story,
-                    trackId: parseInt(story.trackId),
-                    // CORREZIONE: Mappatura del campo 'videoUrl' (dal JSON) a 'video_url' (interno)
-                    video_url: story.videoUrl || '' 
+                    trackId: story.trackId, // Stringa YouTube ID
+                    video_url: story.videoUrl || story.video_url || '' 
                 }));
             } catch (error) {
                 console.warn("Impossibile caricare storie da GitHub (User_videos.json).", error);
                 remoteStories = [];
             }
         }
-
+        
         // --- Logica Utente (Auth, Storie, Playlist, Like) ---
 
         // Autenticazione (Simulazione)
@@ -1019,8 +1095,26 @@
                  authSwitchLink.onclick = () => switchAuthMode('login');
              }
         }
+
+        function updateAuthUI(user) {
+            const authButtonHeader = document.getElementById('auth-button-header');
+            const profileInfo = document.getElementById('profile-info');
+            
+            if (user) {
+                // Utente loggato: icona utente e link al profilo
+                authButtonHeader.innerHTML = `<i data-lucide="user-check" class="w-6 h-6 accent-text"></i>`;
+                authButtonHeader.onclick = () => showSection('profile');
+                if (profileInfo) { profileInfo.textContent = `Loggato come: ${user.email}`; }
+            } else {
+                // Utente disconnesso: icona utente e link al login
+                authButtonHeader.innerHTML = `<i data-lucide="user" class="w-6 h-6"></i>`;
+                authButtonHeader.onclick = () => openAuthModal('login');
+                if (profileInfo) { profileInfo.textContent = `Stato: Disconnesso`; }
+            }
+            lucide.createIcons();
+        }
         
-        // --- Storie (Nuova Logica Video) ---
+        // --- Storie (Logica Video) ---
         
         function renderStories() {
             const container = document.getElementById('stories-bubble-container');
@@ -1031,7 +1125,6 @@
                  return;
             }
 
-            // Rimuovi il messaggio se ci sono storie
             if (message) message.style.display = 'none';
 
             container.innerHTML = remoteStories.map((story, index) => {
@@ -1065,33 +1158,30 @@
             
             document.getElementById('story-player-modal').classList.remove('hidden');
             currentStoryIndex = startIndex;
+            
+            // Pausa il brano YT se sta suonando
+            if(isPlayerReady && ytPlayer.getPlayerState() === YT.PlayerState.PLAYING) {
+                ytPlayer.pauseVideo();
+            }
+            
             playCurrentStory();
         }
 
         window.closeStoryPlayer = function() {
             document.getElementById('story-player-modal').classList.add('hidden');
             
-            // Mette in pausa il brano di sottofondo (se attivo)
-            if (currentHowl) {
-                currentHowl.pause();
-            }
-
             if (storyVideoPlayer) {
                 storyVideoPlayer.pause();
-                // *** PULIZIA AGGIUNTA: Azzeramento esplicito dei listener ***
                 storyVideoPlayer.onended = null;
                 storyVideoPlayer.onerror = null;
                 storyVideoPlayer.oncanplaythrough = null;
                 storyVideoPlayer.onplay = null; 
-                
                 storyVideoPlayer.currentTime = 0;
-                // Rimuove la sorgente e ricarica per fermare definitivamente lo stream audio/video
                 storyVideoPlayer.src = '';
                 storyVideoPlayer.load();
             }
             clearInterval(storyProgressInterval);
-            clearTimeout(storyTimer);
-            renderStories(); // Aggiorna le bolle in background al momento della chiusura
+            renderStories(); 
             saveLocalData();
         }
 
@@ -1102,8 +1192,9 @@
             }
 
             const story = remoteStories[currentStoryIndex];
-            const track = AURA_MAP.find(t => t.id === story.trackId);
-            const videoUrl = story.video_url; // Usa 'video_url' che ora è mappato correttamente
+            // Tenta di trovare il track tramite l'ID YouTube (trackId)
+            const track = AURA_MAP.find(t => t.youtubeId === story.trackId); 
+            const videoUrl = story.video_url;
 
             if (!videoUrl) {
                 if (currentStoryIndex === remoteStories.length - 1) {
@@ -1111,24 +1202,20 @@
                      return;
                 }
                 showToast("Errore: La storia non ha un video URL valido. Passa alla prossima.", 'error');
-                // Chiamata immediata per saltare la storia non valida
                 nextStory(); 
                 return;
             }
             
-            // 0. Pulisci e azzera tutti i listener precedenti all'inizio del ciclo di setup
             storyVideoPlayer.onended = null;
             storyVideoPlayer.onerror = null;
             storyVideoPlayer.oncanplaythrough = null;
             storyVideoPlayer.onplay = null; 
 
-            // 1. Aggiorna UI
             const emoji = HALLOWEEN_EMOJIS[currentStoryIndex % HALLOWEEN_EMOJIS.length];
             document.getElementById('story-emoji').textContent = emoji;
             document.getElementById('story-username').textContent = story.userName;
             document.getElementById('story-track-title').textContent = track ? `${track.title} - ${track.artist}` : 'Brano Sconosciuto';
 
-            // 2. Setup Video Player
             storyVideoPlayer.src = videoUrl;
             storyVideoPlayer.poster = track ? track.cover : ''; 
             storyVideoPlayer.style.opacity = 1;
@@ -1136,44 +1223,27 @@
             storyVideoPlayer.loop = false;
             storyVideoPlayer.currentTime = 0;
             
-            storyVideoPlayer.load(); // Richiede al player di caricare la risorsa
+            storyVideoPlayer.load(); 
 
             storyVideoPlayer.oncanplaythrough = () => {
-                // Il video è pronto per essere riprodotto
                 storyVideoPlayer.play().catch(e => {
-                    console.warn("Autoplay bloccato o errore di riproduzione:", e);
-                    // Se l'autoplay è bloccato (comune sui mobile), lo comunichiamo e mostriamo il pulsante
                     showToast("Tocca lo schermo per riprodurre il video.", 'info');
                     document.getElementById('story-play-pause-button').style.opacity = '1'; 
                     clearInterval(storyProgressInterval);
                 });
             };
             
-            // Gestione degli errori di caricamento/decodifica del video
             storyVideoPlayer.onerror = (e) => {
-                console.error("Errore di riproduzione/caricamento video (Invisibile all'utente):", e);
-                
-                // Chiudi completamente se è l'ultima storia a generare errore
                 if (currentStoryIndex === remoteStories.length - 1) {
                      closeStoryPlayer(); 
                      return;
                 }
-
-                // Passa immediatamente alla prossima storia per evitare il loop di avvio/errore.
                 nextStory(); 
             };
 
-
-            // 3. Setup Progress Bar
             renderStoryProgressBars();
-            
-            // 4. Mark as Watched
             storyWatchedStatus.add(currentStoryIndex);
-
-            // 5. Gestisci la fine della storia
             storyVideoPlayer.onended = nextStory;
-
-            // 6. Avvia il progresso (all'avvio effettivo della riproduzione)
             storyVideoPlayer.onplay = storyProgressPlayer;
         }
         
@@ -1188,7 +1258,6 @@
                 </div>
             `).join('');
             
-             // La barra corrente deve iniziare da 0
              const currentBar = document.getElementById(`story-progress-bar-${currentStoryIndex}`);
              if(currentBar) currentBar.style.width = '0%';
         }
@@ -1214,7 +1283,6 @@
         }
 
         window.nextStory = function() {
-            if (currentHowl) currentHowl.pause();
             if (storyVideoPlayer) storyVideoPlayer.pause();
             currentStoryIndex++;
             if (currentStoryIndex >= remoteStories.length) {
@@ -1225,11 +1293,9 @@
         }
 
         window.prevStory = function() {
-            if (currentHowl) currentHowl.pause();
             if (storyVideoPlayer) storyVideoPlayer.pause();
             
             if (storyVideoPlayer && storyVideoPlayer.currentTime > 1) {
-                // Se la storia è riprodotta per più di 1 secondo, riparti dall'inizio della storia corrente
                 storyVideoPlayer.currentTime = 0;
                 playCurrentStory();
                 return;
@@ -1263,21 +1329,146 @@
         document.getElementById('story-player-modal').addEventListener('click', (e) => {
             const button = document.getElementById('story-play-pause-button');
             
-            // Gestione tap per Play/Pause
             if (e.target.closest('.absolute.inset-y-0.w-1\\/2') || e.target.closest('#story-player-modal button')) return;
             
-            // Play/Pause se si clicca al centro
             if (storyVideoPlayer.paused) {
                 toggleStoryPlayPause(); 
             } else {
                  storyVideoPlayer.pause();
-                 button.style.opacity = '1'; // Rendi visibile l'icona di pausa
+                 button.style.opacity = '1'; 
                  lucide.createIcons();
             }
         });
+        
+        // --- Funzioni Helper (Per Grafica Dinamica) ---
 
+        function updateAmbientLight(hexColor, rgbColor) {
+            if (hexColor) {
+                document.documentElement.style.setProperty('--ryzn-color-hex', hexColor);
+            }
+            if (rgbColor) {
+                document.documentElement.style.setProperty('--ryzn-color-rgb', rgbColor);
+            }
+        }
+        
+        function getTrackElement(track) {
+            const isLiked = likedTracks.has(track.id);
+            return `
+                <div class="depth-glass rounded-xl p-3 hover:bg-white/10 transition cursor-pointer group" onclick="playTrack('${track.id}')">
+                    <div class="relative">
+                        <img src="${track.cover}" alt="${track.title} Cover" class="w-full aspect-square rounded-lg object-cover">
+                        <button onclick="event.stopPropagation(); toggleLike('${track.id}')" class="absolute top-2 right-2 p-2 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition duration-300 ${isLiked ? 'text-red-400 opacity-100' : 'text-white/70 hover:text-red-400'}">
+                            <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+                        </button>
+                    </div>
+                    <div class="mt-3">
+                        <p class="font-bold truncate">${track.title}</p>
+                        <p class="text-sm text-gray-400 truncate">${track.artist}</p>
+                        <div class="text-xs text-gray-500 mt-1 flex justify-between items-center">
+                            <span>Mood: ${track.mood || 'N/D'}</span>
+                            <span class="accent-text font-bold">${track.vibe}/100</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function saveLocalData() {
+            try {
+                localStorage.setItem('aura_liked_tracks', JSON.stringify(Array.from(likedTracks)));
+                localStorage.setItem('aura_user_playlists', JSON.stringify(userPlaylists));
+                localStorage.setItem('aura_logged_in_user', JSON.stringify(loggedInUser));
+                localStorage.setItem('aura_story_watched', JSON.stringify(Array.from(storyWatchedStatus)));
+            } catch (e) {
+                console.error("Errore nel salvataggio locale:", e);
+                showToast("Errore: Impossibile salvare i dati localmente.", 'error');
+            }
+        }
 
-        // Funzioni non modificate...
+        function loadLocalData() {
+            try {
+                const savedTracks = localStorage.getItem('aura_liked_tracks');
+                if (savedTracks) {
+                    likedTracks = new Set(JSON.parse(savedTracks).map(String)); 
+                }
+                const savedPlaylists = localStorage.getItem('aura_user_playlists');
+                if (savedPlaylists) {
+                    userPlaylists = JSON.parse(savedPlaylists);
+                }
+                const savedUser = localStorage.getItem('aura_logged_in_user');
+                if (savedUser && savedUser !== 'null') {
+                    loggedInUser = JSON.parse(savedUser);
+                    updateAuthUI(loggedInUser);
+                } else {
+                    loggedInUser = null;
+                }
+                const savedWatchedStories = localStorage.getItem('aura_story_watched');
+                if (savedWatchedStories) {
+                     storyWatchedStatus = new Set(JSON.parse(savedWatchedStories).map(Number));
+                }
+            } catch (e) {
+                console.error("Errore nel caricamento locale:", e);
+                likedTracks = new Set();
+                userPlaylists = [];
+                loggedInUser = null;
+                storyWatchedStatus = new Set();
+            }
+        }
+
+        window.showToast = function(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const color = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'accent-bg';
+
+            const toast = document.createElement('div');
+            toast.className = `toast depth-glass p-4 rounded-xl shadow-lg ${color} text-white mb-3 max-w-xs`;
+            toast.innerHTML = `<p class="font-semibold">${message}</p>`;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 5000);
+        }
+
+        window.showSection = function(sectionId) {
+            document.querySelectorAll('.section-page').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            const targetSection = document.getElementById(`${sectionId}-section`);
+            if (targetSection) {
+                 targetSection.classList.add('active');
+            } else {
+                 return; 
+            }
+            
+            activateNavItem(sectionId);
+
+            if (sectionId === 'library') { renderLikedTracks(); }
+            if (sectionId === 'playlists') { renderPlaylists(); }
+            if (sectionId === 'stories') { renderStories(); } 
+            if (sectionId === 'music') { 
+                renderMoodGrid(); 
+                // Se non ci sono brani, li carichiamo. Altrimenti, mostriamo i brani del filtro attivo.
+                if (AURA_MAP.length === 0) {
+                     fetchTracks('Trending');
+                } else {
+                     renderDiscoverResults(activeFilter);
+                }
+            }
+
+            // Ridisegna le icone Lucide
+            lucide.createIcons();
+        }
+        
+        function activateNavItem(sectionId) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const activeItem = document.getElementById(`nav-${sectionId}`);
+            
+            if (activeItem) { activeItem.classList.add('active'); }
+        }
 
         window.toggleLike = function(optionalTrackId) {
             const trackId = optionalTrackId || currentTrackData?.id;
@@ -1307,100 +1498,82 @@
         }
         
         function updateLikeButton(trackId) {
-             const isLiked = likedTracks.has(trackId);
-             if (likeButton) {
-                likeButton.classList.toggle('text-red-400', isLiked);
-                likeButton.classList.toggle('text-white/50', !isLiked);
-             }
-             const likeButtonImmersive = document.getElementById('like-button-immersive');
-             if(likeButtonImmersive) {
-                 likeButtonImmersive.classList.toggle('text-red-400', isLiked);
-                 likeButtonImmersive.classList.toggle('text-white/70', !isLiked);
-             }
+            const isLiked = likedTracks.has(trackId);
+            const likeButtonPlayer = document.getElementById('like-button');
+            const likeButtonImmersive = document.getElementById('like-button-immersive');
+
+            const classNames = isLiked ? 'text-red-400' : 'text-white/50 hover:text-red-400';
+            
+            if (likeButtonPlayer) {
+                 likeButtonPlayer.className = `text-white/50 hover:text-red-400 transition ${classNames}`;
+            }
+            if (likeButtonImmersive) {
+                 likeButtonImmersive.className = `text-white/70 hover:text-red-400 transition ${classNames}`;
+            }
         }
         
         function renderLikedTracks() {
             const container = document.getElementById('liked-tracks-list');
-            const likedArray = Array.from(likedTracks);
 
-            if (likedArray.length === 0) {
+            const likedTracksData = AURA_MAP.filter(track => likedTracks.has(track.id));
+            
+            if (likedTracksData.length === 0) {
                  container.innerHTML = '<p class="text-center p-4 text-gray-500">Non hai ancora salvato brani. Aggiungi i tuoi preferiti!</p>';
                  return;
             }
             
-            const tracksHtml = likedArray.map(id => {
-                const track = AURA_MAP.find(t => t.id === id);
-                return track ? getTrackElement(track) : '';
-            }).join('');
+            const tracksHtml = likedTracksData.map(track => getTrackElement(track)).join('');
             
             container.innerHTML = `<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">${tracksHtml}</div>`;
             lucide.createIcons();
         }
         
-        window.openSearchModal = function() {
-            document.getElementById('search-modal').classList.remove('hidden');
-            document.getElementById('search-input').focus();
-        }
-        window.closeSearchModal = function() {
-            document.getElementById('search-modal').classList.add('hidden');
-            document.getElementById('search-results').innerHTML = '<p class="text-center text-gray-500">Inizia a digitare per cercare.</p>';
-        }
-
-        window.performSearch = function() {
-            const query = document.getElementById('search-input').value.toLowerCase().trim();
-            const resultsContainer = document.getElementById('search-results');
-            
-            if (query.length < 2) {
-                resultsContainer.innerHTML = '<p class="text-center text-gray-500">Continua a digitare...</p>';
-                return;
+        // --- NUOVA LOGICA: Funzione per l'icona del Mood (Mantenuta) ---
+        function getMoodIcon(mood) {
+            switch (mood) {
+                case "Spettrale": return "ghost";
+                case "Party": return "sparkles";
+                case "Ambient": return "cloud-drizzle";
+                case "Chill": return "snowflake";
+                default: return "music";
             }
-
-            const results = AURA_MAP.filter(track => 
-                track.title.toLowerCase().includes(query) ||
-                track.artist.toLowerCase().includes(query) ||
-                (track.mood && track.mood.toLowerCase().includes(query))
-            );
-
-            if (results.length === 0) {
-                resultsContainer.innerHTML = '<p class="text-center text-gray-500">Nessun risultato trovato.</p>';
-                return;
-            }
-
-            resultsContainer.innerHTML = results.map(track => `
-                <div onclick="playTrack(${track.id}); closeSearchModal()" class="flex items-center space-x-4 p-3 hover:bg-white/10 rounded-lg transition cursor-pointer">
-                    <img src="${track.cover}" alt="Cover" class="w-12 h-12 rounded-md object-cover">
-                    <div>
-                        <p class="font-semibold">${track.title}</p>
-                        <p class="text-sm text-gray-400">${track.artist} - ${track.mood || 'N/D'}</p>
-                    </div>
-                </div>
-            `).join('');
         }
-
+        
+        // --- MIGLIORAMENTO GRAFICO: Mood Grid (Mantenuta) ---
         function renderMoodGrid() {
             const container = document.getElementById('mood-grid');
             container.innerHTML = ALL_MOODS.map(mood => {
                 const style = MOOD_STYLES[mood];
+                const isActive = activeFilter === mood;
+                // Aggiornato: Aggiunge shadow-xl su attivo, padding più generoso
+                const activeClass = isActive ? 'border-2 accent-border scale-[1.05] shadow-ryzn-accent/30 shadow-xl' : 'border-2 border-transparent shadow-md';
+
                 return `
-                    <button onclick="filterByMood('${mood}')" class="${style} depth-glass p-3 rounded-xl border font-bold text-center hover:scale-[1.02] transition">
-                        ${mood}
+                    <button onclick="filterByMood('${mood}')" 
+                            class="mood-item ${style} depth-glass p-5 rounded-xl border font-extrabold text-center transition ${activeClass} hover:shadow-xl hover:scale-[1.03] transform duration-300 flex flex-col items-center justify-center space-y-2">
+                        <i data-lucide="${getMoodIcon(mood)}" class="w-8 h-8"></i>
+                        <span class="text-lg">${mood}</span>
                     </button>
                 `;
             }).join('');
             
-            const allStyle = activeFilter === 'All' ? 'bg-white/10 border-white text-white' : 'bg-gray-700/50 border-gray-700 text-gray-400';
+            const allActive = activeFilter === 'Trending';
+            const allStyle = allActive ? 'bg-white/10 border-2 border-white text-white scale-[1.05] shadow-ryzn-accent/30 shadow-xl' : 'bg-gray-700/50 border-2 border-transparent text-gray-400 shadow-md';
+            
             container.innerHTML = `
-                <button onclick="filterByMood('All')" class="${allStyle} depth-glass p-3 rounded-xl border font-bold text-center hover:scale-[1.02] transition">
-                    Tutto
+                <button onclick="filterByMood('Trending')" class="mood-item ${allStyle} depth-glass p-5 rounded-xl border font-extrabold text-center transition hover:shadow-xl hover:scale-[1.03] transform duration-300 flex flex-col items-center justify-center space-y-2">
+                    <i data-lucide="compass" class="w-8 h-8"></i>
+                    <span class="text-lg">Tutto (Trending)</span>
                 </button>
                 ${container.innerHTML}
             `;
+            lucide.createIcons();
         }
+        // --------------------------------------------------------------------
 
         window.filterByMood = function(mood) {
             activeFilter = mood;
-            renderMoodGrid(); 
-            renderDiscoverResults(mood);
+            fetchTracks(mood); 
         }
 
         function renderDiscoverResults(filter) {
@@ -1408,7 +1581,7 @@
             
             let filteredTracks = AURA_MAP;
 
-            if (filter !== 'All') {
+            if (filter !== 'Trending') { 
                 filteredTracks = AURA_MAP.filter(track => track.mood === filter);
             }
             
@@ -1419,6 +1592,16 @@
 
             container.innerHTML = filteredTracks.map(track => getTrackElement(track)).join('');
             lucide.createIcons();
+        }
+
+        window.openSearchModal = function() {
+            document.getElementById('search-modal').classList.remove('hidden');
+            document.getElementById('search-input').focus();
+            document.getElementById('search-results').innerHTML = '<p class="text-center text-gray-500">Inizia a digitare per cercare musica su YouTube.</p>';
+        }
+
+        window.closeSearchModal = function() {
+            document.getElementById('search-modal').classList.add('hidden');
         }
 
         window.openCreatePlaylistModal = function() {
@@ -1445,7 +1628,7 @@
             const newPlaylist = {
                 id: Date.now(),
                 name: name,
-                tracks: [],
+                tracks: [], 
                 userId: loggedInUser.id,
                 userName: loggedInUser.email.split('@')[0]
             };
@@ -1476,7 +1659,7 @@
                     <div id="playlist-tracks-${playlist.id}" class="mt-4 grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
                         ${playlist.tracks.slice(0, 4).map(trackId => {
                             const track = AURA_MAP.find(t => t.id === trackId);
-                            return track ? `<img src="${track.cover}" alt="Cover" class="w-full aspect-square rounded-md object-cover">` : '';
+                            return track ? `<img src="${track.cover}" alt="Cover" class="w-full aspect-square rounded-md object-cover">` : `<img src="https://via.placeholder.com/64" alt="Placeholder" class="w-full aspect-square rounded-md object-cover opacity-50">`;
                         }).join('')}
                     </div>
                 </div>
@@ -1519,9 +1702,9 @@
                 listContainer.innerHTML = '<p class="text-center text-gray-500">Nessuna sessione trovata. <button onclick="closeAddToPlaylistModal(); openCreatePlaylistModal()" class="accent-text font-bold">Creane una!</button></p>';
             } else {
                 listContainer.innerHTML = userPlaylists.map(playlist => {
-                    const alreadyIn = playlist.tracks.includes(trackIdToAdd);
+                    const alreadyIn = playlist.tracks.includes(trackIdToAdd); 
                     return `
-                        <button onclick="addTrackToPlaylist(${playlist.id}, ${trackIdToAdd})" class="w-full text-left p-3 rounded-lg hover:bg-white/10 transition flex items-center justify-between ${alreadyIn ? 'text-gray-500 cursor-not-allowed' : 'text-white'}">
+                        <button onclick="addTrackToPlaylist(${playlist.id}, '${trackIdToAdd}')" class="w-full text-left p-3 rounded-lg hover:bg-white/10 transition flex items-center justify-between ${alreadyIn ? 'text-gray-500 cursor-not-allowed' : 'text-white'}">
                             <span>${playlist.name} (${playlist.tracks.length})</span>
                             <i data-lucide="${alreadyIn ? 'check-circle' : 'plus'}" class="w-5 h-5"></i>
                         </button>
@@ -1548,24 +1731,63 @@
                  return;
             }
             
-            playlist.tracks.push(trackId);
+            playlist.tracks.push(trackId); 
             saveLocalData();
             closeAddToPlaylistModal();
             showToast(`Aggiunto "${track.title}" a "${playlist.name}"!`, 'success');
             if (document.getElementById('playlists-section').classList.contains('active')) { renderPlaylists(); }
         }
+        
+        // --- Media Session API (Widget di Notifica NATIVO) ---
+        
+        function updateMediaSession() {
+             if ('mediaSession' in navigator && currentTrackData && isPlayerReady) {
+                 
+                 navigator.mediaSession.metadata = new MediaMetadata({
+                    title: currentTrackData.title,
+                    artist: currentTrackData.artist,
+                    album: 'Aura Music', 
+                    artwork: [
+                        { src: currentTrackData.cover, sizes: '512x512', type: 'image/jpeg' } 
+                    ]
+                 });
 
+                 const isPlaying = ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
 
+                 navigator.mediaSession.setActionHandler('play', () => { 
+                    ytPlayer.playVideo();
+                    updateMediaSession();
+                 });
+                 navigator.mediaSession.setActionHandler('pause', () => { 
+                    ytPlayer.pauseVideo();
+                    updateMediaSession();
+                 });
+                 navigator.mediaSession.setActionHandler('nexttrack', () => { skipForward(); });
+                 navigator.mediaSession.setActionHandler('previoustrack', () => { skipBackward(); });
+                 
+                 navigator.mediaSession.setActionHandler('seekto', (details) => {
+                     if(details.seekTime !== undefined) ytPlayer.seekTo(details.seekTime, true);
+                 });
+                 
+                 if ('setPositionState' in navigator.mediaSession && ytPlayer.getDuration) {
+                    const duration = ytPlayer.getDuration();
+                    if (duration > 0) {
+                         navigator.mediaSession.setPositionState({
+                            duration: duration,
+                            playbackRate: isPlaying ? 1 : 0,
+                            position: ytPlayer.getCurrentTime()
+                        });
+                    }
+                 }
+             }
+        }
+        
         // --- Inizializzazione Applicazione ---
         
-        // --- Registrazione Service Worker per PWA (NUOVO BLOCCO) ---
+        // --- Registrazione Service Worker per PWA (Mantenuto) ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('SW registrato:', registration.scope);
-                        // L'installazione è ora possibile se soddisfatti tutti i criteri PWA (HTTPS, Manifest, SW)
-                    })
                     .catch(error => {
                         console.error('Registrazione SW fallita:', error);
                     });
@@ -1576,29 +1798,30 @@
 
         async function initializeAppContent() {
             
-            // =========================================================
-            // *** INIEZIONE DINAMICA DEL MANIFEST PWA (RICHIESTA) ***
-            // =========================================================
+            // INIEZIONE DINAMICA DEL MANIFEST PWA 
             const pwaLink = document.createElement('link');
             pwaLink.rel = 'manifest';
-            pwaLink.href = 'manifest.json'; // Assumi che manifest.json sia nella radice
+            pwaLink.href = 'manifest.json'; 
             document.head.appendChild(pwaLink);
-            console.log("Manifest PWA collegato dinamicamente.");
-            // =========================================================
 
             loadLocalData();
-            await fetchTracks();
+            
+            // CARICAMENTO ASINCRONO DEI DATI (NON BLOCCA L'INIZIALIZZAZIONE UI/PLAYER)
+            await fetchTracks('Trending'); 
             await loadRemoteStories(); 
-            getDOMElements();
+            
+            getDOMElements(); // Inizializza tutte le variabili DOM
 
-            const initialHex = AURA_MAP.length > 0 ? AURA_MAP[0].color : '#f99428';
-            const initialRgb = AURA_MAP.length > 0 ? AURA_MAP[0].rgb : '249 148 40';
-            updateAmbientLight(initialHex, initialRgb); 
+            // Imposta uno sfondo di default (Mantiene la grafica)
+            updateAmbientLight('#f99428', '249 148 40'); 
             
             updateLoopButton(isLooping); 
             
             showSection('music'); 
             setVolume(currentVolume); 
+            
+             // Assicura che la barra player sia inizialmente nascosta, poi mostrata al primo play
+             if (playerBar) playerBar.classList.remove('active'); 
         }
 
         document.addEventListener('DOMContentLoaded', initializeAppContent);
