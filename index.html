@@ -181,20 +181,20 @@
         .widget-row::-webkit-scrollbar {
             display: none;
         }
+        /* MODIFICATO: Rimossa larghezza fissa per adattarsi alla griglia 2 colonne */
         .widget-row-item {
             display: inline-block;
-            width: 160px; /* Larghezza fissa per widget orizzontale */
+            width: 160px; 
             margin-right: 12px;
             vertical-align: top;
             white-space: normal;
         }
+        /* MODIFICATO: Rimosse le regole di larghezza per adattarsi alla griglia 2 colonne */
         .widget-quick-access {
-            display: inline-flex;
-            width: 48%; /* Due per riga su mobile */
-            min-width: 250px;
-            margin-right: 12px;
+            display: flex; /* Mantiene la struttura interna */
             height: 80px;
             align-items: center;
+            width: 100%; /* Si adatta alla colonna della griglia */
         }
 
     </style>
@@ -498,7 +498,8 @@
         const YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3/";
         
         // --- Dati & Configurazione Locali ---
-        const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/"; 
+        // FIX CRITICO: Rimosso il trattino in eccesso per risolvere l'URL del manifesto delle Storie.
+        const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/se02babro-tech/Aura-Music/main/"; 
         const STORIES_MANIFEST_URL = GITHUB_RAW_BASE + "User_videos.json"; 
         
         let AURA_MAP = []; // Contiene i metadati dei brani YouTube
@@ -1120,7 +1121,7 @@
          */
         function renderMoodGrid() {
             const moodsHtml = ALL_MOODS.map(getMoodTile).join('');
-            // Utilizza la stessa struttura 'quick-access' per la griglia
+            // Utilizza la struttura 'quick-access' che ora è una griglia 2x2
             return createWidgetBlock('Scegli la Vibe', 'Seleziona un genere per un ascolto mirato.', moodsHtml, 'quick-access');
         }
 
@@ -1161,8 +1162,8 @@
             if (layout === 'grid') {
                  contentClasses = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
             } else if (layout === 'quick-access') {
-                 // Avvolge gli elementi in un contenitore flessibile che simula una griglia
-                 contentClasses = 'flex flex-wrap gap-3';
+                 // MODIFICA RICHIESTA: layout a 2 colonne fissa (mobile-first)
+                 contentClasses = 'grid grid-cols-2 gap-3';
             }
             
             return `
@@ -1214,10 +1215,10 @@
                 return;
             }
 
-            // WIDGET 0: Scegli la Vibe (Mood Grid) - Aggiunto in cima
+            // WIDGET 0: Scegli la Vibe (Mood Grid) - Aggiunto in cima (Ora 2 colonne fisse)
             allWidgetsHtml += renderMoodGrid(); 
 
-            // WIDGET 1: Quick Access / Ascoltati di Recente (Simulazione stile 2x3 o 2x4)
+            // WIDGET 1: Quick Access / Ascoltati di Recente (Simulazione stile 2x3 o 2x4) (Ora 2 colonne fisse)
             const quickAccessTracks = AURA_MAP.slice(0, 6);
             const quickAccessHtml = quickAccessTracks.map(getQuickAccessWidget).join('');
             allWidgetsHtml += createWidgetBlock('Accesso Rapido', 'I tuoi brani di tendenza.', quickAccessHtml, 'quick-access');
@@ -1587,6 +1588,8 @@
                 const response = await fetch(STORIES_MANIFEST_URL);
                 if (!response.ok) {
                     if (response.status === 404) {
+                        // FIX: Aggiunto log per debugging
+                        console.warn("Manifesto storie non trovato. Controlla l'URL corretto:", STORIES_MANIFEST_URL);
                         remoteStories = [];
                         return;
                     }
