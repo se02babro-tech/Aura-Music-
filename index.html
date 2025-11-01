@@ -474,8 +474,9 @@
             <button id="add-to-playlist-button" onclick="event.stopPropagation(); openAddToPlaylistModal()" class="text-white/50 hover:text-white transition hidden lg:block">
                 <i data-lucide="list-plus" class="w-5 h-5"></i>
             </button>
-            <button id="like-button" onclick="event.stopPropagation(); toggleLike()" class="text-white/50 hover:text-red-400 transition">
-                <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+            \1
+            <button id="playlist-add-button" onclick="event.stopPropagation(); addCurrentTrackToPlaylist()" class="text-white/50 hover:text-green-400 transition">
+                <i data-lucide="list-plus" class="w-5 h-5"></i>
             </button>
             
             <i data-lucide="volume" class="w-5 h-5 text-white/70 hidden lg:block"></i>
@@ -567,70 +568,103 @@
         // ====================================================================
 
         
-// === PATCH PLAYER FIX AUTOPLAY ===
+
+// === PLAYER FIX COMPLETO (Compatto + Autoplay + Icone Dinamiche + Playlist Toast) ===
 let playerReadyQueue = [];
+
+// Garantisce che il player sia pronto
 function ensureYouTubePlayerReady(callback) {
-    if (isPlayerReady && ytPlayer) {
-        callback();
-    } else {
-        playerReadyQueue.push(callback);
-    }
+    if (isPlayerReady && ytPlayer) callback();
+    else playerReadyQueue.push(callback);
 }
+
 function onYouTubeIframeAPIReady() {
-    if (ytPlayer) return; // evita doppia inizializzazione
+    if (ytPlayer) return;
     ytPlayer = new YT.Player('ytPlayer', {
-        height: '390',
-        width: '640',
+        height: '0',
+        width: '0',
         videoId: '',
         playerVars: {
-            'controls': 0,
-            'disablekb': 1,
-            'modestbranding': 1,
-            'rel': 0,
-            'showinfo': 0,
-            'iv_load_policy': 3,
-            'playsinline': 1,
-            'enablejsapi': 1,
-            'origin': window.location.origin,
-            'autoplay': 0
+            controls: 0,
+            disablekb: 1,
+            modestbranding: 1,
+            rel: 0,
+            showinfo: 0,
+            iv_load_policy: 3,
+            playsinline: 1,
+            enablejsapi: 1,
+            origin: window.location.origin,
+            autoplay: 0
         },
         events: {
-            'onReady': function(event) {
+            onReady: (event) => {
                 isPlayerReady = true;
-                console.log("✅ YouTube Player pronto (patch autoplay).");
+                console.log("✅ Player pronto.");
                 setVolume(currentVolume);
                 playerReadyQueue.forEach(fn => fn());
                 playerReadyQueue = [];
             },
-            'onStateChange': onPlayerStateChange
+            onStateChange: handlePlayerStateChange
         }
     });
 }
 window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
 
-// Override playTrack per forzare autoplay
+// Stato dinamico player (icona e barra)
+function handlePlayerStateChange(event) {
+    const state = event.data;
+    if (state === YT.PlayerState.PLAYING) {
+        togglePlayIcon(false);
+        playerBar.classList.add('active');
+    } else if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.ENDED) {
+        togglePlayIcon(true);
+    }
+}
+
+// Funzione principale per avviare la riproduzione
 window.playTrack = function(trackId) {
     const track = AURA_MAP.find(t => t.id === trackId);
-    if (!track) { showToast("Brano non trovato.", 'error'); return; }
+    if (!track) return showToast("Brano non trovato.", "error");
     currentTrackData = track;
     updateUI(track);
     updateAmbientLight(track.color, track.rgb);
     playerBar.classList.add('active');
+
     ensureYouTubePlayerReady(() => {
         try {
             ytPlayer.loadVideoById(track.youtubeId);
             const playPromise = ytPlayer.playVideo();
-            if (playPromise && typeof playPromise.catch === "function") {
-                playPromise.catch(() => {
-                    showToast("Autoplay bloccato, premi Play.", "info");
-                });
+            if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(() => showToast("Autoplay bloccato, premi Play.", "info"));
             }
-        } catch(e) {
-            console.error("Errore autoplay:", e);
+        } catch (e) {
+            console.error("Errore durante la riproduzione:", e);
         }
     });
 };
-// === FINE PATCH PLAYER ===
+
+// Play/Pausa con sincronizzazione icona
+window.togglePlayPause = function(forcePlay = false) {
+    if (!ytPlayer || !isPlayerReady) return;
+    const state = ytPlayer.getPlayerState();
+    if (forcePlay || state === YT.PlayerState.PAUSED || state === YT.PlayerState.CUED) {
+        ytPlayer.playVideo();
+    } else if (state === YT.PlayerState.PLAYING) {
+        ytPlayer.pauseVideo();
+    }
+};
+
+// Aggiungi a playlist con toast
+window.addCurrentTrackToPlaylist = function() {
+    if (!currentTrackData) {
+        showToast("Nessun brano selezionato.", "warning");
+        return;
+    }
+    openAddToPlaylistModal();
+    showToast("Brano aggiunto alla playlist!", "success");
+};
+// === FINE PLAYER FIX ===
+
  
 
         function onPlayerReady(event) {
@@ -1009,12 +1043,21 @@ window.playTrack = function(trackId) {
         }
 
         
+
 function renderMoodResults(mood) {
-    const results = AURA_MAP.filter(t => t.mood === mood || mood === 'Search Result');
+    console.log("🎵 Caricamento vibe:", mood);
     const container = document.getElementById('home-widgets-container');
+    if (!AURA_MAP || AURA_MAP.length === 0) {
+        container.innerHTML = `
+            <div class='text-center text-gray-400 mt-10'>
+                <p>Nessun brano disponibile per questa vibe.</p>
+            </div>`;
+        return;
+    }
+
+    const results = AURA_MAP.filter(t => t.mood === mood || t.mood?.includes(mood));
     const resultsHtml = results.map(getTrackElement).join('');
 
-    // Struttura Vibe con freccia e titolo
     container.innerHTML = `
         <div class="mb-8">
             <div class="flex items-center mb-4 space-x-3">
@@ -1025,14 +1068,15 @@ function renderMoodResults(mood) {
                     <span>${mood}</span>
                 </h3>
             </div>
-            <p class="text-gray-400 mb-6">Vibe selezionata: ${mood}. Scopri i brani che rispecchiano il tuo stato d'animo.</p>
+            <p class="text-gray-400 mb-6">Vibe selezionata: ${mood}. Scopri i brani più adatti al tuo stato d'animo.</p>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                ${resultsHtml}
+                ${resultsHtml || "<p class='text-gray-400 col-span-full text-center'>Nessun brano trovato per questa vibe.</p>"}
             </div>
         </div>
     `;
     lucide.createIcons();
 }
+
 
 
         // --- FUNZIONI NAVIGAZIONE E UI ---
