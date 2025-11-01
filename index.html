@@ -492,6 +492,8 @@
 
     <script>
         // --- CONFIGURAZIONE YOUTUBE ---
+        // 🚨 ATTENZIONE: Questo è il punto più probabile di fallimento.
+        // Se la musica non si carica o non parte, sostituisci la chiave seguente con una tua chiave YouTube API valida.
         const YOUTUBE_API_KEY = "AIzaSyBdSCl8vmkgc3rqg6BrLmWEzcxrIRlqARg"; 
         const YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3/";
         
@@ -503,15 +505,15 @@
         
         // --- Stili e Icone per Mood Grid Migliorata (Natale/Glaciale) ---
         const MOOD_STYLES = {
-            "Invernale": "bg-blue-900/40 border-blue-600 text-blue-300", 
-            "Party": "bg-red-900/40 border-red-600 text-red-300", 
+            "Invernale": "bg-blue-900/40 border-blue-600 text-blue-300", // Glacial/Winter Theme (MODIFICATO da Spettrale)
+            "Party": "bg-red-900/40 border-red-600 text-red-300", // Christmas Party
             "Ambient": "bg-gray-800/40 border-gray-600 text-gray-300",
-            "Chill": "bg-cyan-900/40 border-cyan-600 text-cyan-300"
+            "Chill": "bg-cyan-900/40 border-cyan-600 text-cyan-300" // Glacial Chill
         };
         
         const ALL_MOODS = Object.keys(MOOD_STYLES);
         const YOUTUBE_MOOD_QUERIES = {
-            "Invernale": "Christmas songs for kids", 
+            "Invernale": "Christmas songs for kids", // MODIFICATO da Spettrale
             "Party": "best christmas party songs hits",
             "Ambient": "fireplace christmas ambience with music",
             "Chill": "lofi christmas beats"
@@ -579,6 +581,7 @@
 
             setVolume(currentVolume); 
             
+            // 💡 CONTROLLO CRITICO: Tenta di inizializzare il player se AURA_MAP è già popolata 
             if (AURA_MAP.length > 0 && !currentTrackData) {
                  currentTrackData = AURA_MAP[0];
             }
@@ -670,7 +673,7 @@
 
             let url;
             if (filter === 'Trending') {
-                // Tira giù molti risultati (max 50) per popolare tutti i 5 widget
+                // Tira giù molti risultati per popolare tutti i widget (aumentato a 50 per i nuovi widget)
                 url = `${YOUTUBE_API_BASE_URL}videos?part=snippet,contentDetails&chart=mostPopular&videoCategoryId=10&regionCode=IT&maxResults=50&key=${YOUTUBE_API_KEY}`;
             } else {
                 // Se è un mood, fai la ricerca specifica (e sovrascrivi la home temporaneamente)
@@ -681,6 +684,9 @@
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
+                    // 🚨 CRITICO: Gestione dell'errore di chiave API
+                    container.innerHTML = `<p class="text-center p-4 text-red-400 col-span-full">Errore nel caricamento dei brani. (Codice: ${response.status}). 
+                        Controlla la tua <b>YOUTUBE_API_KEY</b> nel codice! Se è scaduta, i brani non caricheranno mai.</p>`;
                     throw new Error(`YouTube API Error! Status: ${response.status}`);
                 }
                 const data = await response.json();
@@ -706,7 +712,11 @@
 
             } catch (error) {
                 console.error("Errore nel recupero dei brani da YouTube:", error);
-                container.innerHTML = `<p class="text-center p-4 text-red-400 col-span-full">Errore nel caricamento: ${error.message}. Verifica la chiave API.</p>`;
+                // Se l'errore è già stato gestito nel blocco 'if (!response.ok)', qui non fa nulla
+                if(AURA_MAP.length === 0) {
+                     // Caso di errore generico (es. timeout)
+                     container.innerHTML = `<p class="text-center p-4 text-red-400 col-span-full">Errore nel caricamento: ${error.message}. Verifica la tua chiave API.</p>`;
+                }
                 AURA_MAP = [];
             }
         }
@@ -783,6 +793,8 @@
             showToast("Disconnessione Eseguita.", 'info');
             showSection('music'); // Torna alla home
         }
+
+        // --- FINE FIX CRITICI
 
         /**
          * Funzioni di riproduzione del player YouTube
@@ -1134,8 +1146,8 @@
          */
         function createWidgetBlock(title, subtitle, contentHtml, layout = 'horizontal-scroll') {
             let contentClasses = 'widget-row';
-            if (layout.includes('grid')) {
-                contentClasses = layout; // Usa le classi di griglia passate
+            if (layout === 'grid') {
+                contentClasses = 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4';
             } else if (layout === 'quick-access') {
                  contentClasses = 'flex flex-wrap gap-x-4 gap-y-3'; // Simula il layout 2xN
             }
@@ -1153,7 +1165,7 @@
 
         function getMoodIcon(mood) {
             switch (mood) {
-                case "Invernale": return "🎄"; // MODIFICATO: Albero di Natale Emoji
+                case "Invernale": return "snowflakes"; // Adattato al tema
                 case "Party": return "sparkles";
                 case "Ambient": return "cloud-drizzle";
                 case "Chill": return "snowflake";
@@ -1167,21 +1179,12 @@
         function getMoodGridHtml() {
             return ALL_MOODS.map(mood => {
                 const styleClass = MOOD_STYLES[mood] || 'bg-gray-700/40 border-gray-500 text-gray-300';
-                const iconOrEmoji = getMoodIcon(mood);
+                const icon = getMoodIcon(mood);
                 
-                let iconHtml;
-                if (iconOrEmoji.length > 2) { // È un nome Lucide (es. "sparkles")
-                     // Icona Lucide
-                     iconHtml = `<i data-lucide="${iconOrEmoji}" class="w-8 h-8 ${MOOD_STYLES[mood].includes('text-') ? '' : 'text-white'}"></i>`;
-                } else { // È un'emoji (es. "🎄")
-                     // Emoji, usa uno span con dimensione fissa
-                     iconHtml = `<span class="text-3xl">${iconOrEmoji}</span>`; 
-                }
-
                 // depth-glass e riquadro (COME RICHIESTO)
                 return `
                     <div onclick="showMoodTracks('${mood}')" class="depth-glass ${styleClass} p-4 rounded-xl cursor-pointer transition hover:scale-[1.03] border-2 shadow-lg flex flex-col items-center justify-center text-center space-y-2 min-h-[120px]">
-                        ${iconHtml}
+                        <i data-lucide="${icon}" class="w-8 h-8 ${MOOD_STYLES[mood].includes('text-') ? '' : 'text-white'}"></i>
                         <p class="font-bold text-lg">${mood}</p>
                     </div>
                 `;
@@ -1203,18 +1206,21 @@
             document.getElementById('home-greeting').textContent = `${greeting} La tua Vibe è pronta.`;
 
             if (AURA_MAP.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-500 col-span-full">Nessun brano caricato. Verifica la tua chiave API.</p>';
+                // Non sovrascrivere il messaggio di errore API se è presente
+                if (!container.innerHTML.includes('Controlla la tua <b>YOUTUBE_API_KEY</b>')) {
+                    container.innerHTML = '<p class="text-center text-gray-500 col-span-full">Nessun brano caricato. Riprova più tardi.</p>';
+                }
                 return;
             }
 
             let allWidgetsHtml = '';
 
-            // LOGICA DI FILTRO (Sovrascrive la home se un mood è attivo)
+            // --- LOGICA DI FILTRO (Sovrascrive la home se un mood è attivo) ---
             if (activeFilter !== 'Trending') {
                 const filteredTracks = AURA_MAP.filter(t => t.mood === activeFilter);
                 const filteredHtml = filteredTracks.map(getTrackElement).join('');
                 
-                // Pulsante Torna alla Home / X
+                // NUOVO: Pulsante Torna alla Home / X
                 const backButtonHtml = `
                     <button onclick="showSection('music', 'Trending')" class="flex items-center text-gray-400 hover:accent-text transition mb-6">
                         <i data-lucide="arrow-left" class="w-6 h-6 mr-2"></i>
@@ -1223,36 +1229,49 @@
                 `;
                 
                 // Inserisce prima del blocco widget
-                container.innerHTML = backButtonHtml + createWidgetBlock(`Risultati: ${activeFilter}`, 'Brani selezionati in base al tuo mood.', filteredHtml, 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4');
+                container.innerHTML = backButtonHtml + createWidgetBlock(`Risultati: ${activeFilter}`, 'Brani selezionati in base al tuo mood.', filteredHtml, 'grid');
                 lucide.createIcons();
                 return;
             }
 
-            // WIDGET 1: Quick Access / Ascoltati di Recente (Simulazione stile 2xN grid)
+            // WIDGET 1: Quick Access / Ascoltati di Recente (Simulazione stile 2x3 o 2x4)
             const quickAccessTracks = AURA_MAP.slice(0, 6);
             const quickAccessHtml = quickAccessTracks.map(getQuickAccessWidget).join('');
             allWidgetsHtml += createWidgetBlock('Accesso Rapido', 'I tuoi brani di tendenza.', quickAccessHtml, 'quick-access');
 
-            // WIDGET 2: Scegli la Vibe (Mood Grid/Boxes) -> FISSO A DUE COLONNE (COME RICHIESTO)
+            // --- WIDGET 2: HITS GLOBALI (Nuovo Contenuto) ---
+            const globalHitsTracks = AURA_MAP.slice(6, 16);
+            const globalHitsHtml = globalHitsTracks.map(getTrackElement).join('');
+            allWidgetsHtml += createWidgetBlock('Hits Globali', 'Brani di tendenza in tutto il mondo.', globalHitsHtml, 'horizontal-scroll');
+
+            // --- DISCLAIMER (Nuova Sezione Richiesta) ---
+            const disclaimerHtml = `
+                <div class="my-10 p-6 rounded-2xl depth-glass border-l-4 border-red-500 shadow-xl">
+                    <h3 class="text-xl font-bold text-red-400 flex items-center mb-2">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 mr-3 flex-shrink-0"></i>
+                        ⚠️ Avviso Beta - Ryzn Developer ⚠️
+                    </h3>
+                    <p class="text-white/90">
+                        Questo programma è in **fase Beta**. Potrebbero essere riscontrati bug o malfunzionamenti. 
+                        La tua collaborazione è fondamentale per la Vibe perfetta.
+                    </p>
+                    <p class="text-sm mt-3 text-red-300">
+                        Se trovi dei problemi, segnalali per favore su 
+                        <a href="https://Ryznmusic.it" target="_blank" class="font-bold underline hover:text-white transition">Ryznmusic.it</a>.
+                    </p>
+                </div>
+            `;
+            allWidgetsHtml += disclaimerHtml;
+
+
+            // --- WIDGET 3: CONSIGLIATI PER TE (Nuovo Contenuto) ---
+            const recommendedTracks = AURA_MAP.slice(16, 26);
+            const recommendedHtml = recommendedTracks.map(getTrackElement).join('');
+            allWidgetsHtml += createWidgetBlock('Consigliati per Te', 'La Vibe che ti aspetti, basata sui tuoi ascolti recenti.', recommendedHtml, 'horizontal-scroll');
+
+            // WIDGET 4: Scegli la Vibe (Mood Grid/Boxes)
             const moodGridHtml = getMoodGridHtml();
-            allWidgetsHtml += createWidgetBlock('Scegli la Vibe', 'Seleziona il tuo mood attuale e inizia ad ascoltare.', moodGridHtml, 'grid grid-cols-2 gap-4'); // Rimosso sm:grid-cols-4
-
-            
-            // WIDGET 3: Deep Dive Discovery (Horizontal Carousel)
-            const deepDiveTracks = AURA_MAP.slice(6, 16);
-            const deepDiveHtml = deepDiveTracks.map(getTrackElement).join('');
-            allWidgetsHtml += createWidgetBlock('Deep Dive Discovery', 'Nuove vibrazioni solo per te.', deepDiveHtml, 'horizontal-scroll');
-            
-            // NUOVO WIDGET 4: Rilassati con il nostro Flow (Horizontal Carousel)
-            const moodMusicTracks = AURA_MAP.slice(16, 26);
-            const moodMusicHtml = moodMusicTracks.map(getTrackElement).join('');
-            allWidgetsHtml += createWidgetBlock('Rilassati con il nostro Flow', 'Playlist curate per il tuo stato d\'animo.', moodMusicHtml, 'horizontal-scroll');
-
-            // NUOVO WIDGET 5: Ritorno al Passato (Horizontal Carousel)
-            const retroTracks = AURA_MAP.slice(26, 36);
-            const retroHtml = retroTracks.map(getTrackElement).join('');
-            allWidgetsHtml += createWidgetBlock('Ritorno al Passato', 'I successi che non smettono di emozionare.', retroHtml, 'horizontal-scroll');
-
+            allWidgetsHtml += createWidgetBlock('Scegli la Vibe', 'Seleziona il tuo mood attuale e inizia ad ascoltare.', moodGridHtml, 'grid grid-cols-2 sm:grid-cols-4 gap-4');
             
             // Applica tutti i widget
             container.innerHTML = allWidgetsHtml;
@@ -1882,6 +1901,15 @@
             await fetchTracks('Trending'); 
             await loadRemoteStories(); 
             
+            // ⭐ FIX CRITICO RIPRODUZIONE (Post-fetch check)
+            // Se il player è pronto (isPlayerReady = true) ma non ha ancora un brano (currentTrackData = null)
+            // a causa della race condition, inizializza ora il primo brano.
+            if (isPlayerReady && AURA_MAP.length > 0 && !currentTrackData) {
+                 currentTrackData = AURA_MAP[0];
+                 ytPlayer.cueVideoById(currentTrackData.youtubeId);
+                 updateUI(currentTrackData); 
+            }
+            // FINE FIX ⭐
 
             // Imposta uno sfondo di default (Mantiene la grafica)
             updateAmbientLight('#00BFFF', '0 191 255'); 
