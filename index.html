@@ -373,7 +373,7 @@
         <section id="music-section" class="section-page active">
             <h2 id="home-greeting" class="text-4xl font-extrabold mb-8 text-white">Buonasera. La tua Vibe è pronta.</h2>
             <div id="home-widgets-container" class="space-y-10">
-                <p class="text-center text-gray-500">Caricamento in corso...</p>
+                <p class="text-center text-gray-400 col-span-full">Caricamento in corso...</p>
             </div>
         </section>
         <section id="library-section" class="section-page">
@@ -520,7 +520,7 @@
         
         let currentTrackData = null;
         let ytPlayer = null; // Oggetto del Player IFrame di YouTube
-        let isPlayerReady = false; // Nuovo flag di stato per il player
+        let isPlayerReady = false; 
 
         let likedTracks = new Set();
         let userPlaylists = [];
@@ -562,7 +562,6 @@
                     'iv_load_policy': 3,
                     'playsinline': 1,
                     'enablejsapi': 1,
-                    'origin': window.location.origin,
                     'autoplay': 0 // Mantiene l'autoplay disabilitato per evitare blocchi
                 },
                 events: {
@@ -599,7 +598,7 @@
                 setupProgressInterval();
                 updateMediaSession();
                 playerBar.classList.add('active');
-                checkAndSkipAd(); // Controllo immediato all'avvio
+                // checkAndSkipAd(); // Controllo immediato all'avvio: Rimosso da qui, si affida all'intervallo
             } else if (state === YT.PlayerState.PAUSED) {
                  // *** MODIFICA: Icona rimossa qui. Ora cambia solo al click su togglePlayPause() ***
                 clearInterval(progressInterval);
@@ -615,7 +614,7 @@
                     // Il cambio traccia chiama playTrack() che aggiorna l'icona
                 }
             } else if (state === YT.PlayerState.BUFFERING) {
-                checkAndSkipAd(); // Controllo anche durante il buffering
+                // checkAndSkipAd(); // Controllo anche durante il buffering: Rimosso da qui, si affida all'intervallo
             }
         }
 
@@ -626,31 +625,33 @@
         }
 
         function checkAndSkipAd() {
-            if (!isPlayerReady || !ytPlayer || !ytPlayer.getAdState) return;
+            if (!isPlayerReady || !ytPlayer || !ytPlayer.getAdState || !ytPlayer.getPlayerState) return;
             
             const playerState = ytPlayer.getPlayerState();
-            const adState = ytPlayer.getAdState();
+            // L'API YT IFrame definisce AD_STATE: 1=PLAYING, 2=ENDED, 3=SKIPPABLE.
+            // Purtroppo, non c'è una costante pubblica per AD_STATE_PLAYING. Usiamo lo stato del player e un controllo
+            const adState = ytPlayer.getAdState(); 
             
-            // Se lo stato dell'annuncio è diverso da AD_ENDED (2) e non è in stato UNSTARTED (-1)
-            // e il player è in riproduzione o buffering, significa che è in corso o sta per iniziare un annuncio.
-            if (adState !== YT.AdState.AD_ENDED && adState !== YT.AdState.UNSTARTED) {
-                console.log("Annuncio rilevato o imminente. Silenzio.");
+            // Lo stato AD_ENDED (2) indica che non c'è un annuncio. 
+            // Se AD_ENDED non è lo stato attuale, c'è un annuncio in corso o in queue (Stato 1=PLAYING/3=SKIPPABLE).
+            const isAdPlaying = adState !== 2 && (playerState === YT.PlayerState.PLAYING || playerState === YT.PlayerState.BUFFERING); 
+
+            if (isAdPlaying) {
+                // console.log("Annuncio rilevato o imminente. Silenzio e tento il salto.");
                 
-                // Silenzia e cerca di saltare avanti di 5 secondi se possibile
-                // (Molte API IFrame lo impediscono, ma proviamo per le ads skippable)
+                // Silenzia
                 ytPlayer.setVolume(0); 
                 
-                // Prova a saltare l'annuncio se non è un pre-roll non skippable
-                if (playerState === YT.PlayerState.PLAYING || playerState === YT.PlayerState.BUFFERING) {
-                    try {
-                        ytPlayer.seekTo(ytPlayer.getCurrentTime() + 5, true); 
-                    } catch (e) {
-                         // Ignora l'errore se il seekTo non è permesso durante l'ad
-                    }
+                // Tenta di saltare avanti di 5 secondi se possibile (utile per gli annunci skippable o i pre-roll corti)
+                try {
+                    ytPlayer.seekTo(ytPlayer.getCurrentTime() + 5, true); 
+                } catch (e) {
+                     // console.log("SeekTo fallito durante l'ad, probabile annuncio non skippable.");
+                     // Ignora l'errore se il seekTo non è permesso durante l'ad
                 }
             } else {
-                 // Nessun annuncio, ripristina il volume
-                 if (ytPlayer.getVolume() === 0) {
+                 // Nessun annuncio. Se il volume è a zero a causa del blocco, lo ripristina
+                 if (ytPlayer.getVolume() === 0 && currentVolume > 0) {
                      ytPlayer.setVolume(currentVolume);
                  }
             }
@@ -671,13 +672,13 @@
             }
 
             let url;
-            if (filter === 'Trending') {
-                // Tira giù molti risultati (max 50) per popolare tutti i 5 widget
-                url = `${YOUTUBE_API_BASE_URL}videos?part=snippet,contentDetails&chart=mostPopular&videoCategoryId=10&regionCode=IT&maxResults=50&key=${YOUTUBE_API_KEY}`;
-            } else {
-                // Se è un mood, fai la ricerca specifica (e sovrascrivi la home temporaneamente)
-                const query = YOUTUBE_MOOD_QUERIES[filter] || 'music official video';
+            if (filter === 'Trending' || ALL_MOODS.includes(filter)) {
+                 // Per Trending e Mood, usa una query di ricerca per un set dinamico di dati (50 risultati)
+                const query = (filter === 'Trending') ? 'best music videos 2024' : YOUTUBE_MOOD_QUERIES[filter];
                 url = `${YOUTUBE_API_BASE_URL}search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=50&key=${YOUTUBE_API_KEY}`;
+            } else {
+                 // Fallback
+                 url = `${YOUTUBE_API_BASE_URL}videos?part=snippet,contentDetails&chart=mostPopular&videoCategoryId=10&regionCode=IT&maxResults=50&key=${YOUTUBE_API_KEY}`;
             }
 
             try {
@@ -703,7 +704,7 @@
                 
                 AURA_MAP = results;
                 
-                // Dopo il caricamento iniziale o del filtro, mostra i widget o i risultati
+                // Dopo il caricamento, mostra i widget
                 renderHomePageWidgets(); 
 
             } catch (error) {
@@ -727,7 +728,7 @@
             return moods[Math.floor(Math.random() * moods.length)];
         }
 
-        // --- Funzioni di Autenticazione ---
+        // --- Funzioni di Autenticazione (OMESSE PER BREVITÀ, RIMANGONO UGUALI) ---
         function openAuthModal(mode) {
              document.getElementById('auth-modal').classList.remove('hidden');
              switchAuthMode(mode);
@@ -785,6 +786,7 @@
             showSection('music'); // Torna alla home
         }
 
+
         /**
          * Funzioni di riproduzione del player YouTube
          */
@@ -795,6 +797,7 @@
             
             if (isPlayerReady) {
                 ytPlayer.loadVideoById(trackId);
+                // Il player imposterà il volume predefinito, poi checkAndSkipAd() lo gestirà.
             } else {
                 showToast("Player in fase di caricamento. Riprova tra un attimo.", 'info');
             }
@@ -863,8 +866,11 @@
         window.setVolume = function(volume) {
             currentVolume = parseInt(volume);
             if (ytPlayer && isPlayerReady) {
-                ytPlayer.setVolume(currentVolume);
-                // Aggiorna tutti gli slider se ne abbiamo più di uno (es. player bar e immersive)
+                // Applica il volume solo se l'adblock non lo ha silenziato
+                if (ytPlayer.getVolume() !== 0) { 
+                    ytPlayer.setVolume(currentVolume);
+                }
+                // Aggiorna tutti gli slider
                 if(volumeSlider) volumeSlider.value = currentVolume;
                 if(volumeSliderImmersive) volumeSliderImmersive.value = currentVolume;
             }
@@ -949,8 +955,6 @@
             // Forza il re-render delle icone Lucide (critico per animazioni)
             lucide.createIcons();
             
-            // *** MODIFICA: L'aggiornamento dell'icona è stato spostato in playTrack() e togglePlayPause() ***
-            
             // Aggiorna la Media Session per il controllo esterno
             updateMediaSession();
         }
@@ -985,7 +989,7 @@
             }
         }
         
-        // --- Gestione Stato Locale ---
+        // --- Gestione Stato Locale (OMESSE PER BREVITÀ, RIMANGONO UGUALI) ---
         function saveLocalData() {
             localStorage.setItem('likedTracks', JSON.stringify(Array.from(likedTracks)));
             localStorage.setItem('userPlaylists', JSON.stringify(userPlaylists));
@@ -1104,7 +1108,7 @@
         }
 
         // ====================================================================
-        // FUNZIONI DI WIDGET RENDERING (Nuove per stile YouTube Music)
+        // FUNZIONI DI WIDGET RENDERING
         // ====================================================================
 
         /**
@@ -1157,7 +1161,7 @@
          */
         function getMoodIcon(mood) {
             switch (mood) {
-                case "Invernale": return "🎄"; // MODIFICATO: Albero di Natale Emoji
+                case "Invernale": return "🎄"; // Albero di Natale Emoji
                 case "Party": return "sparkles";
                 case "Ambient": return "cloud-drizzle";
                 case "Chill": return "snowflake";
@@ -1182,7 +1186,7 @@
                     iconHtml = `<span class="text-3xl">${iconOrEmoji}</span>`;
                 }
                 
-                // depth-glass e riquadro (COME RICHIESTO)
+                // *** IMPORTANTE: Usa fetchTracks per caricare i brani del mood, ma ripristina la vista Home
                 return `
                     <div onclick="showMoodTracks('${mood}')" class="depth-glass ${styleClass} p-4 rounded-xl cursor-pointer transition hover:scale-[1.03] border-2 shadow-lg flex flex-col items-center justify-center text-center space-y-2 min-h-[120px]">
                         ${iconHtml}
@@ -1198,13 +1202,19 @@
         window.renderHomePageWidgets = function() {
             const container = document.getElementById('home-widgets-container');
             if (!container) return;
-
-            // Aggiorna il saluto
-            const currentHour = new Date().getHours();
-            let greeting = "Buonasera.";
-            if (currentHour < 12) greeting = "Buongiorno.";
-            else if (currentHour < 18) greeting = "Buon Pomeriggio.";
-            document.getElementById('home-greeting').textContent = `${greeting} La tua Vibe è pronta.`;
+            
+            // Imposta l'intestazione corretta per la Home
+            let greeting = "La tua Vibe è pronta.";
+            if (activeFilter !== 'Trending') {
+                 // Se stiamo visualizzando i brani filtrati per un Mood (Vibe), cambiamo l'intestazione
+                 greeting = `Vibrazioni per: ${activeFilter}`;
+            } else {
+                 const currentHour = new Date().getHours();
+                 if (currentHour < 12) greeting = "Buongiorno. La tua Vibe è pronta.";
+                 else if (currentHour < 18) greeting = "Buon Pomeriggio. La tua Vibe è pronta.";
+                 else greeting = "Buonasera. La tua Vibe è pronta.";
+            }
+            document.getElementById('home-greeting').textContent = greeting;
 
             if (AURA_MAP.length === 0) {
                  container.innerHTML = '<p class="text-center p-4 text-gray-500">Nessun brano trovato. Prova a ricaricare o a cercare.</p>';
@@ -1212,28 +1222,43 @@
             }
 
             let allWidgetsHtml = '';
+            
+            // Filtra AURA_MAP in base all'activeFilter se non è 'Trending'
+            const filteredTracks = activeFilter === 'Trending' 
+                ? AURA_MAP
+                : AURA_MAP.filter(t => t.mood === activeFilter);
+            
+            // Se l'activeFilter non è 'Trending' e i filtri sono vuoti, torniamo a 'Trending'
+            if (activeFilter !== 'Trending' && filteredTracks.length === 0) {
+                 // Torna a Trending se il filtro non ha dato risultati (e carica)
+                 activeFilter = 'Trending';
+                 fetchTracks('Trending');
+                 return; 
+            }
+            
+            const baseTracks = filteredTracks.length > 0 ? filteredTracks : AURA_MAP;
 
             // WIDGET 1: Brani Recenti/Quick Access (Due per riga, usa i primi 4 brani)
-            const quickAccessTracks = AURA_MAP.slice(0, 4);
+            const quickAccessTracks = baseTracks.slice(0, 4);
             const quickAccessHtml = quickAccessTracks.map(getQuickAccessWidget).join('');
             allWidgetsHtml += createWidgetBlock('Accesso Veloce', 'I brani recenti e i tuoi preferiti in un click.', quickAccessHtml, 'flex flex-wrap gap-4');
 
-            // WIDGET 2: Mood Grid (Due colonne)
+            // WIDGET 2: Mood Grid (Griglia dei mood, sempre visibile)
             const moodGridHtml = getMoodGridHtml();
-            allWidgetsHtml += createWidgetBlock('Scegli la Vibe', 'Seleziona il tuo mood attuale e inizia ad ascoltare.', moodGridHtml, 'grid grid-cols-2 gap-4'); // Rimosso sm:grid-cols-4
+            allWidgetsHtml += createWidgetBlock('Scegli la Vibe', 'Seleziona il tuo mood attuale e inizia ad ascoltare.', moodGridHtml, 'grid grid-cols-2 gap-4'); 
 
             // WIDGET 3: Deep Dive Discovery (Horizontal Carousel)
-            const deepDiveTracks = AURA_MAP.slice(6, 16);
+            const deepDiveTracks = baseTracks.slice(4, 14);
             const deepDiveHtml = deepDiveTracks.map(getTrackElement).join('');
             allWidgetsHtml += createWidgetBlock('Deep Dive Discovery', 'Nuove vibrazioni solo per te.', deepDiveHtml, 'horizontal-scroll');
 
             // NUOVO WIDGET 4: Rilassati con il nostro Flow (Horizontal Carousel)
-            const moodMusicTracks = AURA_MAP.slice(16, 26);
+            const moodMusicTracks = baseTracks.slice(14, 24);
             const moodMusicHtml = moodMusicTracks.map(getTrackElement).join('');
             allWidgetsHtml += createWidgetBlock('Rilassati con il nostro Flow', 'Playlist curate per il tuo stato d\'animo.', moodMusicHtml, 'horizontal-scroll');
 
             // NUOVO WIDGET 5: Ritorno al Passato (Horizontal Carousel)
-            const retroTracks = AURA_MAP.slice(26, 36);
+            const retroTracks = baseTracks.slice(24, 34);
             const retroHtml = retroTracks.map(getTrackElement).join('');
             allWidgetsHtml += createWidgetBlock('Ritorno al Passato', 'I successi che non smettono di emozionare.', retroHtml, 'horizontal-scroll');
 
@@ -1242,19 +1267,18 @@
             lucide.createIcons();
         }
 
+        /**
+         * Funzione per mostrare i brani di un Mood specifico. 
+         * Ora chiama fetchTracks che a sua volta chiama renderHomePageWidgets per aggiornare i contenuti.
+         */
         window.showMoodTracks = function(mood) {
-            activeFilter = mood;
-            if (AURA_MAP.length === 0) {
-                // Se non ci sono brani, li carica con la query del mood
-                fetchTracks(mood);
-            } else {
-                // Altrimenti (es. se "Trending" è chiamato con questo filtro), ricarica la home completa
-                renderHomePageWidgets();
-            }
+            activeFilter = mood; // Imposta il filtro attivo
+            fetchTracks(mood);    // Forza il ricaricamento dei dati con la query del mood
+            // La funzione renderHomePageWidgets() verrà chiamata al termine di fetchTracks()
         }
 
         // ====================================================================
-        // FUNZIONI PRE-ESISTENTI (Mantengono la loro funzionalità)
+        // FUNZIONI PRE-ESISTENTI (OMESSE PER BREVITÀ, RIMANGONO UGUALI)
         // ====================================================================
         
         function getLikedTrackElement(track) {
@@ -1577,7 +1601,7 @@
             }, 60000);
         }
 
-        // --- Logica Storie (Video) ---
+        // --- Logica Storie (Video) (OMESSE PER BREVITÀ, RIMANGONO UGUALI) ---
         async function loadRemoteStories() {
             try {
                 const response = await fetch(STORIES_MANIFEST_URL);
