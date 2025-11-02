@@ -196,6 +196,33 @@
             height: 80px;
             align-items: center;
         }
+        
+        /* NUOVI STILI PER TITOLO SCORREVOLE (MARQUEE) */
+        .marquee-container {
+            overflow: hidden;
+            width: 100%;
+            padding-top: 5px; /* Spazio superiore */
+            padding-bottom: 5px; /* Spazio inferiore */
+            text-align: center; 
+        }
+        .marquee-text {
+            white-space: nowrap;
+            display: inline-block;
+            animation: marquee 10s linear infinite; /* Animazione di default */
+            min-width: 100%;
+            animation-play-state: running; /* Inizialmente in esecuzione */
+        }
+        .marquee-text:hover {
+            animation-play-state: paused; /* Metti in pausa al passaggio del mouse */
+        }
+        @keyframes marquee {
+            0%   { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .text-4xl.font-extrabold.truncate {
+             /* Assicura che la classe truncate non prevalga sul marquee */
+             white-space: normal;
+        }
 
     </style>
 </head>
@@ -259,8 +286,8 @@
             <button onclick="closeAddToPlaylistModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
         </div>
     </div>
-
-    <div id="immersive-mode" onclick="exitImmersiveMode()" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-[150] hidden flex-col items-center justify-center p-6 modal">
+    
+    <div id="immersive-mode" class="fixed inset-0 bg-black/90 backdrop-blur-xl z-[150] hidden flex-col items-center justify-center p-6 modal">
         <div class="absolute top-6 left-6 flex items-center space-x-4">
             <button onclick="exitImmersiveMode()" class="text-white/80 hover:text-white transition"><i data-lucide="chevron-down" class="w-8 h-8"></i></button>
             <h2 class="text-xl font-semibold">In Riproduzione</h2>
@@ -272,7 +299,9 @@
             </div>
             
             <div class="text-center">
-                <h3 id="immersive-title" class="text-4xl font-extrabold truncate">Titolo Brano</h3>
+                <div class="marquee-container">
+                    <h3 id="immersive-title" class="text-4xl font-extrabold">Titolo Brano</h3>
+                </div>
                 <p id="immersive-artist" class="text-xl text-gray-400 truncate">Artista</p>
             </div>
 
@@ -340,7 +369,7 @@
         
         <header class="flex justify-between items-center mb-8">
             <div class="flex items-center space-x-8">
-                <a href="#" onclick="showSection('music')" class="cursor-pointer">
+                <a href="#" onclick="resetHomePage()" class="cursor-pointer">
                     <h1 class="logo-aura flex items-center space-x-2">
                         <i data-lucide="sparkles" class="w-7 h-7 accent-text fill-ryzn-accent/30"></i>
                         <span class="logo-text">Aura</span>
@@ -506,15 +535,21 @@
             "Invernale": "bg-blue-900/40 border-blue-600 text-blue-300", 
             "Party": "bg-red-900/40 border-red-600 text-red-300", 
             "Ambient": "bg-gray-800/40 border-gray-600 text-gray-300",
-            "Chill": "bg-cyan-900/40 border-cyan-600 text-cyan-300"
+            "Chill": "bg-cyan-900/40 border-cyan-600 text-cyan-300",
+            // NUOVI MOODS PER GRIGLIA 2x3
+            "Focus": "bg-yellow-900/40 border-yellow-600 text-yellow-300",
+            "Energia": "bg-pink-900/40 border-pink-600 text-pink-300"
         };
         
-        const ALL_MOODS = Object.keys(MOOD_STYLES);
+        const ALL_MOODS = Object.keys(MOOD_STYLES); // 6 moods totali
         const YOUTUBE_MOOD_QUERIES = {
             "Invernale": "Christmas songs for kids", 
             "Party": "best christmas party songs hits",
             "Ambient": "fireplace christmas ambience with music",
-            "Chill": "lofi christmas beats"
+            "Chill": "lofi christmas beats",
+            // NUOVE QUERY
+            "Focus": "study music for deep focus",
+            "Energia": "gym workout music hits 2024"
         };
         // -------------------------------------------------------------
         
@@ -726,6 +761,18 @@
             // Assegna un mood casuale per i trending
             const moods = ALL_MOODS;
             return moods[Math.floor(Math.random() * moods.length)];
+        }
+
+        // --- Gestione Reset Home ---
+        window.resetHomePage = function() {
+            // Riporta il filtro allo stato iniziale (Trending)
+            activeFilter = 'Trending';
+            // Ricarica i brani di tendenza da YouTube
+            fetchTracks('Trending'); 
+            // Mostra la sezione Music (Home)
+            showSection('music'); 
+            // Resetta lo scorrimento della pagina
+            window.scrollTo(0, 0); 
         }
 
         // --- Funzioni di Autenticazione (OMESSE PER BREVITÀ, RIMANGONO UGUALI) ---
@@ -943,9 +990,20 @@
             playerArtist.textContent = track.artist;
             playerCover.src = track.cover;
 
-            immersiveTitle.textContent = track.title;
+            // Logica Marquee per il titolo del player immersivo
             immersiveArtist.textContent = track.artist;
             immersiveCover.src = track.cover;
+            
+            const titleElement = document.getElementById('immersive-title');
+            titleElement.textContent = track.title;
+            
+            // Se il titolo è troppo lungo, applica la classe marquee
+            // 35 caratteri è una soglia euristica per titoli che potrebbero non stare su una riga
+            if (track.title.length > 35) {
+                titleElement.classList.add('marquee-text');
+            } else {
+                titleElement.classList.remove('marquee-text');
+            }
             
             vibeScoreDisplay.textContent = `Vibe Score: ${track.vibe}/100`;
 
@@ -1165,6 +1223,9 @@
                 case "Party": return "sparkles";
                 case "Ambient": return "cloud-drizzle";
                 case "Chill": return "snowflake";
+                // NUOVI MOODS
+                case "Focus": return "brain"; 
+                case "Energia": return "bolt"; 
                 default: return "music";
             }
         }
@@ -1186,7 +1247,7 @@
                     iconHtml = `<span class="text-3xl">${iconOrEmoji}</span>`;
                 }
                 
-                // *** IMPORTANTE: Usa fetchTracks per caricare i brani del mood, ma ripristina la vista Home
+                // *** IMPORTANTE: Usa showMoodTracks per caricare i brani del mood, ma ripristina la vista Home
                 return `
                     <div onclick="showMoodTracks('${mood}')" class="depth-glass ${styleClass} p-4 rounded-xl cursor-pointer transition hover:scale-[1.03] border-2 shadow-lg flex flex-col items-center justify-center text-center space-y-2 min-h-[120px]">
                         ${iconHtml}
@@ -1238,27 +1299,28 @@
             
             const baseTracks = filteredTracks.length > 0 ? filteredTracks : AURA_MAP;
 
-            // WIDGET 1: Brani Recenti/Quick Access (Due per riga, usa i primi 4 brani)
-            const quickAccessTracks = baseTracks.slice(0, 4);
+            // WIDGET 1: Brani Recenti/Quick Access (Ora i primi 6 brani)
+            const quickAccessTracks = baseTracks.slice(0, 6); // MODIFICA: Da 4 a 6
             const quickAccessHtml = quickAccessTracks.map(getQuickAccessWidget).join('');
             allWidgetsHtml += createWidgetBlock('Accesso Veloce', 'I brani recenti e i tuoi preferiti in un click.', quickAccessHtml, 'flex flex-wrap gap-4');
 
             // WIDGET 2: Mood Grid (Griglia dei mood, sempre visibile)
             const moodGridHtml = getMoodGridHtml();
+            // La classe 'grid grid-cols-2 gap-4' assicura un layout 2 a 2 per le 6 Vibes
             allWidgetsHtml += createWidgetBlock('Scegli la Vibe', 'Seleziona il tuo mood attuale e inizia ad ascoltare.', moodGridHtml, 'grid grid-cols-2 gap-4'); 
 
             // WIDGET 3: Deep Dive Discovery (Horizontal Carousel)
-            const deepDiveTracks = baseTracks.slice(4, 14);
+            const deepDiveTracks = baseTracks.slice(6, 16); // Parte dal sesto brano
             const deepDiveHtml = deepDiveTracks.map(getTrackElement).join('');
             allWidgetsHtml += createWidgetBlock('Deep Dive Discovery', 'Nuove vibrazioni solo per te.', deepDiveHtml, 'horizontal-scroll');
 
             // NUOVO WIDGET 4: Rilassati con il nostro Flow (Horizontal Carousel)
-            const moodMusicTracks = baseTracks.slice(14, 24);
+            const moodMusicTracks = baseTracks.slice(16, 26);
             const moodMusicHtml = moodMusicTracks.map(getTrackElement).join('');
             allWidgetsHtml += createWidgetBlock('Rilassati con il nostro Flow', 'Playlist curate per il tuo stato d\'animo.', moodMusicHtml, 'horizontal-scroll');
 
             // NUOVO WIDGET 5: Ritorno al Passato (Horizontal Carousel)
-            const retroTracks = baseTracks.slice(24, 34);
+            const retroTracks = baseTracks.slice(26, 36);
             const retroHtml = retroTracks.map(getTrackElement).join('');
             allWidgetsHtml += createWidgetBlock('Ritorno al Passato', 'I successi che non smettono di emozionare.', retroHtml, 'horizontal-scroll');
 
