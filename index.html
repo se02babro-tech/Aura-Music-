@@ -190,9 +190,9 @@
         }
         .widget-quick-access {
             display: inline-flex;
-            width: 48%; /* Due per riga su mobile */
-            min-width: 250px;
-            margin-right: 12px;
+            width: 48%; /* Mantiene il 48% per creare le 2 colonne con gap-4 */
+            /* min-width: 250px; <-- Rimosso per abilitare le 2 colonne su schermi piccoli */
+            /* margin-right: 12px; <-- Rimosso, gestito da gap-4 */
             height: 80px;
             align-items: center;
         }
@@ -595,7 +595,7 @@
                     'rel': 0,
                     'showinfo': 0,
                     'iv_load_policy': 3,
-                    'playsinline': 1,
+                    'playsinline': 1, // CRITICO: Permette riproduzione senza fullscreen su iOS
                     'enablejsapi': 1,
                     'autoplay': 0 // Mantiene l'autoplay disabilitato per evitare blocchi
                 },
@@ -610,6 +610,15 @@
         function onPlayerReady(event) {
             console.log("YouTube Player Ready. Inizializzazione controlli.");
             isPlayerReady = true; 
+
+            // ** MODIFICA CRITICA PER MOBILE/BACKGROUND **
+            // Aggiunge l'attributo 'allow' all'IFrame per abilitare la riproduzione in background.
+            const iframe = document.getElementById('ytPlayer');
+            if (iframe && iframe.tagName === 'IFRAME') {
+                 // Setta gli attributi di policy di riproduzione nel browser (autoplay, Picture-in-Picture)
+                 iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+            }
+            // ********************************************
 
             setVolume(currentVolume); 
             
@@ -1302,6 +1311,7 @@
             // WIDGET 1: Brani Recenti/Quick Access (Ora i primi 6 brani)
             const quickAccessTracks = baseTracks.slice(0, 6); // MODIFICA: Da 4 a 6
             const quickAccessHtml = quickAccessTracks.map(getQuickAccessWidget).join('');
+            // La classe 'flex flex-wrap gap-4' sul contenitore genitore gestisce le due colonne e le 3 linee.
             allWidgetsHtml += createWidgetBlock('Accesso Veloce', 'I brani recenti e i tuoi preferiti in un click.', quickAccessHtml, 'flex flex-wrap gap-4');
 
             // WIDGET 2: Mood Grid (Griglia dei mood, sempre visibile)
