@@ -441,41 +441,13 @@
              <div id="stories-bubble-container" class="flex space-x-6 mb-10 overflow-x-auto pb-2 scrollbar-hide">
                  <p id="no-stories-message" class="text-center p-4 text-gray-500">Nessuna storia video trovata nel manifesto remoto.</p>
              </div>
+             
              <hr class="border-white/10 my-10">
 
-            <h2 class="text-3xl font-bold mt-12 mb-6">📣 Eventi Aura Live</h2>
-            
-            <div id="aura-events-feed" class="space-y-6">
-                
-                <div class="depth-glass p-6 rounded-xl border-l-4 accent-border flex items-start space-x-4">
-                    <i data-lucide="rocket" class="w-8 h-8 accent-text flex-shrink-0"></i>
-                    <div>
-                        <h3 class="text-xl font-bold mb-1">Lancio Ufficiale Aura!</h3>
-                        <p class="text-sm text-gray-400 mb-2">🗓️ **31 Ottobre** - Un nuovo universo sonoro prende vita.</p>
-                        <p class="text-white/90">Celebra con noi il lancio ufficiale di Aura Music. Ascolta playlist esclusive e sblocca il badge "Early Adopter". La musica non sarà più la stessa.</p>
-                    </div>
-                </div>
-
-                <div class="depth-glass p-6 rounded-xl border-l-4 border-red-500 flex items-start space-x-4">
-                    <i data-lucide="gift" class="w-8 h-8 text-red-400 flex-shrink-0"></i>
-                    <div>
-                        <h3 class="text-xl font-bold mb-1">Xmas Music Contest 🎄</h3>
-                        <p class="text-sm text-gray-400 mb-2">🎶 Dicembre - Invia la tua cover o brano originale a tema natalizio.</p>
-                        <p class="text-white/90">Il vincitore sarà in rotazione esclusiva sulla homepage per tutto Gennaio. È il momento di far sentire la tua "Vibe Natalizia"!</p>
-                    </div>
-                </div>
-
-                <div class="depth-glass p-6 rounded-xl border-l-4 border-blue-500 flex items-start space-x-4">
-                    <i data-lucide="sparkles" class="w-8 h-8 text-blue-400 flex-shrink-0"></i>
-                    <div>
-                        <h3 class="text-xl font-bold mb-1">New Year Concert: L'Alba del Suono</h3>
-                        <p class="text-sm text-gray-400 mb-2">🎉 **1 Gennaio** - Streaming Live.</p>
-                        <p class="text-white/90">Un'esperienza immersiva unica con artisti misteriosi in esclusiva per la community di Aura. Preparati per un viaggio sonoro indimenticabile per iniziare l'anno.</p>
-                    </p>
-                </div>
-
-            </div>
-        </section>
+             <div id="new-releases-feed">
+                 <p class="text-center p-4 text-gray-500">Caricamento nuove uscite...</p>
+             </div>
+             </section>
 
         </div> 
     
@@ -681,7 +653,7 @@
             const isAdPlaying = adState !== 2 && (playerState === YT.PlayerState.PLAYING || playerState === YT.PlayerState.BUFFERING); 
 
             if (isAdPlaying) {
-                // console.log("Annuncio rilevato o imminente. Silenzio e tento il salto.");
+                // console.log("Annuncio rilevato o imminente. Silenzia e tento il salto.");
                 
                 // Silenzia
                 ytPlayer.setVolume(0); 
@@ -1132,6 +1104,7 @@
                 renderPlaylists();
             } else if (sectionId === 'stories') {
                 renderStories();
+                renderNewReleases(); // NUOVO: Chiama il rendering del feed di nuove uscite
             }
         }
 
@@ -1172,11 +1145,50 @@
                 buttonImmersive.classList.toggle('text-red-400', isLiked);
                 buttonImmersive.classList.toggle('text-white/70', !isLiked);
             }
+            // Forza il re-render di tutte le icone 'heart' nel DOM
+            lucide.createIcons();
         }
 
         // ====================================================================
         // FUNZIONI DI WIDGET RENDERING
         // ====================================================================
+        
+        /**
+         * Attiva la condivisione nativa del brano (navigator.share).
+         */
+        window.shareNewRelease = async function(trackId) {
+            const track = AURA_MAP.find(t => t.id === trackId);
+            if (!track) {
+                showToast("Dati del brano non disponibili per la condivisione.", 'error');
+                return;
+            }
+
+            // Simula l'URL del brano usando l'ID di YouTube
+            const shareUrl = `https://youtu.be/${track.youtubeId}`;
+            const shareTitle = `Ascolta "${track.title}" di ${track.artist} su Aura Music!`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: shareTitle,
+                        text: `Nuova Uscita: ${track.title} - ${track.artist}`,
+                        url: shareUrl,
+                    });
+                    // console.log('Condivisione riuscita.');
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        // console.error('Errore durante la condivisione:', error);
+                        showToast("Condivisione annullata o fallita.", 'info');
+                    }
+                }
+            } else {
+                // Fallback per browser non supportati (es. desktop)
+                navigator.clipboard.writeText(shareUrl)
+                    .then(() => showToast("URL del brano copiato negli appunti!", 'success'))
+                    .catch(() => showToast("Impossibile copiare l'URL.", 'error'));
+            }
+        }
+        
 
         /**
          * Genera il markup per un singolo brano in un carosello.
@@ -1265,6 +1277,107 @@
                 `;
             }).join('');
         }
+        
+        /**
+         * Genera un post "Nuova Uscita" in stile Instagram.
+         */
+        function getNewReleasePost(track, username, postDate, caption) {
+            // Uso il colore del mood del brano per l'accento
+            const accentColor = track.color || '#00BFFF';
+            
+            // Icona temporanea per il profilo
+            const profileEmoji = username.startsWith('Aura') ? '✨' : '🎤';
+            
+            const isLiked = likedTracks.has(track.id);
+
+            return `
+                <div class="new-release-post bg-black/50 depth-glass rounded-xl overflow-hidden mb-8 border border-white/10 shadow-2xl">
+                    
+                    <div class="flex items-center p-4">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-gray-700/50 mr-3 border-2" style="border-color: ${accentColor};">
+                            <span>${profileEmoji}</span>
+                        </div>
+                        <div class="flex-grow">
+                            <p class="font-bold text-white truncate">${username}</p>
+                            <p class="text-xs text-gray-400">Nuova Uscita · ${postDate}</p>
+                        </div>
+                        <button onclick="showToast('Altre opzioni per ${track.title}', 'info')" class="text-gray-400 hover:text-white transition p-1">
+                            <i data-lucide="more-horizontal" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div class="relative w-full aspect-square" onclick="playTrack('${track.id}')">
+                        <img src="${track.cover}" alt="Cover di ${track.title}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition duration-300">
+                            <i data-lucide="play-circle" class="w-20 h-20 text-white opacity-80 fill-current"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center p-3 space-x-4">
+                        <button onclick="event.stopPropagation(); toggleLike('${track.id}')" class="text-white/70 hover:text-red-400 transition ${isLiked ? 'text-red-400' : ''}">
+                            <i data-lucide="heart" class="w-7 h-7 fill-current"></i>
+                        </button>
+                        <button onclick="showToast('Commenti non abilitati', 'info')" class="text-white/70 hover:text-white transition">
+                            <i data-lucide="message-circle" class="w-7 h-7"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); shareNewRelease('${track.id}')" class="text-white/70 hover:text-white transition">
+                            <i data-lucide="send" class="w-7 h-7"></i>
+                        </button>
+                        <button onclick="openAddToPlaylistModal('${track.id}')" class="ml-auto text-white/70 hover:accent-text transition">
+                             <i data-lucide="list-plus" class="w-7 h-7"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-4 pt-0">
+                        <p class="text-sm font-semibold mb-1">${track.artist}</p>
+                        <p class="text-white text-lg font-bold">${track.title}</p>
+                        <p class="text-sm text-gray-300 mt-2">${caption}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Renderizza i post delle nuove uscite musicali.
+         */
+        function renderNewReleases() {
+            const container = document.getElementById('new-releases-feed');
+            if (!container) return;
+            
+            // Prendiamo i primi 5 brani da AURA_MAP per simulare le nuove uscite.
+            const newReleaseTracks = AURA_MAP.slice(0, 5); 
+
+            if (newReleaseTracks.length === 0) {
+                container.innerHTML = '<p class="text-center p-4 text-gray-500">Nessuna nuova uscita da mostrare.</p>';
+                return;
+            }
+            
+            // Dati fittizi per i post Instagram
+            const postData = [
+                { username: "Aura Official", date: "1h fa", caption: "Finalmente qui! La nostra nuova Vibe ti aspetta. Ascolta subito il brano completo!" },
+                { username: newReleaseTracks[1]?.artist || "Artista Anonimo", date: "3h fa", caption: "Vibrazioni Glaciali per questo inverno. L'ultimo singolo è su Aura Music." },
+                { username: "Community Picks", date: "1g fa", caption: "Scelto dalla nostra community! Questo brano è un must-have." },
+                { username: newReleaseTracks[3]?.artist || "Beat Maker", date: "2g fa", caption: "Il nuovo EP è fuori ora! Link in bio. #NuovaMusica #AuraVibe" },
+                { username: "Aura Recommends", date: "3g fa", caption: "Da non perdere: un viaggio sonoro mozzafiato. Trovato in esclusiva su Aura." },
+            ];
+            
+            let feedHtml = '';
+            
+            newReleaseTracks.forEach((track, index) => {
+                const data = postData[index] || postData[0];
+                feedHtml += getNewReleasePost(track, data.username, data.date, data.caption);
+            });
+            
+            container.innerHTML = `
+                <h2 class="text-3xl font-bold mt-12 mb-6 border-b border-white/10 pb-4">🌟 Nuove Uscite Musicali</h2>
+                <div class="max-w-xl mx-auto"> ${feedHtml}
+                </div>
+            `;
+            
+            // Aggiorna le icone (cruciale per il pulsante 'heart' e 'send')
+            lucide.createIcons();
+        }
+
 
         /**
          * Ridisegna l'intera home page con il layout a widget.
@@ -1665,6 +1778,7 @@
             // Sovrascrive temporaneamente AURA_MAP con i brani della playlist per la riproduzione in sequenza
             AURA_MAP = playableTracks;
             playTrack(playableTracks[0].id);
+            showSection('music'); // Torna alla home per un'esperienza più pulita
             showToast(`Riproduzione Sessione: ${playlist.name}`, 'info');
 
             // Ricarica AURA_MAP originale dopo un timeout (o al cambio di sezione) per ripristinare i trending
