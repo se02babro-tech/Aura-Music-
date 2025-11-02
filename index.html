@@ -602,18 +602,18 @@
             <h2 class="text-3xl font-bold mb-6">Profilo Utente</h2>
             <div class="depth-glass p-6 rounded-xl max-w-lg space-y-4">
                 <p id="profile-info" class="text-lg font-semibold">Stato: Disconnesso</p>
-                <div id="vibe-score-display" class="text-xl accent-text font-bold">Vibe Score: 0/100</div>
+                <div id="vibe-score-display" class="text-xl accent-text font-bold">Stato: 0/100</div>
                 <button onclick="handleLogout()" class="px-4 py-2 bg-red-600 rounded-lg text-white font-bold hover:bg-red-700 transition">Disconnetti</button>
             </div>
         </section>
 
         <section id="stories-section" class="section-page">
              <div class="flex justify-between items-center mb-6">
-                 <h2 class="text-3xl font-bold">Storie Aura (Video)</h2>
+                 <h2 class="text-3xl font-bold">Aura story's</h2>
                  </div>
              
              <div id="stories-bubble-container" class="flex space-x-6 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-                 <p id="no-stories-message" class="text-center p-4 text-gray-500">Nessuna storia video trovata nel manifesto remoto.</p>
+                 <p id="no-stories-message" class="text-center p-4 text-gray-500"><Nessuna Storia Disponibile></p>
              </div>
              
              <hr class="border-white/10 my-10">
@@ -689,13 +689,13 @@
         
         const ALL_MOODS = Object.keys(MOOD_STYLES); // 6 moods totali
         const YOUTUBE_MOOD_QUERIES = {
-            "Invernale": "Christmas songs for kids", 
-            "Party": "best christmas party songs hits",
-            "Ambient": "fireplace christmas ambience with music",
-            "Chill": "lofi christmas beats",
+            "Invernale": "Musica Invernale", 
+            "Party": "Tecno Music",
+            "Ambient": "House Music",
+            "Chill": "lofi beats",
             // NUOVE QUERY
-            "Focus": "study music for deep focus",
-            "Energia": "gym workout music hits 2024"
+            "Focus": "Rap e trap italiana",
+            "Energia": "Europop tecno hardcore pop"
         };
         // -------------------------------------------------------------
         
@@ -864,7 +864,7 @@
             let url;
             if (filter === 'Trending' || ALL_MOODS.includes(filter)) {
                  // Per Trending e Mood, usa una query di ricerca per un set dinamico di dati (50 risultati)
-                const query = (filter === 'Trending') ? 'best music videos 2024' : YOUTUBE_MOOD_QUERIES[filter];
+                const query = (filter === 'Trending') ? 'Top 10 italia' : YOUTUBE_MOOD_QUERIES[filter];
                 url = `${YOUTUBE_API_BASE_URL}search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=50&key=${YOUTUBE_API_KEY}`;
             } else {
                  // Fallback
@@ -898,8 +898,8 @@
                 renderHomePageWidgets(); 
 
             } catch (error) {
-                console.error("Errore nel recupero dei brani da YouTube:", error);
-                container.innerHTML = `<p class="text-center p-4 text-red-400 col-span-full">Errore nel caricamento: ${error.message}. Verifica la chiave API.</p>`;
+                console.error("SERVER IN AGGIORNAMENTO:", error);
+                container.innerHTML = `<p class="text-center p-4 text-red-400 col-span-full">Server in aggiornamento: ${error.message}. Ricollegati piu tardi.</p>`;
                 AURA_MAP = [];
             }
         }
@@ -1008,7 +1008,7 @@
             playerBar.classList.add('active');
             
             // *** MODIFICA: Aggiornamento manuale icona quando si carica una nuova traccia ***
-            togglePlayIcon(false); // Assume che stia per partire (mostra ⏹️)
+            togglePlayIcon(false); // Assume che stia per partire (mostra ⏯)
         }
 
         window.togglePlayPause = function() {
@@ -1031,12 +1031,12 @@
             if (playerState === YT.PlayerState.PLAYING) {
                 ytPlayer.pauseVideo();
                 // *** MODIFICA: CAMBIO ICONA SUBITO AL CLICK - Stato successivo: PAUSA ***
-                togglePlayIcon(true); // Imposta su PAUSA (mostra ▶️)
+                togglePlayIcon(true); // Imposta su PAUSA (mostra  ▶.)
             } else if (playerState === YT.PlayerState.PAUSED || playerState === YT.PlayerState.CUED) {
                 // Tentativo di riproduzione con gestione del blocco Autoplay
                 const attemptPlay = ytPlayer.playVideo();
                 // *** MODIFICA: CAMBIO ICONA SUBITO AL CLICK - Stato successivo: PLAY ***
-                togglePlayIcon(false); // Imposta su PLAY (mostra ⏹️)
+                togglePlayIcon(false); // Imposta su PLAY (mostra ⏯)
                 if (attemptPlay && typeof attemptPlay.catch === 'function') {
                     attemptPlay.catch(e => {
                         showToast("Riproduzione manuale richiesta.", 'info');
@@ -1046,7 +1046,7 @@
                 // Se è ENDED o CUED, riavvia
                 playTrack(currentTrackData.id, true);
                 // *** MODIFICA: CAMBIO ICONA SUBITO AL CLICK - Stato successivo: PLAY ***
-                togglePlayIcon(false); // Imposta su PLAY (mostra ⏹️)
+                togglePlayIcon(false); // Imposta su PLAY (mostra ⏯)
             }
         }
 
