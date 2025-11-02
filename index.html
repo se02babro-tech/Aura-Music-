@@ -502,22 +502,23 @@
         
         let AURA_MAP = []; // Contiene i metadati dei brani YouTube
         
-        // --- Stili e Icone per Mood Grid Migliorata (Natale/Glaciale) ---
+        // --- Stili e Icone per Mood Grid Migliorata (Vibe Generiche) ---
+        // INIZIO MODIFICA 2: Categorie più sensate e generali
         const MOOD_STYLES = {
-            "Invernale": "bg-blue-900/40 border-blue-600 text-blue-300", 
-            "Party": "bg-red-900/40 border-red-600 text-red-300", 
-            "Ambient": "bg-gray-800/40 border-gray-600 text-gray-300",
+            "Focus": "bg-blue-900/40 border-blue-600 text-blue-300", 
+            "Energy": "bg-red-900/40 border-red-600 text-red-300", 
+            "Relax": "bg-gray-800/40 border-gray-600 text-gray-300",
             "Chill": "bg-cyan-900/40 border-cyan-600 text-cyan-300"
         };
         
         const ALL_MOODS = Object.keys(MOOD_STYLES);
         const YOUTUBE_MOOD_QUERIES = {
-            "Invernale": "Christmas songs for kids", 
-            "Party": "best christmas party songs hits",
-            "Ambient": "fireplace christmas ambience with music",
-            "Chill": "lofi christmas beats"
+            "Focus": "lofi study beats concentration", 
+            "Energy": "best workout music motivation hits",
+            "Relax": "calming ambient music deep sleep",
+            "Chill": "lofi chill hop beats"
         };
-        // -------------------------------------------------------------
+        // FINE MODIFICA 2
         
         let currentTrackData = null;
         let ytPlayer = null; // Oggetto del Player IFrame di YouTube
@@ -633,7 +634,7 @@
             // Se lo stato dell'annuncio è diverso da AD_ENDED (2) e non è in stato UNSTARTED (-1)
             // e il player è in riproduzione o buffering, significa che è in corso o sta per iniziare un annuncio.
             if (adState !== YT.AdState.AD_ENDED && adState !== YT.AdState.UNSTARTED) {
-                console.log("Annuncio rilevato o imminente. Silenzio.");
+                console.log("Annuncio rilevato o imminente. Silenzia.");
                 
                 // Silenzia e cerca di saltare avanti di 5 secondi se possibile
                 // (Molte API IFrame lo impediscono, ma proviamo per le ads skippable)
@@ -663,6 +664,7 @@
          * Carica i brani da YouTube in base al filtro/query.
          */
         async function fetchTracks(filter = 'Trending') {
+            activeFilter = filter; // Aggiorna il filtro attivo
             const container = document.getElementById('home-widgets-container');
             if (container) {
                 container.innerHTML = `<p class="text-center text-gray-400 col-span-full"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Caricamento brani di tendenza da YouTube... (${filter})</p>`;
@@ -1124,7 +1126,13 @@
 
             // Ricarica i contenuti della sezione
             if (sectionId === 'music') {
-                renderHomePageWidgets();
+                // Se si torna a 'music', resetta il filtro e ricarica i trending se non ci sono brani
+                if (activeFilter !== 'Trending') {
+                    activeFilter = 'Trending';
+                    fetchTracks('Trending');
+                } else {
+                    renderHomePageWidgets();
+                }
             } else if (sectionId === 'library') {
                 renderLikedTracks();
             } else if (sectionId === 'playlists') {
@@ -1232,15 +1240,17 @@
             `;
         }
 
+        // INIZIO MODIFICA 2: Icone aggiornate per le nuove Vibe
         function getMoodIcon(mood) {
             switch (mood) {
-                case "Invernale": return "🎄"; // MODIFICATO: Albero di Natale Emoji
-                case "Party": return "sparkles";
-                case "Ambient": return "cloud-drizzle";
-                case "Chill": return "snowflake";
+                case "Focus": return "book-open"; 
+                case "Energy": return "zap";
+                case "Relax": return "cloud-drizzle";
+                case "Chill": return "coffee";
                 default: return "music";
             }
         }
+        // FINE MODIFICA 2
 
         /**
          * Genera il markup per la griglia dei Moods ("Scegli la Vibe").
@@ -1281,7 +1291,13 @@
             let greeting = "Buonasera.";
             if (currentHour < 12) greeting = "Buongiorno.";
             else if (currentHour < 18) greeting = "Buon Pomeriggio.";
-            document.getElementById('home-greeting').textContent = `${greeting} La tua Vibe è pronta.`;
+            
+            let greetingText = `${greeting} La tua Vibe è pronta.`;
+            if (activeFilter !== 'Trending') {
+                 greetingText = `Vibe Attiva: ${activeFilter}`;
+            }
+
+            document.getElementById('home-greeting').textContent = greetingText;
 
             if (AURA_MAP.length === 0) {
                 container.innerHTML = `<p class="text-center p-4 text-gray-500">Nessun brano da mostrare. Prova a ricaricare o a cercare qualcosa.</p>`;
@@ -1290,46 +1306,61 @@
 
             let allWidgetsHtml = '';
 
-            // WIDGET 1: Accesso Rapido (Quick Access) - MODIFICATO IN GRIGLIA A 2 COLONNE
-            const quickAccessTracks = AURA_MAP.slice(0, 4);
-            const quickAccessHtml = quickAccessTracks.map(getQuickAccessElement).join('');
-            // MODIFICA 1: Cambiato 'horizontal-scroll' a 'grid grid-cols-2 gap-3'
-            allWidgetsHtml += createWidgetBlock('Accesso Rapido', 'I tuoi brani recenti e suggeriti.', quickAccessHtml, 'grid grid-cols-2 gap-3');
+            // INIZIO MODIFICA 3: Visualizzazione dinamica se un Mood è attivo
+            if (activeFilter !== 'Trending') {
+                 // Se un Mood è attivo, mostra solo un grande blocco di risultati per quel Mood
+                 const moodTracksHtml = AURA_MAP.map(getTrackElement).join('');
+                 allWidgetsHtml += createWidgetBlock(
+                     `Risultati Vibe: ${activeFilter}`, 
+                     `Brani selezionati per il tuo momento ${activeFilter.toLowerCase()}.`, 
+                     moodTracksHtml, 
+                     'horizontal-scroll' // Usa il carosello per mostrare tutti i risultati
+                 );
+            } else {
+                // WIDGET 1: Accesso Rapido (Quick Access) 
+                const quickAccessTracks = AURA_MAP.slice(0, 4);
+                const quickAccessHtml = quickAccessTracks.map(getQuickAccessElement).join('');
+                allWidgetsHtml += createWidgetBlock('Accesso Rapido', 'I tuoi brani recenti e suggeriti.', quickAccessHtml, 'grid grid-cols-2 gap-3');
 
-            // WIDGET 2: Scegli la Vibe (Mood Grid) - GRIGLIA A DUE COLONNE (COME RICHIESTO)
-            const moodGridHtml = getMoodGridHtml();
-            allWidgetsHtml += createWidgetBlock('Scegli la Vibe', 'Seleziona il tuo mood attuale e inizia ad ascoltare.', moodGridHtml, 'grid grid-cols-2 gap-4'); // Rimosso sm:grid-cols-4
+                // WIDGET 2: Scegli la Vibe (Mood Grid)
+                const moodGridHtml = getMoodGridHtml();
+                allWidgetsHtml += createWidgetBlock('Scegli la Vibe', 'Seleziona il tuo mood attuale e inizia ad ascoltare.', moodGridHtml, 'grid grid-cols-2 gap-4'); // Rimosso sm:grid-cols-4
 
-            // WIDGET 3: Deep Dive Discovery (Horizontal Carousel)
-            const deepDiveTracks = AURA_MAP.slice(6, 16);
-            const deepDiveHtml = deepDiveTracks.map(getTrackElement).join('');
-            allWidgetsHtml += createWidgetBlock('Deep Dive Discovery', 'Nuove vibrazioni solo per te.', deepDiveHtml, 'horizontal-scroll');
+                // WIDGET 3: Deep Dive Discovery (Horizontal Carousel)
+                const deepDiveTracks = AURA_MAP.slice(6, 16);
+                const deepDiveHtml = deepDiveTracks.map(getTrackElement).join('');
+                allWidgetsHtml += createWidgetBlock('Deep Dive Discovery', 'Nuove vibrazioni solo per te.', deepDiveHtml, 'horizontal-scroll');
 
-            // NUOVO WIDGET 4: Rilassati con il nostro Flow (Horizontal Carousel)
-            const moodMusicTracks = AURA_MAP.slice(16, 26);
-            const moodMusicHtml = moodMusicTracks.map(getTrackElement).join('');
-            allWidgetsHtml += createWidgetBlock('Rilassati con il nostro Flow', 'Playlist curate per il tuo stato d\'animo.', moodMusicHtml, 'horizontal-scroll');
+                // NUOVO WIDGET 4: Rilassati con il nostro Flow (Horizontal Carousel)
+                const moodMusicTracks = AURA_MAP.slice(16, 26);
+                const moodMusicHtml = moodMusicTracks.map(getTrackElement).join('');
+                allWidgetsHtml += createWidgetBlock('Rilassati con il nostro Flow', 'Playlist curate per il tuo stato d\'animo.', moodMusicHtml, 'horizontal-scroll');
 
-            // NUOVO WIDGET 5: Ritorno al Passato (Horizontal Carousel)
-            const retroTracks = AURA_MAP.slice(26, 36);
-            const retroHtml = retroTracks.map(getTrackElement).join('');
-            allWidgetsHtml += createWidgetBlock('Ritorno al Passato', 'I successi che non smettono di emozionare.', retroHtml, 'horizontal-scroll');
+                // NUOVO WIDGET 5: Ritorno al Passato (Horizontal Carousel)
+                const retroTracks = AURA_MAP.slice(26, 36);
+                const retroHtml = retroTracks.map(getTrackElement).join('');
+                allWidgetsHtml += createWidgetBlock('Ritorno al Passato', 'I successi che non smettono di emozionare.', retroHtml, 'horizontal-scroll');
+            }
+            // FINE MODIFICA 3
 
             // Applica tutti i widget
             container.innerHTML = allWidgetsHtml;
             lucide.createIcons();
         }
 
+        // INIZIO MODIFICA 1: Funzione showMoodTracks sistemata
         window.showMoodTracks = function(mood) {
-            activeFilter = mood;
-            if (AURA_MAP.length === 0) {
-                // Se non ci sono brani, li carica con la query del mood
-                fetchTracks(mood);
-            } else {
-                // Altrimenti (es. se "Trending" è chiamato con questo filtro), ricarica la home completa
-                renderHomePageWidgets();
+            // Quando si clicca su un mood, si vuole caricare NUOVO contenuto, 
+            // quindi si chiama sempre fetchTracks.
+            fetchTracks(mood); 
+            // Aggiunge un messaggio di caricamento visibile prima che la fetch finisca
+            const container = document.getElementById('home-widgets-container');
+            if (container) {
+                 container.innerHTML = `<p class="text-center text-gray-400 col-span-full"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Caricamento brani per Vibe: ${mood}... </p>`;
+                 lucide.createIcons();
             }
         }
+        // FINE MODIFICA 1
 
         // ====================================================================
         // FUNZIONI PRE-ESISTENTI (Mantengono la loro funzionalità)
@@ -1518,6 +1549,8 @@
             
             // Ricarica AURA_MAP originale dopo un timeout (o al cambio di sezione) per ripristinare i trending
             setTimeout(() => {
+                // Resetta il filtro e ricarica i trending
+                activeFilter = 'Trending';
                 fetchTracks('Trending');
             }, 60000); 
         }
