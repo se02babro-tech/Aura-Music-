@@ -694,7 +694,7 @@
             "Ambient": "House Music",
             "Chill": "lofi beats",
             // NUOVE QUERY
-            "Focus": "Rap e trap italiana",
+            "Focus": "Rap e trap ",
             "Energia": "Europop tecno hardcore pop"
         };
         // -------------------------------------------------------------
@@ -864,7 +864,7 @@
             let url;
             if (filter === 'Trending' || ALL_MOODS.includes(filter)) {
                  // Per Trending e Mood, usa una query di ricerca per un set dinamico di dati (50 risultati)
-                const query = (filter === 'Trending') ? 'Top 10 italia' : YOUTUBE_MOOD_QUERIES[filter];
+                const query = (filter === 'Trending') ? 'musica in tendenza' : YOUTUBE_MOOD_QUERIES[filter];
                 url = `${YOUTUBE_API_BASE_URL}search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=50&key=${YOUTUBE_API_KEY}`;
             } else {
                  // Fallback
@@ -874,7 +874,7 @@
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error(`YouTube API Error! Status: ${response.status}`);
+                    throw new Error(`Error! Status: ${response.status}`);
                 }
                 const data = await response.json();
 
@@ -972,7 +972,7 @@
                 showToast("Registrazione Eseguita!", 'success');
             } else {
                 loggedInUser = { email: email, vibeScore: 50 };
-                showToast("Accesso Eseguito!", 'success');
+                showToast("Login Eseguito!", 'success');
             }
             
             saveLocalData();
@@ -984,7 +984,7 @@
             loggedInUser = null;
             saveLocalData();
             updateAuthUI(null);
-            showToast("Disconnessione Eseguita.", 'info');
+            showToast("Logout Eseguito.", 'info');
             showSection('music'); // Torna alla home
         }
 
@@ -1013,7 +1013,7 @@
 
         window.togglePlayPause = function() {
             if (!isPlayerReady) {
-                showToast("Il player YouTube non è pronto.", 'error');
+                showToast("Riprova.", 'error');
                 return;
             }
             
@@ -1174,9 +1174,9 @@
 
         // START: FUNZIONE PER IL CAMBIO EMOJI (RESTANO INVARIATE)
         function togglePlayIcon(isPaused) {
-            // isPaused = true -> Player in pausa, mostra Play emoji (▶️)
-            // isPaused = false -> Player in riproduzione, mostra Stop emoji (⏹️)
-            const emoji = isPaused ? '▶️' : '⏹️'; 
+            // isPaused = true -> Player in pausa, mostra Play emoji (▶)
+            // isPaused = false -> Player in riproduzione, mostra Stop emoji (⏯)
+            const emoji = isPaused ? '▶' : '⏯'; 
 
             if (playIcon) {
                 // Aggiorniamo il contenuto dell'elemento <span>
@@ -1528,7 +1528,7 @@
             
             // Dati fittizi per i post Instagram
             const postData = [
-                { username: "Aura Official", date: "1h fa", caption: "Finalmente qui! La nostra nuova Vibe ti aspetta. Ascolta subito il brano completo!" },
+                { username: "Aura Ai", date: "1h fa", caption: "Finalmente qui! La nostra nuova Vibe ti aspetta. Ascolta subito il brano completo!" },
                 { username: newReleaseTracks[1]?.artist || "Artista Anonimo", date: "3h fa", caption: "Vibrazioni Glaciali per questo inverno. L'ultimo singolo è su Aura Music." },
                 { username: "Community Picks", date: "1g fa", caption: "Scelto dalla nostra community! Questo brano è un must-have." },
                 { username: newReleaseTracks[3]?.artist || "Beat Maker", date: "2g fa", caption: "Il nuovo EP è fuori ora! Link in bio. #NuovaMusica #AuraVibe" },
@@ -1953,7 +1953,7 @@
             AURA_MAP = playableTracks;
             playTrack(playableTracks[0].id);
             showSection('music'); // Torna alla home per un'esperienza più pulita
-            showToast(`Riproduzione Sessione: ${playlist.name}`, 'info');
+            showToast(`Riproduzione Playlist: ${playlist.name}`, 'info');
 
             // Ricarica AURA_MAP originale dopo un timeout (o al cambio di sezione) per ripristinare i trending
             setTimeout(() => {
