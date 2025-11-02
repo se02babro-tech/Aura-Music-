@@ -188,11 +188,12 @@
             vertical-align: top;
             white-space: normal;
         }
+        /* MODIFICA 1: Rendo l'elemento compatibile con il grid layout a 2 colonne */
         .widget-quick-access {
-            display: inline-flex;
-            width: 48%; /* Due per riga su mobile */
-            min-width: 250px;
-            margin-right: 12px;
+            display: flex; /* Cambiato da inline-flex a flex */
+            width: 100%; /* Cambiato da 48% a 100% per riempire la cella della griglia */
+            min-width: auto; /* Rimosso min-width fisso */
+            margin-right: 0; /* Rimosso margine orizzontale */
             height: 80px;
             align-items: center;
         }
@@ -266,14 +267,14 @@
             <h2 class="text-xl font-semibold">In Riproduzione</h2>
         </div>
         
-        <div class="flex flex-col items-center space-y-12 max-w-lg w-full">
+        <div class="flex flex-col items-center space-y-8 max-w-lg w-full overflow-y-auto pt-16 pb-20"> 
             <div id="immersive-yt-player-container" class="w-full aspect-video rounded-3xl shadow-2xl shadow-ryzn-accent/30 overflow-hidden bg-black flex items-center justify-center">
                  <img id="immersive-cover" src="" alt="Album Cover" class="w-full h-full object-cover">
             </div>
             
             <div class="text-center">
-                <h3 id="immersive-title" class="text-4xl font-extrabold truncate">Titolo Brano</h3>
-                <p id="immersive-artist" class="text-xl text-gray-400 truncate">Artista</p>
+                <h3 id="immersive-title" class="text-3xl font-extrabold truncate">Titolo Brano</h3>
+                <p id="immersive-artist" class="text-lg text-gray-400 truncate">Artista</p>
             </div>
 
             <div id="progress-bar-immersive-container" class="w-full h-2 bg-white/20 rounded-full cursor-pointer relative">
@@ -748,34 +749,34 @@
                 title.textContent = 'Registrati ad Aura Music';
                 button.textContent = 'Registrati';
                 button.onclick = () => handleAuthAction('register');
-                link.textContent = 'Accedi';
+                link.textContent = 'Hai già un account? Accedi';
                 link.onclick = () => switchAuthMode('login');
             }
         }
+        
         function handleAuthAction(mode) {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
             
             if (!email || !password) {
                 showToast("Inserisci email e password.", 'error');
                 return;
             }
-            
-            // Simulazione di autenticazione/registrazione (in un'app reale: chiamata API)
-            if (mode === 'register') {
-                 loggedInUser = { email: email, vibeScore: 0 };
-                 showToast("Registrazione Eseguita!", 'success');
-            } else {
-                 loggedInUser = { email: email, vibeScore: 50 }; 
-                 showToast("Accesso Eseguito!", 'success');
-            }
 
+            // Simulazione di logica di autenticazione (non implementa un'app reale: chiamata API)
+            if (mode === 'register') {
+                loggedInUser = { email: email, vibeScore: 0 };
+                showToast("Registrazione Eseguita!", 'success');
+            } else {
+                loggedInUser = { email: email, vibeScore: 50 };
+                showToast("Accesso Eseguito!", 'success');
+            }
             saveLocalData();
             updateAuthUI(loggedInUser);
             closeAuthModal();
-            showSection('profile'); 
+            showSection('profile');
         }
-
+        
         window.handleLogout = function() {
             loggedInUser = null;
             saveLocalData();
@@ -790,24 +791,22 @@
         window.playTrack = function(trackId, autoplay = true) {
             const track = AURA_MAP.find(t => t.id === trackId);
             if (!track) return;
-
             currentTrackData = track;
-
             if (isPlayerReady) {
                 ytPlayer.loadVideoById(trackId);
             } else {
                 showToast("Player in fase di caricamento. Riprova tra un attimo.", 'info');
             }
-
             updateUI(track);
             playerBar.classList.add('active');
-}
-
-        window.togglePlayPause = function() {
+        }
+        
+        window.togglePlayPause = function(fromImmersive = false) {
             if (!isPlayerReady) {
                 showToast("Il player YouTube non è pronto.", 'error');
                 return;
             }
+
             if (!currentTrackData) {
                 if (AURA_MAP.length > 0) {
                     playTrack(AURA_MAP[0].id);
@@ -823,14 +822,14 @@
             } else if (playerState === YT.PlayerState.PAUSED) {
                 // Tentativo di riproduzione con gestione del blocco Autoplay
                 const attemptPlay = ytPlayer.playVideo();
-                 if (attemptPlay && typeof attemptPlay.catch === 'function') {
-                     attemptPlay.catch(e => {
+                if (attemptPlay && typeof attemptPlay.catch === 'function') {
+                    attemptPlay.catch(e => {
                         showToast("Riproduzione manuale richiesta.", 'info');
-                     });
-                 }
+                    });
+                }
             } else {
                 // Se è ENDED o CUED, riavvia
-                 playTrack(currentTrackData.id, true);
+                playTrack(currentTrackData.id, true);
             }
         }
         
@@ -844,57 +843,40 @@
         window.skipBackward = function() {
             if (!currentTrackData) return;
             const currentIndex = AURA_MAP.findIndex(t => t.id === currentTrackData.id);
-            const prevIndex = (currentIndex - 1 + AURA_MAP.length) % AURA_MAP.length;
+            let prevIndex = (currentIndex - 1);
+            if (prevIndex < 0) {
+                prevIndex = AURA_MAP.length - 1;
+            }
             playTrack(AURA_MAP[prevIndex].id);
         }
-
-        window.setVolume = function(volume) {
-            currentVolume = parseInt(volume); // Riceve 0-100
-            if (isPlayerReady) {
-                 ytPlayer.setVolume(currentVolume);
-                 if (ytPlayer.isMuted()) { 
-                     // Se era muto per un annuncio, ripristina
-                     ytPlayer.unMute();
-                 }
-            }
-            if (volumeSlider) volumeSlider.value = currentVolume;
-            if (volumeSliderImmersive) volumeSliderImmersive.value = currentVolume;
-        }
-
+        
         window.toggleLoop = function() {
             isLooping = !isLooping;
             updateLoopButton(isLooping);
-            saveLocalData();
-            showToast(isLooping ? 'Ripetizione Attivata' : 'Ripetizione Disattivata', 'info');
+            showToast(isLooping ? 'Ripetizione Attiva' : 'Ripetizione Disattiva', 'info');
         }
 
         function updateLoopButton(isLooping) {
-            const loopIcon = document.getElementById('loop-button-immersive').querySelector('i');
-            if (loopIcon) {
-                if (isLooping) {
-                    loopIcon.setAttribute('data-lucide', 'repeat-one');
-                    loopIcon.classList.add('accent-text');
-                    loopIcon.classList.remove('text-white/70');
-                } else {
-                    loopIcon.setAttribute('data-lucide', 'repeat');
-                    loopIcon.classList.remove('accent-text');
-                    loopIcon.classList.add('text-white/70');
-                }
-            }
-            lucide.createIcons();
+             const button = document.getElementById('loop-button-immersive');
+             if (button) {
+                 button.classList.toggle('accent-text', isLooping);
+                 button.classList.toggle('text-white/70', !isLooping);
+             }
         }
+
+        /**
+         * Funzioni di Interfaccia Utente e Modalità Immersiva
+         */
 
         function setupProgressInterval() {
             clearInterval(progressInterval);
-            progressInterval = setInterval(updateProgress, 1000);
+            progressInterval = setInterval(updateProgress, 1000); 
         }
 
         function updateProgress() {
             if (!ytPlayer || !progressBar || !progressBarImmersive) return;
-            
             const duration = ytPlayer.getDuration();
             const currentTime = ytPlayer.getCurrentTime();
-
             if (duration > 0) {
                 const percentage = (currentTime / duration) * 100;
                 progressBar.style.width = `${percentage}%`;
@@ -917,37 +899,35 @@
             if (!ytPlayer || !currentTrackData) return;
             const duration = ytPlayer.getDuration();
             if (duration <= 0) return;
-
             const container = event.currentTarget;
             const clickX = event.clientX - container.getBoundingClientRect().left;
             const width = container.offsetWidth;
             const seekTime = (clickX / width) * duration;
             ytPlayer.seekTo(seekTime, true);
-        }
-
+        } 
+        
         // Aggiunge l'event listener per il seek, altrimenti funziona solo per il click sul player bar
         function setupSeekListeners() {
             if(progressBarContainer) progressBarContainer.addEventListener('click', handleSeek);
             if(progressBarImmersiveContainer) progressBarImmersiveContainer.addEventListener('click', handleSeek);
         }
 
-
         function updateUI(track) {
             playerTitle.textContent = track.title;
             playerArtist.textContent = track.artist;
             playerCover.src = track.cover;
-
+            
             immersiveTitle.textContent = track.title;
             immersiveArtist.textContent = track.artist;
             immersiveCover.src = track.cover;
             
             vibeScoreDisplay.textContent = `Vibe Score: ${track.vibe}/100`;
-
+            
             updateAmbientLight(track.color || '#00BFFF', track.rgb || '0 191 255');
             updateLikeButton(track.id);
 
             // Forza il re-render delle icone Lucide (critico per animazioni)
-            lucide.createIcons(); 
+            lucide.createIcons();
         }
 
         function togglePlayIcon(isPaused) {
@@ -967,360 +947,40 @@
                 document.documentElement.style.setProperty('--ryzn-color-hex', hexColor);
             }
             if (rgbColor) {
-                document.documentElement.style.setProperty('--ryzn-color-rgb', rgbColor);
-            }
-        }
-
-        // --- Logica Like/Playlist/UI ---
-        function saveLocalData() {
-            localStorage.setItem('aura_liked_tracks', JSON.stringify(Array.from(likedTracks)));
-            localStorage.setItem('aura_playlists', JSON.stringify(userPlaylists));
-            localStorage.setItem('aura_user', JSON.stringify(loggedInUser));
-            localStorage.setItem('aura_story_watched', JSON.stringify(Array.from(storyWatchedStatus)));
-        }
-
-        function loadLocalData() {
-            try {
-                const savedLikes = localStorage.getItem('aura_liked_tracks');
-                if (savedLikes) {
-                    likedTracks = new Set(JSON.parse(savedLikes));
-                }
-                const savedPlaylists = localStorage.getItem('aura_playlists');
-                if (savedPlaylists) {
-                    userPlaylists = JSON.parse(savedPlaylists);
-                }
-                const savedUser = localStorage.getItem('aura_user');
-                if (savedUser && savedUser !== 'null') {
-                    loggedInUser = JSON.parse(savedUser);
-                    updateAuthUI(loggedInUser);
-                } else {
-                    loggedInUser = null;
-                }
-                const savedWatchedStories = localStorage.getItem('aura_story_watched');
-                if (savedWatchedStories) {
-                     storyWatchedStatus = new Set(JSON.parse(savedWatchedStories));
-                }
-                const savedLoop = localStorage.getItem('aura_loop_status');
-                if (savedLoop) {
-                    isLooping = JSON.parse(savedLoop);
-                }
-                const savedVolume = localStorage.getItem('aura_volume');
-                if (savedVolume) {
-                    currentVolume = parseInt(savedVolume);
-                }
-
-            } catch(e) {
-                console.error("Errore nel caricamento dei dati locali:", e);
-            }
-        }
-
-        // --- Gestione Sezioni ---
-        window.showSection = function(sectionId, filter = activeFilter) {
-            activeFilter = filter; // Usa il filtro passato o l'attuale
-
-            document.querySelectorAll('.section-page').forEach(section => {
-                section.classList.remove('active');
-            });
-            const targetSection = document.getElementById(`${sectionId}-section`);
-            if (targetSection) {
-                targetSection.classList.add('active');
-            }
-            
-            // Aggiorna la navigazione
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            const activeItem = document.getElementById(`nav-${sectionId}`);
-            if (activeItem) {
-                activeItem.classList.add('active');
-            }
-            
-            // Ricarica i contenuti della sezione
-            if (sectionId === 'music') {
-                renderHomePageWidgets(); 
-            } else if (sectionId === 'library') {
-                renderLikedTracks();
-            } else if (sectionId === 'playlists') {
-                renderPlaylists();
-            } else if (sectionId === 'stories') {
-                renderStories();
-            }
-        }
-
-        window.toggleLike = function(optionalTrackId) {
-            const trackId = optionalTrackId || currentTrackData?.id;
-            if (!trackId) {
-                showToast("Seleziona una traccia prima.", 'error');
-                return;
-            }
-            const track = AURA_MAP.find(t => t.id === trackId);
-            if (!track) return;
-            
-            if (likedTracks.has(trackId)) {
-                likedTracks.delete(trackId);
-                showToast(`Rimosso: ${track.title}`, 'info');
-            } else {
-                likedTracks.add(trackId);
-                showToast(`Aggiunto ai Preferiti: ${track.title}`, 'success');
-            }
-            
-            saveLocalData();
-            updateLikeButton(trackId);
-            renderLikedTracks(); // Aggiorna la libreria se visibile
-        }
-
-        function updateLikeButton(trackId) {
-            const isLiked = likedTracks.has(trackId);
-            const button = document.getElementById('like-button');
-            if (button) {
-                button.classList.toggle('text-red-400', isLiked);
-                button.classList.toggle('text-white/50', !isLiked);
-            }
-            const buttonImmersive = document.getElementById('like-button-immersive');
-            if (buttonImmersive) {
-                buttonImmersive.classList.toggle('text-red-400', isLiked);
-                buttonImmersive.classList.toggle('text-white/70', !isLiked);
-            }
-        }
-
-        // ====================================================================
-        // FUNZIONI DI WIDGET RENDERING (Nuove per stile YouTube Music)
-        // ====================================================================
-
-        /**
-         * Genera il markup per il widget orizzontale piccolo (stile "Quick Access/Recent").
-         */
-        function getQuickAccessWidget(track) {
-            const defaultColor = '#3a3a3a'; 
-            return `
-                 <div onclick="playTrack('${track.id}')" class="widget-quick-access depth-glass p-1 rounded-lg cursor-pointer transition hover:scale-[1.02] border border-transparent hover:accent-border" style="background-color: ${defaultColor};">
-                     <img src="${track.cover}" alt="${track.title}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
-                     <div class="truncate p-3">
-                         <p class="text-white font-bold truncate">${track.title}</p>
-                         <p class="text-gray-400 text-xs truncate">${track.artist}</p>
-                     </div>
-                 </div>
-            `;
-        }
-
-        /**
-         * Genera il markup per le card verticali (stile "Discovery").
-         */
-        function getTrackElement(track) {
-            return `
-                <div onclick="playTrack('${track.id}')" class="widget-row-item cursor-pointer transition hover:opacity-80">
-                    <img src="${track.cover}" alt="${track.title}" class="w-full aspect-square rounded-lg object-cover shadow-lg shadow-ryzn-accent/10 mb-2">
-                    <p class="text-white font-bold text-sm truncate">${track.title}</p>
-                    <p class="text-gray-400 text-xs truncate">${track.artist}</p>
-                </div>
-            `;
-        }
-        
-        /**
-         * Wrapper per l'intera sezione widget.
-         */
-        function createWidgetBlock(title, subtitle, contentHtml, layout = 'horizontal-scroll') {
-            let contentClasses = 'widget-row';
-            if (layout.includes('grid')) {
-                contentClasses = layout; // Usa le classi di griglia passate
-            } else if (layout === 'quick-access') {
-                 contentClasses = 'flex flex-wrap gap-x-4 gap-y-3'; // Simula il layout 2xN
-            }
-            
-            return `
-                 <div>
-                     <h3 class="text-2xl font-bold mb-2">${title}</h3>
-                     ${subtitle ? `<p class="text-gray-400 mb-4">${subtitle}</p>` : ''}
-                     <div class="${contentClasses}">
-                         ${contentHtml}
-                     </div>
-                 </div>
-            `;
-        }
-
-        function getMoodIcon(mood) {
-            switch (mood) {
-                case "Invernale": return "🎄"; // MODIFICATO: Albero di Natale Emoji
-                case "Party": return "sparkles";
-                case "Ambient": return "cloud-drizzle";
-                case "Chill": return "snowflake";
-                default: return "music";
+                document.documentElement.style.setProperty('--ryzn-color-rgb', rgbColor.replace(/,/g, ' '));
             }
         }
         
-        /**
-         * Genera il markup per la griglia dei Moods ("Scegli la Vibe").
-         */
-        function getMoodGridHtml() {
-            return ALL_MOODS.map(mood => {
-                const styleClass = MOOD_STYLES[mood] || 'bg-gray-700/40 border-gray-500 text-gray-300';
-                const iconOrEmoji = getMoodIcon(mood);
-                
-                let iconHtml;
-                if (iconOrEmoji.length > 2) { // È un nome Lucide (es. "sparkles")
-                     // Icona Lucide
-                     iconHtml = `<i data-lucide="${iconOrEmoji}" class="w-8 h-8 ${MOOD_STYLES[mood].includes('text-') ? '' : 'text-white'}"></i>`;
-                } else { // È un'emoji (es. "🎄")
-                     // Emoji, usa uno span con dimensione fissa
-                     iconHtml = `<span class="text-3xl">${iconOrEmoji}</span>`; 
-                }
+        function getDOMElements() {
+            progressBar = document.getElementById('progress-bar');
+            progressBarImmersive = document.getElementById('progress-bar-immersive');
+            playIcon = document.getElementById('play-icon');
+            immersivePlayIcon = document.getElementById('immersive-play-icon');
+            playerTitle = document.getElementById('player-title');
+            playerArtist = document.getElementById('player-artist');
+            playerCover = document.getElementById('player-cover');
+            immersiveCover = document.getElementById('immersive-cover');
+            immersiveTitle = document.getElementById('immersive-title');
+            immersiveArtist = document.getElementById('immersive-artist');
+            likeButton = document.getElementById('like-button');
+            vibeScoreDisplay = document.getElementById('vibe-score-display');
+            volumeSlider = document.getElementById('volume-slider');
+            volumeSliderImmersive = document.getElementById('volume-slider-immersive');
+            progressBarContainer = document.getElementById('progress-bar-container');
+            progressBarImmersiveContainer = document.getElementById('progress-bar-immersive-container');
+            loopButtonImmersive = document.getElementById('loop-button-immersive');
+            playerBar = document.querySelector('.player-bar');
 
-                // depth-glass e riquadro (COME RICHIESTO)
-                return `
-                    <div onclick="showMoodTracks('${mood}')" class="depth-glass ${styleClass} p-4 rounded-xl cursor-pointer transition hover:scale-[1.03] border-2 shadow-lg flex flex-col items-center justify-center text-center space-y-2 min-h-[120px]">
-                        ${iconHtml}
-                        <p class="font-bold text-lg">${mood}</p>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        /**
-         * Ridisegna l'intera home page con il layout a widget.
-         */
-        window.renderHomePageWidgets = function() {
-            const container = document.getElementById('home-widgets-container');
-            if (!container) return;
-
-            // Aggiorna il saluto
-            const currentHour = new Date().getHours();
-            let greeting = "Buonasera.";
-            if (currentHour < 12) greeting = "Buongiorno.";
-            else if (currentHour < 18) greeting = "Buon Pomeriggio.";
-            document.getElementById('home-greeting').textContent = `${greeting} La tua Vibe è pronta.`;
-
-            if (AURA_MAP.length === 0) {
-                container.innerHTML = '<p class="text-center text-gray-500 col-span-full">Nessun brano caricato. Verifica la tua chiave API.</p>';
-                return;
-            }
-
-            let allWidgetsHtml = '';
-
-            // LOGICA DI FILTRO (Sovrascrive la home se un mood è attivo)
-            if (activeFilter !== 'Trending') {
-                const filteredTracks = AURA_MAP.filter(t => t.mood === activeFilter);
-                const filteredHtml = filteredTracks.map(getTrackElement).join('');
-                
-                // Pulsante Torna alla Home / X
-                const backButtonHtml = `
-                    <button onclick="showSection('music', 'Trending')" class="flex items-center text-gray-400 hover:accent-text transition mb-6">
-                        <i data-lucide="arrow-left" class="w-6 h-6 mr-2"></i>
-                        Torna alla Home
-                    </button>
-                `;
-                
-                // Inserisce prima del blocco widget
-                container.innerHTML = backButtonHtml + createWidgetBlock(`Risultati: ${activeFilter}`, 'Brani selezionati in base al tuo mood.', filteredHtml, 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4');
-                lucide.createIcons();
-                return;
-            }
-
-            // WIDGET 1: Quick Access / Ascoltati di Recente (Simulazione stile 2xN grid)
-            const quickAccessTracks = AURA_MAP.slice(0, 6);
-            const quickAccessHtml = quickAccessTracks.map(getQuickAccessWidget).join('');
-            allWidgetsHtml += createWidgetBlock('Accesso Rapido', 'I tuoi brani di tendenza.', quickAccessHtml, 'quick-access');
-
-            // WIDGET 2: Scegli la Vibe (Mood Grid/Boxes) -> FISSO A DUE COLONNE (COME RICHIESTO)
-            const moodGridHtml = getMoodGridHtml();
-            allWidgetsHtml += createWidgetBlock('Scegli la Vibe', 'Seleziona il tuo mood attuale e inizia ad ascoltare.', moodGridHtml, 'grid grid-cols-2 gap-4'); // Rimosso sm:grid-cols-4
-
-            
-            // WIDGET 3: Deep Dive Discovery (Horizontal Carousel)
-            const deepDiveTracks = AURA_MAP.slice(6, 16);
-            const deepDiveHtml = deepDiveTracks.map(getTrackElement).join('');
-            allWidgetsHtml += createWidgetBlock('Deep Dive Discovery', 'Nuove vibrazioni solo per te.', deepDiveHtml, 'horizontal-scroll');
-            
-            // NUOVO WIDGET 4: Rilassati con il nostro Flow (Horizontal Carousel)
-            const moodMusicTracks = AURA_MAP.slice(16, 26);
-            const moodMusicHtml = moodMusicTracks.map(getTrackElement).join('');
-            allWidgetsHtml += createWidgetBlock('Rilassati con il nostro Flow', 'Playlist curate per il tuo stato d\'animo.', moodMusicHtml, 'horizontal-scroll');
-
-            // NUOVO WIDGET 5: Ritorno al Passato (Horizontal Carousel)
-            const retroTracks = AURA_MAP.slice(26, 36);
-            const retroHtml = retroTracks.map(getTrackElement).join('');
-            allWidgetsHtml += createWidgetBlock('Ritorno al Passato', 'I successi che non smettono di emozionare.', retroHtml, 'horizontal-scroll');
-
-            
-            // Applica tutti i widget
-            container.innerHTML = allWidgetsHtml;
-            lucide.createIcons();
-        }
-        
-        window.showMoodTracks = function(mood) {
-            activeFilter = mood;
-            if (AURA_MAP.length === 0) {
-                // Se non ci sono brani, li carica con la query del mood
-                fetchTracks(mood);
-            } else {
-                // Altrimenti (es. se "Trending" è chiamato con questo filtro), ricarica la home completa
-                renderHomePageWidgets();
-            }
-        }
-
-        // ====================================================================
-        // FUNZIONI PRE-ESISTENTI (Mantengono la loro funzionalità)
-        // ====================================================================
-
-        function getLikedTrackElement(track) {
-            return `
-                 <div onclick="playTrack('${track.id}')" class="depth-glass p-3 rounded-xl flex items-center space-x-4 cursor-pointer hover:bg-white/10 transition">
-                     <img src="${track.cover}" alt="${track.title}" class="w-12 h-12 rounded-md object-cover flex-shrink-0">
-                     <div class="flex-grow truncate">
-                         <p class="text-white font-bold truncate">${track.title}</p>
-                         <p class="text-gray-400 text-sm truncate">${track.artist}</p>
-                     </div>
-                     <button onclick="event.stopPropagation(); toggleLike('${track.id}')" class="p-2 text-red-400 hover:text-red-500 transition flex-shrink-0">
-                         <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
-                     </button>
-                 </div>
-            `;
-        }
-
-        function renderLikedTracks() {
-            const container = document.getElementById('liked-tracks-list');
-            const likedTracksArray = Array.from(likedTracks);
-            const tracksHtml = likedTracksArray
-                .map(id => AURA_MAP.find(t => t.id === id))
-                .filter(t => t)
-                .map(track => getLikedTrackElement(track))
-                .join('');
-                
-            if (tracksHtml.length === 0) {
-                container.innerHTML = '<p class="text-center p-4 text-gray-500">Nessun brano salvato.</p>';
-            } else {
-                container.innerHTML = tracksHtml;
-            }
-            lucide.createIcons();
-        }
-
-        function updateAuthUI(user) {
-            const authButton = document.getElementById('auth-button-header');
-            const profileInfo = document.getElementById('profile-info');
-
-            if (authButton) {
-                const icon = authButton.querySelector('i');
-                if (user) {
-                    icon.setAttribute('data-lucide', 'user-check');
-                    authButton.classList.add('accent-border');
-                    authButton.classList.add('border-2');
-                    authButton.onclick = () => showSection('profile');
-                } else {
-                    icon.setAttribute('data-lucide', 'user');
-                    authButton.classList.remove('accent-border');
-                    authButton.classList.remove('border-2');
-                    authButton.onclick = () => openAuthModal('login');
-                }
-            }
-            
-            if (profileInfo) {
-                profileInfo.textContent = user ? `Utente: ${user.email}` : 'Stato: Disconnesso';
-            }
+            setupSeekListeners(); 
+            // Aggiorna volume iniziale (perché lo slider in HTML ha un valore di default)
+            if (volumeSlider) volumeSlider.value = currentVolume;
+            if (volumeSliderImmersive) volumeSliderImmersive.value = currentVolume;
         }
 
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             if (!container) return;
-
+            
             const toast = document.createElement('div');
             let bgColor = 'bg-gray-700';
             let icon = 'info';
@@ -1361,82 +1021,371 @@
         }
 
         async function performSearch(isLiveInput = false) {
-             const query = document.getElementById('search-input').value.trim();
-             const resultsContainer = document.getElementById('search-results');
+            const query = document.getElementById('search-input').value.trim();
+            const resultsContainer = document.getElementById('search-results');
 
-             if (query.length === 0) {
-                 resultsContainer.innerHTML = '<p class="text-center text-gray-500">Digita almeno 3 caratteri e premi Cerca.</p>';
-                 return;
-             } else if (query.length < 3 && isLiveInput) {
-                 resultsContainer.innerHTML = '<p class="text-center text-gray-500">Continua a digitare...</p>';
-                 return;
-             }
-             
-             resultsContainer.innerHTML = '<p class="text-center text-gray-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Ricerca in corso...</p>';
-             lucide.createIcons();
-             
-             const url = `${YOUTUBE_API_BASE_URL}search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=15&key=${YOUTUBE_API_KEY}`;
-             
-             try {
+            if (query.length === 0) {
+                resultsContainer.innerHTML = '<p class="text-center text-gray-500">Digita almeno 3 caratteri e premi Cerca.</p>';
+                return;
+            } else if (query.length < 3 && isLiveInput) {
+                resultsContainer.innerHTML = '<p class="text-center text-gray-500">Continua a digitare...</p>';
+                return;
+            }
+            
+            resultsContainer.innerHTML = '<p class="text-center text-gray-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Ricerca in corso...</p>';
+            lucide.createIcons();
+
+            const url = `${YOUTUBE_API_BASE_URL}search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=15&key=${YOUTUBE_API_KEY}`;
+            
+            try {
                 const response = await fetch(url);
-                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error('API key non valida o limite raggiunto.');
+                }
                 const data = await response.json();
-
-                const results = data.items.map(item => ({
+                
+                const searchResults = data.items.map(item => ({
                     id: item.id.videoId,
                     youtubeId: item.id.videoId,
                     title: item.snippet.title,
                     artist: item.snippet.channelTitle,
-                    cover: item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : 'https://via.placeholder.com/64',
-                    mood: 'Search Result',
-                    vibe: Math.floor(Math.random() * 100) + 1,
-                    color: '#00bcd4', // Ciano per risultati di ricerca
-                    rgb: '0 188 212',
+                    cover: item.snippet.thumbnails.default.url
                 }));
+                
+                // Aggiunge i risultati alla mappa principale se non presenti
+                searchResults.forEach(track => {
+                    if (!AURA_MAP.find(t => t.id === track.id)) {
+                        AURA_MAP.push({
+                             ...track,
+                             mood: 'Search Result',
+                             vibe: Math.floor(Math.random() * 100) + 1,
+                             color: getRandomAccentColor(),
+                             rgb: getRandomAccentRGB()
+                        });
+                    }
+                });
 
-                if (results.length === 0) {
-                     resultsContainer.innerHTML = '<p class="text-center text-gray-500">Nessun risultato trovato per la tua ricerca.</p>';
-                } else {
-                     // Utilizza la funzione di rendering per le card verticali
-                     resultsContainer.innerHTML = `<div class="space-y-3">${results.map(track => getLikedTrackElement(track)).join('')}</div>`;
-
-                     // Aggiunge i risultati della ricerca alla AURA_MAP in modo non distruttivo
-                     const existingIds = new Set(AURA_MAP.map(t => t.id));
-                     const newTracks = results.filter(track => !existingIds.has(track.id));
-                     AURA_MAP.push(...newTracks);
+                if (searchResults.length === 0) {
+                    resultsContainer.innerHTML = '<p class="text-center text-gray-500">Nessun risultato trovato.</p>';
+                    return;
                 }
-
+                
+                resultsContainer.innerHTML = searchResults.map(track => {
+                    return `
+                        <div onclick="playTrack('${track.id}'); closeSearchModal();" class="p-3 rounded-xl flex items-center space-x-4 cursor-pointer hover:bg-white/10 transition">
+                            <img src="${track.cover}" alt="${track.title}" class="w-10 h-10 rounded-md object-cover flex-shrink-0">
+                            <div class="flex-grow truncate">
+                                <p class="text-white font-bold truncate">${track.title}</p>
+                                <p class="text-xs text-gray-400 truncate">${track.artist}</p>
+                            </div>
+                            <button onclick="event.stopPropagation(); window.openAddToPlaylistModal('${track.id}')" class="text-gray-400 hover:accent-text transition"><i data-lucide="list-plus" class="w-5 h-5"></i></button>
+                        </div>
+                    `;
+                }).join('');
+                
                 lucide.createIcons();
 
-             } catch (error) {
-                 console.error("Search Error:", error);
-                 resultsContainer.innerHTML = `<p class="text-center text-red-400">Errore nella ricerca: ${error.message}</p>`;
-             }
+            } catch (error) {
+                console.error("Errore nella ricerca YouTube:", error);
+                resultsContainer.innerHTML = `<p class="text-center p-4 text-red-400 col-span-full">Errore di ricerca: ${error.message}</p>`;
+            }
         }
         
-        // --- Gestione Playlist (Sessioni) ---
-
-        function openCreatePlaylistModal() {
-            document.getElementById('create-playlist-modal').classList.remove('hidden');
-            document.getElementById('playlist-name-input').focus();
+        function setVolume(value) {
+            currentVolume = parseInt(value);
+            if (isPlayerReady && ytPlayer && ytPlayer.setVolume) {
+                ytPlayer.setVolume(currentVolume);
+            }
+            // Aggiorna entrambi gli slider per coerenza
+            if (volumeSlider) volumeSlider.value = currentVolume;
+            if (volumeSliderImmersive) volumeSliderImmersive.value = currentVolume;
         }
 
+        // --- Navigazione & Sezioni ---
+        window.showSection = function(sectionId) {
+            // Nasconde la sezione precedente o l'attuale
+            document.querySelectorAll('.section-page').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            const targetSection = document.getElementById(`${sectionId}-section`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            // Aggiorna la navigazione
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const activeItem = document.getElementById(`nav-${sectionId}`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+
+            // Ricarica i contenuti della sezione
+            if (sectionId === 'music') {
+                renderHomePageWidgets();
+            } else if (sectionId === 'library') {
+                renderLikedTracks();
+            } else if (sectionId === 'playlists') {
+                renderPlaylists();
+            } else if (sectionId === 'stories') {
+                renderStories();
+            }
+        }
+
+        window.toggleLike = function(optionalTrackId) {
+            const trackId = optionalTrackId || currentTrackData?.id;
+            if (!trackId) {
+                showToast("Seleziona una traccia prima.", 'error');
+                return;
+            }
+            
+            const track = AURA_MAP.find(t => t.id === trackId);
+            if (!track) return;
+
+            if (likedTracks.has(trackId)) {
+                likedTracks.delete(trackId);
+                showToast(`Rimosso: ${track.title}`, 'info');
+            } else {
+                likedTracks.add(trackId);
+                showToast(`Aggiunto ai Preferiti: ${track.title}`, 'success');
+            }
+
+            saveLocalData();
+            updateLikeButton(trackId);
+            renderLikedTracks(); // Aggiorna la libreria se visibile
+        }
+
+        function updateLikeButton(trackId) {
+            const isLiked = likedTracks.has(trackId);
+            const button = document.getElementById('like-button');
+            if (button) {
+                button.classList.toggle('text-red-400', isLiked);
+                button.classList.toggle('text-white/50', !isLiked);
+            }
+            const buttonImmersive = document.getElementById('like-button-immersive');
+            if (buttonImmersive) {
+                buttonImmersive.classList.toggle('text-red-400', isLiked);
+                buttonImmersive.classList.toggle('text-white/70', !isLiked);
+            }
+        }
+
+        // ====================================================================
+        // FUNZIONI DI WIDGET RENDERING (Nuove per stile YouTube Music)
+        // ====================================================================
+
+        /**
+         * Genera il markup per il widget orizzontale piccolo (stile "Quick Access/Recent").
+         */
+        function getQuickAccessElement(track) {
+            const trackExists = AURA_MAP.some(t => t.id === track.id);
+            if (!trackExists) return ''; // Filtra tracce mancanti
+
+            return `
+                <div onclick="playTrack('${track.id}')" class="widget-quick-access depth-glass p-3 rounded-xl cursor-pointer hover:bg-white/10 transition">
+                    <img src="${track.cover}" alt="${track.title}" class="w-12 h-12 rounded-lg object-cover flex-shrink-0">
+                    <div class="flex-grow truncate ml-3">
+                        <p class="text-white font-bold truncate">${track.title}</p>
+                        <p class="text-xs text-gray-400 truncate">${track.artist}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        /**
+         * Genera il markup per il widget standard con cover (Horizontal Carousel).
+         */
+        function getTrackElement(track) {
+            const trackExists = AURA_MAP.some(t => t.id === track.id);
+            if (!trackExists) return ''; // Filtra tracce mancanti
+
+            return `
+                <div onclick="playTrack('${track.id}')" class="widget-row-item cursor-pointer hover:bg-white/10 rounded-xl p-2 transition">
+                    <img src="${track.cover}" alt="${track.title}" class="w-full aspect-square rounded-lg object-cover shadow-lg mb-2">
+                    <p class="text-sm font-bold truncate text-white">${track.title}</p>
+                    <p class="text-xs text-gray-400 truncate">${track.artist}</p>
+                </div>
+            `;
+        }
+
+        /**
+         * Funzione Helper per creare un blocco widget.
+         * La classe extra può essere 'horizontal-scroll', 'grid grid-cols-2 gap-4', ecc.
+         */
+        function createWidgetBlock(title, subtitle, contentHtml, extraClass = '') {
+            let contentWrapper;
+            if (extraClass.includes('horizontal-scroll')) {
+                // Per i caroselli, usa widget-row che abilita lo scroll orizzontale
+                contentWrapper = `<div class="widget-row scrollbar-hide">${contentHtml}</div>`;
+            } else {
+                // Per le griglie a 2 o 4 colonne, usa la classe fornita
+                contentWrapper = `<div class="${extraClass}">${contentHtml}</div>`;
+            }
+
+            return `
+                <div class="widget-block">
+                    <h3 class="text-2xl font-bold mb-1 text-white">${title}</h3>
+                    <p class="text-gray-400 mb-4">${subtitle}</p>
+                    ${contentWrapper}
+                </div>
+            `;
+        }
+
+        function getMoodIcon(mood) {
+            switch (mood) {
+                case "Invernale": return "🎄"; // MODIFICATO: Albero di Natale Emoji
+                case "Party": return "sparkles";
+                case "Ambient": return "cloud-drizzle";
+                case "Chill": return "snowflake";
+                default: return "music";
+            }
+        }
+
+        /**
+         * Genera il markup per la griglia dei Moods ("Scegli la Vibe").
+         */
+        function getMoodGridHtml() {
+            return ALL_MOODS.map(mood => {
+                const styleClass = MOOD_STYLES[mood] || 'bg-gray-700/40 border-gray-500 text-gray-300';
+                const iconOrEmoji = getMoodIcon(mood);
+                let iconHtml;
+
+                if (iconOrEmoji.length > 2) { // È un nome Lucide (es. "sparkles")
+                    // Icona Lucide
+                    iconHtml = `<i data-lucide="${iconOrEmoji}" class="w-8 h-8 ${MOOD_STYLES[mood].includes('text-') ? '' : 'text-white'}"></i>`;
+                } else { // È un'emoji (es. "🎄")
+                    // Emoji, usa uno span con dimensione fissa
+                    iconHtml = `<span class="text-3xl">${iconOrEmoji}</span>`;
+                }
+
+                // depth-glass e riquadro (COME RICHIESTO)
+                return `
+                    <div onclick="showMoodTracks('${mood}')" class="depth-glass ${styleClass} p-4 rounded-xl cursor-pointer transition hover:scale-[1.03] border-2 shadow-lg flex flex-col items-center justify-center text-center space-y-2 min-h-[120px]">
+                        ${iconHtml}
+                        <p class="font-bold text-lg">${mood}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /**
+         * Ridisegna l'intera home page con il layout a widget.
+         */
+        window.renderHomePageWidgets = function() {
+            const container = document.getElementById('home-widgets-container');
+            if (!container) return;
+
+            // Aggiorna il saluto
+            const currentHour = new Date().getHours();
+            let greeting = "Buonasera.";
+            if (currentHour < 12) greeting = "Buongiorno.";
+            else if (currentHour < 18) greeting = "Buon Pomeriggio.";
+            document.getElementById('home-greeting').textContent = `${greeting} La tua Vibe è pronta.`;
+
+            if (AURA_MAP.length === 0) {
+                container.innerHTML = `<p class="text-center p-4 text-gray-500">Nessun brano da mostrare. Prova a ricaricare o a cercare qualcosa.</p>`;
+                return;
+            }
+
+            let allWidgetsHtml = '';
+
+            // WIDGET 1: Accesso Rapido (Quick Access) - MODIFICATO IN GRIGLIA A 2 COLONNE
+            const quickAccessTracks = AURA_MAP.slice(0, 4);
+            const quickAccessHtml = quickAccessTracks.map(getQuickAccessElement).join('');
+            // MODIFICA 1: Cambiato 'horizontal-scroll' a 'grid grid-cols-2 gap-3'
+            allWidgetsHtml += createWidgetBlock('Accesso Rapido', 'I tuoi brani recenti e suggeriti.', quickAccessHtml, 'grid grid-cols-2 gap-3');
+
+            // WIDGET 2: Scegli la Vibe (Mood Grid) - GRIGLIA A DUE COLONNE (COME RICHIESTO)
+            const moodGridHtml = getMoodGridHtml();
+            allWidgetsHtml += createWidgetBlock('Scegli la Vibe', 'Seleziona il tuo mood attuale e inizia ad ascoltare.', moodGridHtml, 'grid grid-cols-2 gap-4'); // Rimosso sm:grid-cols-4
+
+            // WIDGET 3: Deep Dive Discovery (Horizontal Carousel)
+            const deepDiveTracks = AURA_MAP.slice(6, 16);
+            const deepDiveHtml = deepDiveTracks.map(getTrackElement).join('');
+            allWidgetsHtml += createWidgetBlock('Deep Dive Discovery', 'Nuove vibrazioni solo per te.', deepDiveHtml, 'horizontal-scroll');
+
+            // NUOVO WIDGET 4: Rilassati con il nostro Flow (Horizontal Carousel)
+            const moodMusicTracks = AURA_MAP.slice(16, 26);
+            const moodMusicHtml = moodMusicTracks.map(getTrackElement).join('');
+            allWidgetsHtml += createWidgetBlock('Rilassati con il nostro Flow', 'Playlist curate per il tuo stato d\'animo.', moodMusicHtml, 'horizontal-scroll');
+
+            // NUOVO WIDGET 5: Ritorno al Passato (Horizontal Carousel)
+            const retroTracks = AURA_MAP.slice(26, 36);
+            const retroHtml = retroTracks.map(getTrackElement).join('');
+            allWidgetsHtml += createWidgetBlock('Ritorno al Passato', 'I successi che non smettono di emozionare.', retroHtml, 'horizontal-scroll');
+
+            // Applica tutti i widget
+            container.innerHTML = allWidgetsHtml;
+            lucide.createIcons();
+        }
+
+        window.showMoodTracks = function(mood) {
+            activeFilter = mood;
+            if (AURA_MAP.length === 0) {
+                // Se non ci sono brani, li carica con la query del mood
+                fetchTracks(mood);
+            } else {
+                // Altrimenti (es. se "Trending" è chiamato con questo filtro), ricarica la home completa
+                renderHomePageWidgets();
+            }
+        }
+
+        // ====================================================================
+        // FUNZIONI PRE-ESISTENTI (Mantengono la loro funzionalità)
+        // ====================================================================
+
+        function getLikedTrackElement(track) {
+            return `
+                <div onclick="playTrack('${track.id}')" class="depth-glass p-3 rounded-xl flex items-center space-x-4 cursor-pointer hover:bg-white/10 transition">
+                    <img src="${track.cover}" alt="${track.title}" class="w-12 h-12 rounded-md object-cover flex-shrink-0">
+                    <div class="flex-grow truncate">
+                        <p class="text-white font-bold truncate">${track.title}</p>
+                        <p class="text-xs text-gray-400 truncate">${track.artist}</p>
+                    </div>
+                    <button onclick="event.stopPropagation(); window.toggleLike('${track.id}')" class="text-red-400 hover:text-red-600 transition"><i data-lucide="heart" class="w-5 h-5 fill-current"></i></button>
+                    <button onclick="event.stopPropagation(); window.openAddToPlaylistModal('${track.id}')" class="text-gray-400 hover:accent-text transition"><i data-lucide="list-plus" class="w-5 h-5"></i></button>
+                </div>
+            `;
+        }
+
+        function renderLikedTracks() {
+            const container = document.getElementById('liked-tracks-list');
+            const tracks = Array.from(likedTracks)
+                .map(id => AURA_MAP.find(t => t.id === id))
+                .filter(t => t);
+
+            if (tracks.length === 0) {
+                container.innerHTML = `<p class="text-center p-4 text-gray-500">Nessun brano salvato. Metti "Mi Piace" per aggiungerli qui!</p>`;
+                return;
+            }
+
+            container.innerHTML = tracks.map(getLikedTrackElement).join('');
+            lucide.createIcons();
+        }
+
+        // --- Logica Playlists (Sessioni) ---
+        function openCreatePlaylistModal() {
+            document.getElementById('playlist-name-input').value = '';
+            document.getElementById('create-playlist-modal').classList.remove('hidden');
+        }
         function closeCreatePlaylistModal() {
             document.getElementById('create-playlist-modal').classList.add('hidden');
         }
 
-        function createPlaylist() {
+        window.createPlaylist = function() {
             const name = document.getElementById('playlist-name-input').value.trim();
             if (name.length < 3) {
                 showToast("Il nome della Sessione deve avere almeno 3 caratteri.", 'error');
                 return;
             }
-            
+
             const newPlaylist = {
                 id: Date.now().toString(),
                 name: name,
                 tracks: []
             };
+
             userPlaylists.push(newPlaylist);
             saveLocalData();
             showToast(`Sessione "${name}" creata!`, 'success');
@@ -1446,6 +1395,7 @@
 
         function renderPlaylists() {
             const container = document.getElementById('playlists-list');
+
             if (userPlaylists.length === 0) {
                 container.innerHTML = '<p class="text-center p-4 text-gray-500 col-span-full">Nessuna sessione creata.</p>';
                 return;
@@ -1453,28 +1403,24 @@
 
             container.innerHTML = userPlaylists.map(playlist => {
                 const trackCount = playlist.tracks.length;
-                
                 // Simula le copertine con i primi 4 brani della playlist
                 const covers = playlist.tracks.slice(0, 4)
-                               .map(id => AURA_MAP.find(t => t.id === id)?.cover || 'https://via.placeholder.com/64');
+                    .map(id => AURA_MAP.find(t => t.id === id)?.cover || 'https://via.placeholder.com/64');
 
                 return `
                     <div class="depth-glass p-4 rounded-xl space-y-3 flex flex-col justify-between cursor-pointer transition hover:bg-white/10 relative">
                         <div>
-                             <h3 class="text-xl font-bold accent-text truncate">${playlist.name}</h3>
-                             <p class="text-sm text-gray-400 mb-3">${trackCount} brani</p>
+                            <h3 class="text-xl font-bold accent-text truncate">${playlist.name}</h3>
+                            <p class="text-sm text-gray-400 mb-3">${trackCount} brani</p>
                         </div>
-                        
                         <div onclick="event.stopPropagation(); playPlaylist('${playlist.id}')" class="flex items-center justify-between">
                             <div class="grid grid-cols-2 gap-1 w-24 aspect-square rounded-lg overflow-hidden flex-shrink-0">
                                 ${covers.map(cover => `<img src="${cover}" alt="Cover" class="w-full h-full object-cover">`).join('')}
                             </div>
-                            
                             <button onclick="event.stopPropagation(); playPlaylist('${playlist.id}')" class="p-3 accent-bg rounded-full hover:scale-110 transition shadow-lg shadow-ryzn-accent/50 ml-4">
                                 <i data-lucide="play" class="w-6 h-6 text-ryzn-bg fill-ryzn-bg"></i>
                             </button>
                         </div>
-                        
                         <button onclick="event.stopPropagation(); deletePlaylist('${playlist.id}')" class="absolute top-3 right-3 text-gray-500 hover:text-red-500 transition">
                             <i data-lucide="trash-2" class="w-5 h-5"></i>
                         </button>
@@ -1484,59 +1430,56 @@
             lucide.createIcons();
         }
 
-        window.openAddToPlaylistModal = function(optionalTrackId) {
-             trackIdToAdd = optionalTrackId || currentTrackData?.id;
-             if (!trackIdToAdd) {
-                showToast("Seleziona una traccia da aggiungere.", 'error');
+        window.openAddToPlaylistModal = function(trackId) {
+            if (!loggedInUser) {
+                showToast("Accedi per aggiungere brani alle Sessioni.", 'error');
                 return;
-             }
-             
-             const listContainer = document.getElementById('playlist-selection-list');
-             if (userPlaylists.length === 0) {
-                 listContainer.innerHTML = `<p class="text-center text-gray-500">Nessuna sessione trovata. <button onclick="closeAddToPlaylistModal(); openCreatePlaylistModal()" class="accent-text">Creane una!</button></p>`;
-             } else {
-                 listContainer.innerHTML = userPlaylists.map(playlist => {
-                      const isTrackInPlaylist = playlist.tracks.includes(trackIdToAdd);
-                      return `
-                         <div onclick="addToPlaylist('${playlist.id}', '${trackIdToAdd}', this)" class="depth-glass p-3 rounded-lg flex items-center justify-between cursor-pointer hover:bg-white/10 transition">
-                             <p class="font-bold truncate">${playlist.name}</p>
-                             <i data-lucide="${isTrackInPlaylist ? 'check' : 'plus'}" class="w-5 h-5 ${isTrackInPlaylist ? 'accent-text' : 'text-gray-400'}"></i>
-                         </div>
-                      `;
-                 }).join('');
-             }
-             document.getElementById('add-to-playlist-modal').classList.remove('hidden');
-             lucide.createIcons();
+            }
+
+            trackIdToAdd = trackId;
+            const listContainer = document.getElementById('playlist-selection-list');
+            
+            if (userPlaylists.length === 0) {
+                listContainer.innerHTML = '<p class="text-center text-gray-500">Nessuna sessione. Crea la prima!</p>';
+            } else {
+                listContainer.innerHTML = userPlaylists.map(p => {
+                    const trackIsPresent = p.tracks.includes(trackId);
+                    return `
+                        <div onclick="addTrackToPlaylist('${p.id}', '${trackId}')" class="p-3 rounded-lg flex justify-between items-center cursor-pointer hover:bg-white/10 transition ${trackIsPresent ? 'bg-white/10' : ''}">
+                            <p class="font-semibold truncate">${p.name}</p>
+                            <i data-lucide="${trackIsPresent ? 'check-circle' : 'plus-circle'}" class="w-5 h-5 ${trackIsPresent ? 'accent-text' : 'text-gray-500'}"></i>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('add-to-playlist-modal').classList.remove('hidden');
+            lucide.createIcons();
         }
 
-        window.closeAddToPlaylistModal = function() {
+        function closeAddToPlaylistModal() {
             document.getElementById('add-to-playlist-modal').classList.add('hidden');
             trackIdToAdd = null;
         }
 
-        window.addToPlaylist = function(playlistId, trackId, element) {
+        window.addTrackToPlaylist = function(playlistId, trackId) {
             const playlist = userPlaylists.find(p => p.id === playlistId);
             const track = AURA_MAP.find(t => t.id === trackId);
+            
             if (!playlist || !track) return;
             
-            const icon = element.querySelector('i');
-            
             if (playlist.tracks.includes(trackId)) {
+                // Rimuovi se già presente (toggle)
                 playlist.tracks = playlist.tracks.filter(id => id !== trackId);
-                showToast(`Rimosso da: ${playlist.name}`, 'info');
-                icon.setAttribute('data-lucide', 'plus');
-                icon.classList.remove('accent-text');
-                icon.classList.add('text-gray-400');
+                showToast(`Rimosso da ${playlist.name}`, 'info');
             } else {
+                // Aggiungi
                 playlist.tracks.push(trackId);
-                showToast(`Aggiunto a: ${playlist.name}`, 'success');
-                icon.setAttribute('data-lucide', 'check');
-                icon.classList.add('accent-text');
-                icon.classList.remove('text-gray-400');
+                showToast(`Aggiunto: ${track.title} a ${playlist.name}`, 'success');
             }
+            
             saveLocalData();
-            renderPlaylists(); // Aggiorna la sezione playlist se visibile
-            lucide.createIcons();
+            openAddToPlaylistModal(trackId); // Ricarica la modal per aggiornare lo stato
         }
 
         window.deletePlaylist = function(playlistId) {
@@ -1562,26 +1505,24 @@
             const playableTracks = playlist.tracks
                 .map(id => AURA_MAP.find(t => t.id === id))
                 .filter(t => t);
-            
+
             if (playableTracks.length === 0) {
-                 showToast("Nessun brano valido trovato per questa sessione.", 'error');
-                 return;
+                showToast("Nessun brano valido trovato per questa sessione.", 'error');
+                return;
             }
 
             // Sovrascrive temporaneamente AURA_MAP con i brani della playlist per la riproduzione in sequenza
-            AURA_MAP = playableTracks; 
-            
+            AURA_MAP = playableTracks;
             playTrack(playableTracks[0].id);
             showToast(`Riproduzione Sessione: ${playlist.name}`, 'info');
-
+            
             // Ricarica AURA_MAP originale dopo un timeout (o al cambio di sezione) per ripristinare i trending
-            setTimeout(() => { 
-                fetchTracks('Trending'); 
+            setTimeout(() => {
+                fetchTracks('Trending');
             }, 60000); 
         }
 
         // --- Logica Storie (Video) ---
-
         async function loadRemoteStories() {
             try {
                 const response = await fetch(STORIES_MANIFEST_URL);
@@ -1593,13 +1534,13 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
+                
                 remoteStories = data.map((story, index) => ({
                     id: index + 1,
                     ...story,
                     trackId: story.trackId, // Stringa YouTube ID
                     video_url: story.videoUrl || story.video_url || ''
                 }));
-
             } catch (error) {
                 console.warn("Impossibile caricare storie da GitHub (User_videos.json).", error);
                 remoteStories = [];
@@ -1609,49 +1550,69 @@
         function renderStories() {
             const container = document.getElementById('stories-bubble-container');
             const message = document.getElementById('no-stories-message');
-
+            
             if (remoteStories.length === 0) {
                 if (message) message.style.display = 'block';
                 container.innerHTML = '';
                 return;
             }
-
+            
             if (message) message.style.display = 'none';
 
             container.innerHTML = remoteStories.map((story, index) => {
                 const emoji = CHRISTMAS_EMOJIS[index % CHRISTMAS_EMOJIS.length];
                 const color1 = STORY_COLORS[index % STORY_COLORS.length];
                 const color2 = STORY_COLORS[(index + 1) % STORY_COLORS.length];
-                const watchedClass = storyWatchedStatus.has(index) ? 'story-bubble-watched' : '';
+                
+                const isWatched = storyWatchedStatus.has(story.id);
 
                 return `
-                    <div class="flex flex-col items-center">
-                        <div class="story-bubble ${watchedClass}" style="${!storyWatchedStatus.has(index) ? `background: linear-gradient(45deg, ${color1}, ${color2});` : ''}" onclick="openStoryPlayer(${index})">
-                            <div class="story-bubble-inner" style="background-color: var(--ryzn-bg-color); border-color: var(--ryzn-bg-color);">
-                                <span role="img" aria-label="Christmas emoji">${emoji}</span>
-                            </div>
+                    <div onclick="openStoryPlayer(${index})" class="story-bubble ${isWatched ? 'story-bubble-watched' : ''}" style="background: linear-gradient(45deg, ${color1}, ${color2});">
+                        <div class="story-bubble-inner">
+                            <span>${emoji}</span>
                         </div>
-                        <p class="text-xs mt-1 max-w-[80px] truncate text-center">${story.username}</p>
                     </div>
                 `;
             }).join('');
+
+            lucide.createIcons();
         }
 
-        function openStoryPlayer(index) {
-            if (remoteStories.length === 0) return;
-            currentStoryIndex = index;
-            document.getElementById('story-player-modal').classList.remove('hidden');
-            storyVideoPlayer = document.getElementById('story-video-player');
-            storyVideoPlayer.src = remoteStories[currentStoryIndex].video_url;
+        function storyProgressPlayer() {
+            const video = storyVideoPlayer;
+            const progressBar = document.getElementById(`story-progress-bar-${currentStoryIndex}`);
             
-            storyWatchedStatus.add(currentStoryIndex);
-            saveLocalData();
-            renderStories(); // Aggiorna lo stato "visto" sulla bolla
+            clearInterval(storyProgressInterval);
+            
+            if (video.duration > 0) {
+                storyProgressInterval = setInterval(() => {
+                    const percentage = (video.currentTime / video.duration) * 100;
+                    if (progressBar) progressBar.style.width = `${percentage}%`;
+                }, 50); 
+            }
+        }
+        
+        window.openStoryPlayer = function(index) {
+            if (index < 0 || index >= remoteStories.length) return;
+            
+            currentStoryIndex = index;
+            const story = remoteStories[index];
+            storyWatchedStatus.add(story.id); // Segna come visto
 
+            const modal = document.getElementById('story-player-modal');
+            modal.classList.remove('hidden');
+
+            if (!storyVideoPlayer) {
+                storyVideoPlayer = document.getElementById('story-video-player');
+            }
+
+            storyVideoPlayer.src = story.video_url;
+            
             updateStoryInfo();
-            storyVideoPlayer.load();
             renderStoryProgressBars();
-            storyVideoPlayer.onended = nextStory;
+            
+            // Gestione video events
+            storyVideoPlayer.onended = nextStory; 
             
             // Inizializza l'intervallo di progresso solo quando il video inizia a suonare
             storyVideoPlayer.onplay = storyProgressPlayer; 
@@ -1659,9 +1620,9 @@
             const attemptPlay = storyVideoPlayer.play();
             if (attemptPlay && typeof attemptPlay.catch === 'function') {
                 attemptPlay.catch(e => {
-                   console.warn("Autoplay video story bloccato.", e);
-                   // Mostra il pulsante di riproduzione per richiedere l'interazione
-                   document.getElementById('story-play-pause-button').style.opacity = '1'; 
+                    console.warn("Autoplay video story bloccato.", e);
+                    // Mostra il pulsante di riproduzione per richiedere l'interazione
+                    document.getElementById('story-play-pause-button').style.opacity = '1'; 
                 });
             }
         }
@@ -1670,6 +1631,7 @@
             document.getElementById('story-player-modal').classList.add('hidden');
             storyVideoPlayer.pause();
             clearInterval(storyProgressInterval);
+            renderStories(); // Aggiorna le bolle dopo aver chiuso
         }
 
         function nextStory() {
@@ -1688,10 +1650,10 @@
                 openStoryPlayer(currentStoryIndex - 1);
             } else {
                 // Riavvolgi la storia corrente se è la prima
-                openStoryPlayer(currentStoryIndex); 
+                openStoryPlayer(currentStoryIndex);
             }
         }
-        
+
         function toggleStoryPlayPause() {
             if (storyVideoPlayer.paused) {
                 storyVideoPlayer.play();
@@ -1703,142 +1665,126 @@
         }
 
         function updateStoryInfo() {
-             const story = remoteStories[currentStoryIndex];
-             document.getElementById('story-username').textContent = story.username;
-             document.getElementById('story-emoji').textContent = CHRISTMAS_EMOJIS[currentStoryIndex % CHRISTMAS_EMOJIS.length];
-
-             // Cerca il brano associato
-             const track = AURA_MAP.find(t => t.youtubeId === story.trackId);
-             document.getElementById('story-track-title').textContent = track ? `🎵 ${track.title}` : 'Musica di sottofondo';
+            const story = remoteStories[currentStoryIndex];
+            document.getElementById('story-username').textContent = story.username;
+            document.getElementById('story-emoji').textContent = CHRISTMAS_EMOJIS[currentStoryIndex % CHRISTMAS_EMOJIS.length]; 
+            
+            // Cerca il brano associato
+            const track = AURA_MAP.find(t => t.youtubeId === story.trackId);
+            document.getElementById('story-track-title').textContent = track ? `🎵 ${track.title}` : 'Musica di sottofondo';
         }
 
         function renderStoryProgressBars() {
             const container = document.getElementById('story-progress-bar-container');
             container.innerHTML = remoteStories.map((_, index) => `
-                 <div class="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
-                     <div id="story-progress-bar-${index}" class="h-1 accent-bg" style="width: ${index < currentStoryIndex ? '100%' : '0%'}; transition: width 0.1s linear;"> 
-                     </div>
-                 </div>
+                <div class="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
+                    <div id="story-progress-bar-${index}" class="h-1 accent-bg" style="width: ${index < currentStoryIndex ? '100%' : '0%'}; transition: width 0.1s linear;">
+                    </div>
+                </div>
             `).join('');
-            const currentBar = document.getElementById(`story-progress-bar-${currentStoryIndex}`);
-            if(currentBar) currentBar.style.width = '0%';
-        }
-
-        function storyProgressPlayer() {
-            const progressBar = document.getElementById(`story-progress-bar-${currentStoryIndex}`);
-            if (!progressBar) return;
-            clearInterval(storyProgressInterval);
             
-            storyProgressInterval = setInterval(() => {
-                if (storyVideoPlayer.paused || storyVideoPlayer.duration <= 0) {
-                    return;
+            // Evidenzia la barra corrente
+            const currentProgressBar = document.getElementById(`story-progress-bar-${currentStoryIndex}`);
+            if (currentProgressBar) {
+                 currentProgressBar.style.transition = 'width 5s linear'; // Simula transizione dinamica per la barra corrente (verrà aggiornata dall'intervallo)
+            }
+        }
+
+        // --- Logica Dati Locali (LocalStorage) ---
+        function saveLocalData() {
+            localStorage.setItem('auraMusicLikedTracks', JSON.stringify(Array.from(likedTracks)));
+            localStorage.setItem('auraMusicPlaylists', JSON.stringify(userPlaylists));
+            localStorage.setItem('auraMusicUser', JSON.stringify(loggedInUser));
+            localStorage.setItem('auraMusicVolume', currentVolume);
+        }
+
+        function loadLocalData() {
+            const storedTracks = localStorage.getItem('auraMusicLikedTracks');
+            if (storedTracks) {
+                likedTracks = new Set(JSON.parse(storedTracks));
+            }
+
+            const storedPlaylists = localStorage.getItem('auraMusicPlaylists');
+            if (storedPlaylists) {
+                userPlaylists = JSON.parse(storedPlaylists);
+            }
+            
+            const storedUser = localStorage.getItem('auraMusicUser');
+            if (storedUser && storedUser !== 'null') {
+                loggedInUser = JSON.parse(storedUser);
+            }
+
+            const storedVolume = localStorage.getItem('auraMusicVolume');
+            if (storedVolume) {
+                currentVolume = parseInt(storedVolume);
+            }
+            
+            updateAuthUI(loggedInUser);
+        }
+        
+        function updateAuthUI(user) {
+            const authButton = document.getElementById('auth-button-header');
+            const profileInfo = document.getElementById('profile-info');
+            
+            if (user) {
+                authButton.onclick = () => showSection('profile');
+                authButton.innerHTML = `<i data-lucide="user-check" class="w-6 h-6 accent-text"></i>`;
+                if (profileInfo) {
+                    profileInfo.innerHTML = `Stato: Connesso come <span class="font-bold accent-text">${user.email}</span>`;
                 }
-                const duration = storyVideoPlayer.duration;
-                const currentTime = storyVideoPlayer.currentTime;
-                const percentage = (currentTime / duration) * 100;
-                progressBar.style.width = `${percentage}%`;
-            }, 50);
+            } else {
+                authButton.onclick = () => openAuthModal('login');
+                authButton.innerHTML = `<i data-lucide="user" class="w-6 h-6"></i>`;
+                if (profileInfo) {
+                    profileInfo.innerHTML = `Stato: Disconnesso`;
+                }
+            }
+            lucide.createIcons();
         }
 
-        // ====================================================================
-        // INIZIALIZZAZIONE E MEDIA SESSION
-        // ====================================================================
-
-        function getDOMElements() {
-            progressBar = document.getElementById('progress-bar');
-            progressBarImmersive = document.getElementById('progress-bar-immersive');
-            playIcon = document.getElementById('play-icon');
-            immersivePlayIcon = document.getElementById('immersive-play-icon');
-            playerTitle = document.getElementById('player-title');
-            playerArtist = document.getElementById('player-artist');
-            playerCover = document.getElementById('player-cover');
-            immersiveTitle = document.getElementById('immersive-title');
-            immersiveArtist = document.getElementById('immersive-artist');
-            immersiveCover = document.getElementById('immersive-cover');
-            likeButton = document.getElementById('like-button');
-            vibeScoreDisplay = document.getElementById('vibe-score-display');
-            volumeSlider = document.getElementById('volume-slider');
-            volumeSliderImmersive = document.getElementById('volume-slider-immersive');
-            progressBarContainer = document.getElementById('progress-bar-container');
-            progressBarImmersiveContainer = document.getElementById('progress-bar-immersive-container');
-            loopButtonImmersive = document.getElementById('loop-button-immersive');
-            playerBar = document.querySelector('.player-bar');
-
-            setupSeekListeners(); 
-            setupMediaSessionHandlers();
-        }
-
-        function setupMediaSessionHandlers() {
-            if (!('mediaSession' in navigator)) return;
+        // --- Gestione MediaSession (Controlli Android/iOS) ---
+        function updateMediaSession() {
+            if (!('mediaSession' in navigator) || !currentTrackData) {
+                return;
+            }
 
             navigator.mediaSession.metadata = new MediaMetadata({
-                title: 'Aura Music',
-                artist: 'YouTube Client',
-                album: 'Vibe',
+                title: currentTrackData.title,
+                artist: currentTrackData.artist,
+                album: 'Aura Music',
                 artwork: [
-                    { src: 'https://via.placeholder.com/96', sizes: '96x96', type: 'image/png' },
-                    { src: 'https://via.placeholder.com/128', sizes: '128x128', type: 'image/png' },
-                    { src: 'https://via.placeholder.com/192', sizes: '192x192', type: 'image/png' },
+                    { src: currentTrackData.cover.replace('default', 'mqdefault'), sizes: '64x64', type: 'image/jpeg' },
+                    { src: currentTrackData.cover.replace('default', 'hqdefault'), sizes: '128x128', type: 'image/jpeg' },
+                    { src: currentTrackData.cover, sizes: '192x192', type: 'image/jpeg' },
                 ]
             });
-
+            
             navigator.mediaSession.setActionHandler('play', () => togglePlayPause());
             navigator.mediaSession.setActionHandler('pause', () => togglePlayPause());
+            
+            // I comandi di seek sono più stabili se si usa un offset fisso con l'API
             navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-                 const seekTime = ytPlayer.getCurrentTime() - (details.seekOffset || 10);
-                 ytPlayer.seekTo(seekTime, true);
+                const seekTime = ytPlayer.getCurrentTime() - (details.seekOffset || 10);
+                ytPlayer.seekTo(seekTime, true);
             });
             navigator.mediaSession.setActionHandler('seekforward', (details) => {
-                 const seekTime = ytPlayer.getCurrentTime() + (details.seekOffset || 10);
-                 ytPlayer.seekTo(seekTime, true);
+                const seekTime = ytPlayer.getCurrentTime() + (details.seekOffset || 10);
+                ytPlayer.seekTo(seekTime, true);
             });
+
             navigator.mediaSession.setActionHandler('previoustrack', () => skipBackward());
             navigator.mediaSession.setActionHandler('nexttrack', () => skipForward());
             
-            // Aggiunge un handler per il seekto (utilizzato da alcuni controlli multimediali)
-            navigator.mediaSession.setActionHandler('seekto', (details) => {
-                if(details.seekTime !== undefined) ytPlayer.seekTo(details.seekTime, true);
-            });
-
-            // Aggiungi un handler per il tasto "Stop" (spesso non implementato, ma utile)
-            if (navigator.mediaSession.setActionHandler) {
-                 navigator.mediaSession.setActionHandler('stop', () => {
-                     if (isPlayerReady) ytPlayer.pauseVideo();
-                 });
+            // Non supportiamo seekto, stop, o toggle-loop nativi
+            if (navigator.mediaSession.setActionHandler('seekto')) {
+                navigator.mediaSession.setActionHandler('seekto', null);
+            }
+            if (navigator.mediaSession.setActionHandler('stop')) {
+                navigator.mediaSession.setActionHandler('stop', null);
             }
         }
-
-        function updateMediaSession() {
-            if (!('mediaSession' in navigator) || !currentTrackData) return;
-
-            const isPlaying = ytPlayer.getPlayerState() === YT.PlayerState.PLAYING;
-            
-            navigator.mediaSession.metadata = new MediaMetadata({
-                 title: currentTrackData.title,
-                 artist: currentTrackData.artist,
-                 album: currentTrackData.mood,
-                 artwork: [
-                     { src: currentTrackData.cover, sizes: '192x192', type: 'image/jpeg' },
-                 ]
-            });
-
-            if ('setPositionState' in navigator.mediaSession) {
-                 navigator.mediaSession.setPositionState({
-                     duration: ytPlayer.getDuration(),
-                     playbackRate: ytPlayer.getPlaybackRate(),
-                     position: ytPlayer.getCurrentTime()
-                 });
-            }
-            
-            // Aggiorna lo stato di riproduzione nel media session
-            if (isPlaying) {
-                 navigator.mediaSession.playbackState = 'playing';
-            } else {
-                 navigator.mediaSession.playbackState = 'paused';
-            }
-        }
-
-        // --- Gestione Service Worker (PWA) ---
+        
+        // --- PWA Service Worker (Non richiesto, ma lasciato per completezza) ---
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
