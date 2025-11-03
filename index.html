@@ -1,20 +1,16 @@
 <!DOCTYPE html>
+
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura Music </title>
-    
-    <link rel="icon" href="https://via.placeholder.com/192x192">
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/192x192">
-    <meta name="theme-color" content="#171717">
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <script src="https://www.youtube.com/iframe_api"></script> 
-
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aura Music </title>
+<link href="https://via.placeholder.com/192x192" rel="icon"/>
+<link href="https://via.placeholder.com/192x192" rel="apple-touch-icon"/>
+<meta content="#171717" name="theme-color"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
         /* Variabili di Tema Dinamiche (Glaciale/Natale) */
         :root {
             --ryzn-color-hex: #00BFFF; /* Glacial Blue */
@@ -164,7 +160,7 @@
             display: none;  
         }
         
-        /* YouTube Player Nascosto per Audio */
+        /* invidious Player Nascosto per Audio */
         #yt-player-container {
             position: absolute;
             top: -9999px; 
@@ -175,7 +171,7 @@
             opacity: 0;
         }
         
-        /* NUOVI STILI PER WIDGET HOME (Ispirati a YouTube Music / iOS) */
+        /* NUOVI STILI PER WIDGET HOME (Ispirati a invidious Music / iOS) */
         .widget-row {
             overflow-x: auto;
             white-space: nowrap;
@@ -384,297 +380,275 @@
 /* ensure modals and player keep their z-index priority (already high in original CSS) */
 
 </style>
-</head>
+<style id="aura-stories-fix">
+/* Strong overrides for Stories Aura centering (specific to this file) */
+#stories-section > .flex.justify-between.items-center.mb-6 {
+  justify-content: center !important;
+}
+#stories-section > .flex.justify-between.items-center.mb-6 h2,
+#stories-section h2 {
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+#stories-bubble-container {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 8px !important; /* very close but centered */
+  padding: 0 20px !important; /* spacing from page edges */
+  box-sizing: border-box !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+#stories-bubble-container .story-bubble {
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+}
+#stories-bubble-container p#no-stories-message {
+  margin: 0 auto !important;
+}
+</style></head>
 <body class="ryzn-bg">
-
-    <div id="toast-container"></div>
-    <!-- Ambient background audio (replace assets/ambient_christmas_soft.mp3 with your file) -->
-    <audio id="ambient-audio" src="assets/ambient_christmas_soft.mp3" loop preload="auto"></audio>
-
-    <!-- Snow visual layers: falling snow canvas + ground accumulation -->
-    <div id="snow-fall" aria-hidden="true"><canvas id="snow-canvas"></canvas></div>
-    <div id="snow-ground" aria-hidden="true"></div>
-    
-    
-    <div id="yt-player-container">
-        <div id="ytPlayer"></div>
-    </div>
-
-
-    <div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4 modal">
-        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
-            <h3 id="auth-title" class="text-2xl font-bold mb-6 accent-text text-center">Accedi ad Aura Music</h3>
-            
-            <input type="email" id="auth-email" placeholder="Email" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-3">
-            <input type="password" id="auth-password" placeholder="Password" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-6">
-            
-            <button id="auth-main-button" onclick="handleAuthAction('login')" class="w-full py-3 accent-bg rounded-lg text-white font-bold accent-hover transition">Accedi</button>
-            
-            <div class="text-center mt-4">
-                <button id="auth-switch-link" onclick="switchAuthMode('register')" class="text-sm text-gray-400 hover:accent-text transition">Registrati</button>
-            </div>
-             <button onclick="closeAuthModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
-        </div>
-    </div>
-    
-    <div id="search-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex flex-col p-4 modal">
-        <div class="w-full max-w-2xl mx-auto depth-glass bg-ryzn-bg p-6 rounded-2xl shadow-2xl relative">
-            <div class="flex items-center mb-4">
-                <input type="text" id="search-input" oninput="performSearch(true)" placeholder="Cerca brani, artisti o mood..." class="flex-grow p-3 rounded-l-lg bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none">
-                <button onclick="performSearch()" class="p-3 accent-bg rounded-r-lg accent-hover"><i data-lucide="search" class="w-6 h-6"></i></button>
-            </div>
-            <div id="search-results" class="max-h-96 overflow-y-auto space-y-3 p-2">
-                <p class="text-center text-gray-500">Inizia a digitare per cercare musica su YouTube.</p>
-            </div>
-            <button onclick="closeSearchModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
-        </div>
-    </div>
-    
-    <div id="create-playlist-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
-        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
-            <h3 class="text-xl font-bold mb-4 accent-text">Crea Nuova Sessione</h3>
-            <input type="text" id="playlist-name-input" placeholder="Nome della sessione" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-4">
-            
-            <div class="flex justify-end space-x-3">
-                <button onclick="closeCreatePlaylistModal()" class="px-4 py-2 text-gray-400 hover:text-white transition rounded-lg">Annulla</button>
-                <button onclick="createPlaylist()" class="px-4 py-2 accent-bg rounded-lg text-white font-bold accent-hover transition">Crea</button>
-            </div>
-            <button onclick="closeCreatePlaylistModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
-        </div>
-    </div>
-
-    <div id="add-to-playlist-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
-        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
-            <h3 class="text-xl font-bold mb-4 accent-text">Aggiungi a Sessione</h3>
-            <div id="playlist-selection-list" class="max-h-64 overflow-y-auto space-y-2 p-1">
-                <p class="text-center text-gray-500">Nessuna sessione trovata.</p>
-            </div>
-            <button onclick="closeAddToPlaylistModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
-        </div>
-    </div>
-    
-    
-<div id="immersive-mode" class="fixed inset-0 bg-gradient-to-b from-[#0a1f33] via-[#112f44] to-[#0b1e2d] backdrop-blur-2xl z-[150] hidden flex flex-col items-center justify-center text-white p-6 modal">
-    
-    <div class="absolute top-6 left-6 flex items-center space-x-4">
-        <button onclick="exitImmersiveMode()" class="text-white/80 hover:text-white transition">
-            <i data-lucide="chevron-down" class="w-8 h-8"></i>
-        </button>
-        <h2 class="text-xl font-semibold text-white/70">In Riproduzione</h2>
-    </div>
-
-    <div class="flex flex-col items-center justify-center space-y-8 max-w-md w-full mt-8">
-        
-        <div id="immersive-yt-player-container" class="w-full max-w-xs aspect-square rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,191,255,0.4)] bg-black/30">
-            <img id="immersive-cover" src="" alt="Album Cover" class="w-full h-full object-cover opacity-90">
-        </div>
-
-        <div class="text-center space-y-2">
-            <div class="marquee-container">
-                <h3 id="immersive-title" class="text-3xl font-extrabold bg-gradient-to-r from-white to-[#B3E0FF] bg-clip-text text-transparent">Titolo Brano</h3>
-            </div>
-            <p id="immersive-artist" class="text-lg text-white/70 truncate">Artista</p>
-        </div>
-
-        <div id="progress-bar-immersive-container" class="w-full h-2 bg-white/20 rounded-full cursor-pointer relative overflow-hidden">
-            <div id="progress-bar-immersive" class="h-2 rounded-full bg-gradient-to-r from-[#00BFFF] to-[#B3E0FF]" style="width: 0;"></div>
-        </div>
-
-        <div class="flex space-x-8 items-center justify-center mt-4">
-            <button id="loop-button-immersive" onclick="event.stopPropagation(); toggleLoop()" class="text-white/60 hover:text-white transition">
-                <i data-lucide="repeat" class="w-7 h-7"></i>
-            </button>
-            <button onclick="event.stopPropagation(); skipBackward()" class="text-white/80 hover:text-white transition">
-                <i data-lucide="skip-back" class="w-8 h-8"></i>
-            </button>
-            <button onclick="event.stopPropagation(); togglePlayPause(true)" class="p-5 rounded-full bg-gradient-to-r from-[#00BFFF] to-[#66D9FF] hover:scale-110 transition shadow-xl shadow-[#00BFFF]/40 flex items-center justify-center">
-                <span id="immersive-play-icon" class="text-4xl text-[#0a1f33] leading-none">▶️</span>
-            </button>
-            <button onclick="event.stopPropagation(); skipForward()" class="text-white/80 hover:text-white transition">
-                <i data-lucide="skip-forward" class="w-8 h-8"></i>
-            </button>
-            <button onclick="event.stopPropagation(); toggleLike()" id="like-button-immersive" class="text-white/70 hover:text-red-400 transition">
-                <i data-lucide="heart" class="w-6 h-6 fill-current"></i>
-            </button>
-        </div>
-
-        <div class="flex items-center space-x-3 w-full justify-center mt-4">
-            <i data-lucide="volume" class="w-5 h-5 text-white/70"></i>
-            <input type="range" id="volume-slider-immersive" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-32 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer accent-bg">
-        </div>
-
-    </div>
+<div id="toast-container"></div>
+<!-- Ambient background audio (replace assets/ambient_christmas_soft.mp3 with your file) -->
+<audio id="ambient-audio" loop="" preload="auto" src="assets/ambient_christmas_soft.mp3">
+<!-- invidious audio element -->
+<audio id="aura-invidious-audio" preload="auto"></audio>
+</audio>
+<!-- Snow visual layers: falling snow canvas + ground accumulation -->
+<div aria-hidden="true" id="snow-fall"><canvas id="snow-canvas"></canvas></div>
+<div aria-hidden="true" id="snow-ground"></div>
+<div id="yt-player-container">
+<div id="ytPlayer"></div>
 </div>
-
-<div id="story-player-modal" class="fixed inset-0 bg-black z-[200] hidden flex items-center justify-center modal">
-        <div class="absolute inset-0 flex items-center justify-center">
-            <video id="story-video-player" class="w-full h-full object-cover" autoplay playsinline></video>
-        </div>
-        
-        <div class="absolute inset-x-0 top-0 p-4 pt-6 flex flex-col justify-start z-10">
-            <div id="story-progress-bar-container" class="flex space-x-1 mb-3">
-                </div>
-            <div id="story-info" class="flex items-center space-x-3 text-white">
-                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xl bg-gray-700">
-                    <span id="story-emoji">🎄</span>
-                </div>
-                <div>
-                    <p id="story-username" class="font-bold text-sm">Utente</p>
-                    <p id="story-track-title" class="text-xs text-gray-300"></p>
-                </div>
-            </div>
-        </div>
-
-        <div class="absolute inset-y-0 w-1/2 left-0 z-20" onclick="prevStory()"></div>
-        <div class="absolute inset-y-0 w-1/2 right-0 z-20" onclick="nextStory()"></div>
-
-        <button onclick="closeStoryPlayer()" class="absolute top-4 right-4 text-white/80 hover:text-white transition z-30">
-            <i data-lucide="x" class="w-8 h-8"></i>
-        </button>
-
-        <button id="story-play-pause-button" onclick="toggleStoryPlayPause()" class="absolute inset-0 flex items-center justify-center text-white z-10 transition-opacity opacity-0">
-            <i data-lucide="play" class="w-20 h-20 fill-current"></i>
-        </button>
-    </div>
-
-    <div class="container-app">
-        
-        <header class="flex justify-between items-center mb-8">
-            <div class="flex items-center space-x-8">
-                <a href="#" onclick="resetHomePage()" class="cursor-pointer">
-                    <h1 class="logo-aura flex items-center space-x-2">
-                        <i data-lucide="sparkles" class="w-7 h-7 accent-text fill-ryzn-accent/30"></i>
-                        <span class="logo-text">Aura</span>
-                    </h1>
-                </a>
-                <nav class="hidden sm:flex space-x-6 text-gray-400 text-lg font-medium">
-                    <button id="nav-music" onclick="showSection('music')" class="nav-item hover:accent-text transition pb-1">Scopri</button>
-                </nav>
-            </div>
-            
-            <div class="flex items-center space-x-3">
-                 <button onclick="showSection('stories')" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition border-2 border-transparent hover:accent-border">
-                    <i data-lucide="sparkles" class="w-6 h-6"></i>
-                 </button>
-                 <button onclick="showSection('playlists')" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
-                    <i data-lucide="list-music" class="w-6 h-6"></i>
-                 </button>
-                 <button onclick="showSection('library')" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
-                    <i data-lucide="heart" class="w-6 h-6 fill-current"></i>
-                 </button>
-                 <button onclick="openSearchModal()" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
-                    <i data-lucide="search" class="w-6 h-6"></i>
-                 </button>
-                 <button id="auth-button-header" onclick="loggedInUser ? showSection('profile') : openAuthModal('login')" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
-                    <i data-lucide="user" class="w-6 h-6"></i>
-                 </button>
-            </div>
-        </header>
-
-        <section id="music-section" class="section-page active">
-            <h2 id="home-greeting" class="text-4xl font-extrabold mb-8 text-white">Buonasera. La tua Vibe è pronta.</h2>
-            
-             
-<div id="home-widgets-container" class="space-y-10">
-                <p class="text-center text-gray-400 col-span-full">Caricamento in corso...</p>
-            </div>
-        </section>
-        <section id="library-section" class="section-page">
-            <h2 class="text-3xl font-bold mb-6">I Tuoi Brani Salvati</h2>
-            <div id="liked-tracks-list" class="space-y-3">
-                <p class="text-center p-4 text-gray-500">Nessun brano salvato.</p>
-            </div>
-        </section>
-
-        <section id="playlists-section" class="section-page">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-3xl font-bold">Le Tue Sessioni</h2>
-                <button onclick="openCreatePlaylistModal()" class="flex items-center px-4 py-2 accent-bg rounded-full text-sm font-semibold accent-hover transition">
-                    <i data-lucide="plus" class="w-4 h-4 mr-1"></i> Crea Sessione
+<div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4 modal" id="auth-modal">
+<div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
+<h3 class="text-2xl font-bold mb-6 accent-text text-center" id="auth-title">Accedi ad Aura Music</h3>
+<input class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-3" id="auth-email" placeholder="Email" type="email"/>
+<input class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-6" id="auth-password" placeholder="Password" type="password"/>
+<button class="w-full py-3 accent-bg rounded-lg text-white font-bold accent-hover transition" id="auth-main-button" onclick="handleAuthAction('login')">Accedi</button>
+<div class="text-center mt-4">
+<button class="text-sm text-gray-400 hover:accent-text transition" id="auth-switch-link" onclick="switchAuthMode('register')">Registrati</button>
+</div>
+<button class="absolute top-3 right-3 text-gray-400 hover:text-white transition" onclick="closeAuthModal()"><i class="w-6 h-6" data-lucide="x"></i></button>
+</div>
+</div>
+<div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex flex-col p-4 modal" id="search-modal">
+<div class="w-full max-w-2xl mx-auto depth-glass bg-ryzn-bg p-6 rounded-2xl shadow-2xl relative">
+<div class="flex items-center mb-4">
+<input class="flex-grow p-3 rounded-l-lg bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none" id="search-input" oninput="performSearch(true)" placeholder="Cerca brani, artisti o mood..." type="text"/>
+<button class="p-3 accent-bg rounded-r-lg accent-hover" onclick="performSearch()"><i class="w-6 h-6" data-lucide="search"></i></button>
+</div>
+<div class="max-h-96 overflow-y-auto space-y-3 p-2" id="search-results">
+<p class="text-center text-gray-500">Inizia a digitare per cercare musica .</p>
+</div>
+<button class="absolute top-3 right-3 text-gray-400 hover:text-white transition" onclick="closeSearchModal()"><i class="w-6 h-6" data-lucide="x"></i></button>
+</div>
+</div>
+<div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4" id="create-playlist-modal">
+<div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
+<h3 class="text-xl font-bold mb-4 accent-text">Crea Nuova Sessione</h3>
+<input class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-4" id="playlist-name-input" placeholder="Nome della sessione" type="text"/>
+<div class="flex justify-end space-x-3">
+<button class="px-4 py-2 text-gray-400 hover:text-white transition rounded-lg" onclick="closeCreatePlaylistModal()">Annulla</button>
+<button class="px-4 py-2 accent-bg rounded-lg text-white font-bold accent-hover transition" onclick="createPlaylist()">Crea</button>
+</div>
+<button class="absolute top-3 right-3 text-gray-400 hover:text-white transition" onclick="closeCreatePlaylistModal()"><i class="w-6 h-6" data-lucide="x"></i></button>
+</div>
+</div>
+<div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4" id="add-to-playlist-modal">
+<div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
+<h3 class="text-xl font-bold mb-4 accent-text">Aggiungi a Sessione</h3>
+<div class="max-h-64 overflow-y-auto space-y-2 p-1" id="playlist-selection-list">
+<p class="text-center text-gray-500">Nessuna sessione trovata.</p>
+</div>
+<button class="absolute top-3 right-3 text-gray-400 hover:text-white transition" onclick="closeAddToPlaylistModal()"><i class="w-6 h-6" data-lucide="x"></i></button>
+</div>
+</div>
+<div class="fixed inset-0 bg-gradient-to-b from-[#0a1f33] via-[#112f44] to-[#0b1e2d] backdrop-blur-2xl z-[150] hidden flex flex-col items-center justify-center text-white p-6 modal" id="immersive-mode">
+<div class="absolute top-6 left-6 flex items-center space-x-4">
+<button class="text-white/80 hover:text-white transition" onclick="exitImmersiveMode()">
+<i class="w-8 h-8" data-lucide="chevron-down"></i>
+</button>
+<h2 class="text-xl font-semibold text-white/70">In Riproduzione</h2>
+</div>
+<div class="flex flex-col items-center justify-center space-y-8 max-w-md w-full mt-8">
+<div class="w-full max-w-xs aspect-square rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,191,255,0.4)] bg-black/30" id="immersive-yt-player-container">
+<img alt="Album Cover" class="w-full h-full object-cover opacity-90" id="immersive-cover" src=""/>
+</div>
+<div class="text-center space-y-2">
+<div class="marquee-container">
+<h3 class="text-3xl font-extrabold bg-gradient-to-r from-white to-[#B3E0FF] bg-clip-text text-transparent" id="immersive-title">Titolo Brano</h3>
+</div>
+<p class="text-lg text-white/70 truncate" id="immersive-artist">Artista</p>
+</div>
+<div class="w-full h-2 bg-white/20 rounded-full cursor-pointer relative overflow-hidden" id="progress-bar-immersive-container">
+<div class="h-2 rounded-full bg-gradient-to-r from-[#00BFFF] to-[#B3E0FF]" id="progress-bar-immersive" style="width: 0;"></div>
+</div>
+<div class="flex space-x-8 items-center justify-center mt-4">
+<button class="text-white/60 hover:text-white transition" id="loop-button-immersive" onclick="event.stopPropagation(); toggleLoop()">
+<i class="w-7 h-7" data-lucide="repeat"></i>
+</button>
+<button class="text-white/80 hover:text-white transition" onclick="event.stopPropagation(); skipBackward()">
+<i class="w-8 h-8" data-lucide="skip-back"></i>
+</button>
+<button class="p-5 rounded-full bg-gradient-to-r from-[#00BFFF] to-[#66D9FF] hover:scale-110 transition shadow-xl shadow-[#00BFFF]/40 flex items-center justify-center" onclick="event.stopPropagation(); togglePlayPause(true)">
+<span class="text-4xl text-[#0a1f33] leading-none" id="immersive-play-icon">▶️</span>
+</button>
+<button class="text-white/80 hover:text-white transition" onclick="event.stopPropagation(); skipForward()">
+<i class="w-8 h-8" data-lucide="skip-forward"></i>
+</button>
+<button class="text-white/70 hover:text-red-400 transition" id="like-button-immersive" onclick="event.stopPropagation(); toggleLike()">
+<i class="w-6 h-6 fill-current" data-lucide="heart"></i>
+</button>
+</div>
+<div class="flex items-center space-x-3 w-full justify-center mt-4">
+<i class="w-5 h-5 text-white/70" data-lucide="volume"></i>
+<input class="w-32 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer accent-bg" id="volume-slider-immersive" max="100" min="0" oninput="setVolume(this.value)" type="range" value="80"/>
+</div>
+</div>
+</div>
+<div class="fixed inset-0 bg-black z-[200] hidden flex items-center justify-center modal" id="story-player-modal">
+<div class="absolute inset-0 flex items-center justify-center">
+<video autoplay="" class="w-full h-full object-cover" id="story-video-player" playsinline=""></video>
+</div>
+<div class="absolute inset-x-0 top-0 p-4 pt-6 flex flex-col justify-start z-10">
+<div class="flex space-x-1 mb-3" id="story-progress-bar-container">
+</div>
+<div class="flex items-center space-x-3 text-white" id="story-info">
+<div class="w-8 h-8 rounded-full flex items-center justify-center text-xl bg-gray-700">
+<span id="story-emoji">🎄</span>
+</div>
+<div>
+<p class="font-bold text-sm" id="story-username">Utente</p>
+<p class="text-xs text-gray-300" id="story-track-title"></p>
+</div>
+</div>
+</div>
+<div class="absolute inset-y-0 w-1/2 left-0 z-20" onclick="prevStory()"></div>
+<div class="absolute inset-y-0 w-1/2 right-0 z-20" onclick="nextStory()"></div>
+<button class="absolute top-4 right-4 text-white/80 hover:text-white transition z-30" onclick="closeStoryPlayer()">
+<i class="w-8 h-8" data-lucide="x"></i>
+</button>
+<button class="absolute inset-0 flex items-center justify-center text-white z-10 transition-opacity opacity-0" id="story-play-pause-button" onclick="toggleStoryPlayPause()">
+<i class="w-20 h-20 fill-current" data-lucide="play"></i>
+</button>
+</div>
+<div class="container-app">
+<header class="flex justify-between items-center mb-8">
+<div class="flex items-center space-x-8">
+<a class="cursor-pointer" href="#" onclick="resetHomePage()">
+<h1 class="logo-aura flex items-center space-x-2">
+<i class="w-7 h-7 accent-text fill-ryzn-accent/30" data-lucide="sparkles"></i>
+<span class="logo-text">Aura</span>
+</h1>
+</a>
+<nav class="hidden sm:flex space-x-6 text-gray-400 text-lg font-medium">
+<button class="nav-item hover:accent-text transition pb-1" id="nav-music" onclick="showSection('music')">Scopri</button>
+</nav>
+</div>
+<div class="flex items-center space-x-3">
+<button class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition border-2 border-transparent hover:accent-border" onclick="showSection('stories')">
+<i class="w-6 h-6" data-lucide="sparkles"></i>
+</button>
+<button class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition" onclick="showSection('playlists')">
+<i class="w-6 h-6" data-lucide="list-music"></i>
+</button>
+<button class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition" onclick="showSection('library')">
+<i class="w-6 h-6 fill-current" data-lucide="heart"></i>
+</button>
+<button class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition" onclick="openSearchModal()">
+<i class="w-6 h-6" data-lucide="search"></i>
+</button>
+<button class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition" id="auth-button-header" onclick="loggedInUser ? showSection('profile') : openAuthModal('login')">
+<i class="w-6 h-6" data-lucide="user"></i>
+</button>
+</div>
+</header>
+<section class="section-page active" id="music-section">
+<h2 class="text-4xl font-extrabold mb-8 text-white" id="home-greeting">Buonasera. La tua Vibe è pronta.</h2>
+<div class="space-y-10" id="home-widgets-container">
+<p class="text-center text-gray-400 col-span-full">Caricamento in corso...</p>
+</div>
+</section>
+<section class="section-page" id="library-section">
+<h2 class="text-3xl font-bold mb-6">I Tuoi Brani Salvati</h2>
+<div class="space-y-3" id="liked-tracks-list">
+<p class="text-center p-4 text-gray-500">Nessun brano salvato.</p>
+</div>
+</section>
+<section class="section-page" id="playlists-section">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-3xl font-bold">Le Tue Sessioni</h2>
+<button class="flex items-center px-4 py-2 accent-bg rounded-full text-sm font-semibold accent-hover transition" onclick="openCreatePlaylistModal()">
+<i class="w-4 h-4 mr-1" data-lucide="plus"></i> Crea Sessione
                 </button>
-            </div>
-            <div id="playlists-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <p class="text-center p-4 text-gray-500 col-span-full">Nessuna sessione creata.</p>
-            </div>
-        </section>
-
-        <section id="profile-section" class="section-page">
-            <h2 class="text-3xl font-bold mb-6">Profilo Utente</h2>
-            <div class="depth-glass p-6 rounded-xl max-w-lg space-y-4">
-                <p id="profile-info" class="text-lg font-semibold">Stato: Disconnesso</p>
-                <div id="vibe-score-display" class="text-xl accent-text font-bold">Stato: 0/100</div>
-                <button onclick="handleLogout()" class="px-4 py-2 bg-red-600 rounded-lg text-white font-bold hover:bg-red-700 transition">Disconnetti</button>
-            </div>
-        </section>
-
-        <section id="stories-section" class="section-page">
-             <div class="flex justify-between items-center mb-6">
-                 <h2 class="text-3xl font-bold">Aura story's</h2>
-                 </div>
-             
-             <div id="stories-bubble-container" class="flex space-x-6 mb-10 overflow-x-auto pb-2 scrollbar-hide">
-                 <p id="no-stories-message" class="text-center p-4 text-gray-500"><Nessuna Storia Disponibile></p>
-             </div>
-             
-             <hr class="border-white/10 my-10">
-
-             <div id="new-releases-feed">
-                 <p class="text-center p-4 text-gray-500">Caricamento nuove uscite...</p>
-             </div>
-             </section>
-
-        </div> 
-    
-    <div onclick="enterImmersiveMode()" class="player-bar depth-glass bg-ryzn-bg/80 border-t border-white/10 flex items-center justify-between px-4 sm:px-8 cursor-pointer">
-        
-        <div class="flex items-center space-x-4 w-1/3">
-            <img id="player-cover" src="https://via.placeholder.com/64" alt="Album Cover" class="w-12 h-12 rounded-md object-cover">
-            <div class="truncate">
-                <p id="player-title" class="font-bold truncate text-sm">Nessun Brano</p>
-                <p id="player-artist" class="text-xs text-gray-400 truncate">Tocca per iniziare</p>
-            </div>
-        </div>
-
-        <div class="flex items-center justify-center space-x-4 w-1/3">
-            <button onclick="event.stopPropagation(); skipBackward()" class="text-white/70 hover:text-white transition hidden md:block">
-                 <i data-lucide="skip-back" class="w-5 h-5 fill-current"></i>
-            </button>
-            <button onclick="event.stopPropagation(); togglePlayPause()" class="p-2 accent-bg rounded-full hover:scale-105 transition shadow-lg shadow-ryzn-accent/30 flex items-center justify-center">
-                <span id="play-icon" class="text-2xl text-ryzn-bg animated-icon leading-none">▶️</span>
-            </button>
-            <button onclick="event.stopPropagation(); skipForward()" class="text-white/70 hover:text-white transition hidden md:block">
-                 <i data-lucide="skip-forward" class="w-5 h-5 fill-current"></i>
-            </button>
-        </div>
-
-        <div class="flex items-center justify-end space-x-4 w-1/3">
-            <button id="add-to-playlist-button" onclick="event.stopPropagation(); openAddToPlaylistModal()" class="text-white/50 hover:text-white transition hidden lg:block">
-                <i data-lucide="list-plus" class="w-5 h-5"></i>
-            </button>
-            <button id="like-button" onclick="event.stopPropagation(); toggleLike()" class="text-white/50 hover:text-red-400 transition">
-                <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
-            </button>
-            
-            <i data-lucide="volume" class="w-5 h-5 text-white/70 hidden lg:block"></i>
-            <input type="range" id="volume-slider" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-20 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-bg hidden lg:block">
-        </div>
-
-        <div id="progress-bar-container" class="absolute bottom-0 left-0 w-full h-1 bg-transparent cursor-pointer">
-            <div id="progress-bar" class="h-1 accent-bg" style="width: 0;"></div>
-        </div>
-    </div>
-
-
-    <script>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="playlists-list">
+<p class="text-center p-4 text-gray-500 col-span-full">Nessuna sessione creata.</p>
+</div>
+</section>
+<section class="section-page" id="profile-section">
+<h2 class="text-3xl font-bold mb-6">Profilo Utente</h2>
+<div class="depth-glass p-6 rounded-xl max-w-lg space-y-4">
+<p class="text-lg font-semibold" id="profile-info">Stato: Disconnesso</p>
+<div class="text-xl accent-text font-bold" id="vibe-score-display">Abbonamento:PREMIUM</div></div>
+<button class="px-4 py-2 bg-red-600 rounded-lg text-white font-bold hover:bg-red-700 transition" onclick="handleLogout()">Disconnetti</button>
+</section></div>
+<section class="section-page" id="stories-section">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-3xl font-bold">Aura story's</h2>
+</div>
+<div class="flex space-x-6 mb-10 overflow-x-auto pb-2 scrollbar-hide" id="stories-bubble-container">
+<p class="text-center p-4 text-gray-500" id="no-stories-message"><nessuna disponibile="" storia=""></nessuna></p>
+</div>
+<hr class="border-white/10 my-10"/>
+<div id="new-releases-feed">
+<p class="text-center p-4 text-gray-500">Caricamento nuove uscite...</p>
+</div>
+</section>
+<div class="player-bar depth-glass bg-ryzn-bg/80 border-t border-white/10 flex items-center justify-between px-4 sm:px-8 cursor-pointer" onclick="enterImmersiveMode()">
+<div class="flex items-center space-x-4 w-1/3">
+<img alt="Album Cover" class="w-12 h-12 rounded-md object-cover" id="player-cover" src="https://via.placeholder.com/64"/>
+<div class="truncate">
+<p class="font-bold truncate text-sm" id="player-title">Nessun Brano</p>
+<p class="text-xs text-gray-400 truncate" id="player-artist">Tocca per iniziare</p>
+</div>
+</div>
+<div class="flex items-center justify-center space-x-4 w-1/3">
+<button class="text-white/70 hover:text-white transition hidden md:block" onclick="event.stopPropagation(); skipBackward()">
+<i class="w-5 h-5 fill-current" data-lucide="skip-back"></i>
+</button>
+<button class="p-2 accent-bg rounded-full hover:scale-105 transition shadow-lg shadow-ryzn-accent/30 flex items-center justify-center" onclick="event.stopPropagation(); togglePlayPause()">
+<span class="text-2xl text-ryzn-bg animated-icon leading-none" id="play-icon">▶️</span>
+</button>
+<button class="text-white/70 hover:text-white transition hidden md:block" onclick="event.stopPropagation(); skipForward()">
+<i class="w-5 h-5 fill-current" data-lucide="skip-forward"></i>
+</button>
+</div>
+<div class="flex items-center justify-end space-x-4 w-1/3">
+<button class="text-white/50 hover:text-white transition hidden lg:block" id="add-to-playlist-button" onclick="event.stopPropagation(); openAddToPlaylistModal()">
+<i class="w-5 h-5" data-lucide="list-plus"></i>
+</button>
+<button class="text-white/50 hover:text-red-400 transition" id="like-button" onclick="event.stopPropagation(); toggleLike()">
+<i class="w-5 h-5 fill-current" data-lucide="heart"></i>
+</button>
+<i class="w-5 h-5 text-white/70 hidden lg:block" data-lucide="volume"></i>
+<input class="w-20 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-bg hidden lg:block" id="volume-slider" max="100" min="0" oninput="setVolume(this.value)" type="range" value="80"/>
+</div>
+<div class="absolute bottom-0 left-0 w-full h-1 bg-transparent cursor-pointer" id="progress-bar-container">
+<div class="h-1 accent-bg" id="progress-bar" style="width: 0;"></div>
+</div>
+</div>
+<script>
         // --- CONFIGURAZIONE YOUTUBE ---
-        const YOUTUBE_API_KEY = "AIzaSyCohnVT3KEG_6wMjEHQu9STCWBDXpPkSVc"; 
-        const YOUTUBE_API_BASE_URL = "https://www.googleapis.com/youtube/v3/";
-        
         // --- Dati & Configurazione Locali ---
-        const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/"; 
+        const YT_API_KEY = "AIzaSyCohnVT3KEG_6wMjEHQu9STCWBDXpPkSVc";
+const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/"; 
         const STORIES_MANIFEST_URL = GITHUB_RAW_BASE + "User_videos.json"; 
         
-        let AURA_MAP = []; // Contiene i metadati dei brani YouTube
+        let AURA_MAP = []; // Contiene i metadati dei brani invidious
         
         // --- Stili e Icone per Mood Grid Migliorata (Natale/Glaciale) ---
         const MOOD_STYLES = {
@@ -700,13 +674,13 @@
         // -------------------------------------------------------------
         
         let currentTrackData = null;
-        let ytPlayer = null; // Oggetto del Player IFrame di YouTube
+        let ytPlayer = null; // Oggetto del Player IFrame di invidious
         let isPlayerReady = false; 
 
         let likedTracks = new Set();
         let userPlaylists = [];
         let remoteStories = []; 
-        let activeFilter = 'Trending'; // Filtro di default per YouTube
+        let activeFilter = 'Trending'; // Filtro di default per invidious
         let isLooping = false;
         let loggedInUser = null;
         
@@ -714,7 +688,7 @@
 
         let progressInterval = null;
         let adCheckInterval = null; // NUOVO: Intervallo per il blocco pubblicità
-        let currentVolume = 80; // Volume in percentuale (0-100) per YouTube API
+        let currentVolume = 80; // Volume in percentuale (0-100) per invidious API
         let trackIdToAdd = null; 
         
         // Dati Storie Video (Natale/Glaciale)
@@ -754,7 +728,7 @@
         window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady; 
 
         function onPlayerReady(event) {
-            console.log("YouTube Player Ready. Inizializzazione controlli.");
+            console.log("invidious Player Ready. Inizializzazione controlli.");
             isPlayerReady = true; 
 
             // ** MODIFICA CRITICA PER MOBILE/BACKGROUND **
@@ -852,59 +826,53 @@
         // ====================================================================
 
         /**
-         * Carica i brani da YouTube in base al filtro/query.
+         * Carica i brani da invidious in base al filtro/query.
          */
-        async function fetchTracks(filter = 'Trending') {
-            const container = document.getElementById('home-widgets-container');
-            if (container) {
-                container.innerHTML = `<p class="text-center text-gray-400 col-span-full"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Caricamento brani di tendenza da YouTube... (${filter})</p>`;
-                lucide.createIcons();
-            }
-
-            let url;
-            if (filter === 'Trending' || ALL_MOODS.includes(filter)) {
-                 // Per Trending e Mood, usa una query di ricerca per un set dinamico di dati (50 risultati)
-                const query = (filter === 'Trending') ? 'musica in tendenza' : YOUTUBE_MOOD_QUERIES[filter];
-                url = `${YOUTUBE_API_BASE_URL}search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=50&key=${YOUTUBE_API_KEY}`;
-            } else {
-                 // Fallback
-                 url = `${YOUTUBE_API_BASE_URL}videos?part=snippet,contentDetails&chart=mostPopular&videoCategoryId=10&regionCode=IT&maxResults=50&key=${YOUTUBE_API_KEY}`;
-            }
-
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`Error! Status: ${response.status}`);
-                }
-                const data = await response.json();
-
-                const results = data.items
-                    .filter(item => item.id && (item.id.videoId || item.id))
-                    .map(item => ({
-                        id: item.id.videoId || item.id,
-                        youtubeId: item.id.videoId || item.id,
-                        title: item.snippet.title,
-                        artist: item.snippet.channelTitle,
-                        cover: item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : 'https://via.placeholder.com/64',
-                        mood: filter === 'Trending' ? getTrackMood() : filter,
-                        vibe: Math.floor(Math.random() * 100) + 1,
-                        color: getRandomAccentColor(), 
-                        rgb: getRandomAccentRGB()
-                    }));
-                
-                AURA_MAP = results;
-                
-                // Dopo il caricamento, mostra i widget
-                renderHomePageWidgets(); 
-
-            } catch (error) {
-                console.error("SERVER IN AGGIORNAMENTO:", error);
-                container.innerHTML = `<p class="text-center p-4 text-red-400 col-span-full">Server in aggiornamento: ${error.message}. Ricollegati piu tardi.</p>`;
-                AURA_MAP = [];
-            }
-        }
         
-        function getRandomAccentColor() {
+
+
+async function fetchTracks(filter = 'Trending') {
+    const container = document.getElementById('home-widgets-container');
+    if (container) {
+        container.innerHTML = `<p class="text-center text-gray-400 col-span-full"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Caricamento brani... (${filter})</p>`;
+        try { lucide.createIcons && lucide.createIcons(); } catch(e){}
+    }
+    try {
+        const query = (filter === 'Trending') ? 'Rap Italiano, Trap Italiana, Pop Italiano, Dance Italiana' : (filter || 'music');
+        const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=24`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('search failed: ' + res.status);
+        const data = await res.json();
+        const items = data.results || [];
+        const results = items.map(it => {
+            const title = it.trackName || it.collectionName || 'Unknown Title';
+            const artist = it.artistName || 'Unknown Artist';
+            const cover = it.artworkUrl100 ? it.artworkUrl100.replace(/100x100bb.jpg$/,'600x600bb.jpg') : 'https://via.placeholder.com/512';
+            const itunesId = it.trackId || it.collectionId || (title + '|' + artist);
+            return {
+                id: 'AURA-' + itunesId,
+                itunesId: itunesId,
+                title: title,
+                artist: artist,
+                cover: cover,
+                youtube_search_query: `${title} ${artist}`,
+                mood: (filter === 'Trending') ? getTrackMood() : filter,
+                vibe: Math.floor(Math.random() * 100) + 1,
+                color: getRandomAccentColor(),
+                rgb: getRandomAccentRGB()
+            };
+        });
+        AURA_MAP = results;
+        renderHomePageWidgets();
+    } catch(err) {
+        console.error('fetchTracks error', err);
+        if (container) container.innerHTML = `<p class="text-center p-4 text-red-400 col-span-full">Errore caricamento da Aura.server: ${err.message}</p>`;
+        AURA_MAP = [];
+    }
+}
+
+
+function getRandomAccentColor() {
             const colors = ['#00BFFF', '#34D399', '#FCD34D', '#FF007F', '#8B5CF6']; // Glacial, Mint, Gold, Magenta, Violet
             return colors[Math.floor(Math.random() * colors.length)];
         }
@@ -919,18 +887,29 @@
         }
 
         // --- Gestione Reset Home ---
-        window.resetHomePage = function() {
-            // Riporta il filtro allo stato iniziale (Trending)
-            activeFilter = 'Trending';
-            // Ricarica i brani di tendenza da YouTube
-            fetchTracks('Trending'); 
-            // Mostra la sezione Music (Home)
-            showSection('music'); 
-            // Resetta lo scorrimento della pagina
-            window.scrollTo(0, 0); 
-        }
+        
+// --- Gestione Reset Home (corretto, senza toast) ---
+window.resetHomePage = async function() {
+    try {
+        // Ripristina il filtro di default
+        activeFilter = 'Trending';
 
-        // --- Funzioni di Autenticazione (OMESSE PER BREVITÀ, RIMANGONO UGUALI) ---
+        // Mostra sezione home
+        showSection('music');
+
+        // Ricarica i brani principali
+        await fetchTracks('Trending');
+
+        // Renderizza di nuovo i widget
+        renderHomePageWidgets();
+
+        // Torna in cima alla pagina
+        window.scrollTo(0, 0);
+    } catch (e) {
+        console.error("Errore nel reset della home:", e);
+    }
+};
+// --- Funzioni di Autenticazione (OMESSE PER BREVITÀ, RIMANGONO UGUALI) ---
         function openAuthModal(mode) {
              document.getElementById('auth-modal').classList.remove('hidden');
              switchAuthMode(mode);
@@ -990,26 +969,42 @@
 
 
         /**
-         * Funzioni di riproduzione del player YouTube
+         * Funzioni di riproduzione del player invidious
          */
-        window.playTrack = function(trackId, autoplay = true) {
-            const track = AURA_MAP.find(t => t.id === trackId);
-            if (!track) return;
-            currentTrackData = track;
-            
-            if (isPlayerReady) {
-                ytPlayer.loadVideoById(trackId);
-                // Il player imposterà il volume predefinito, poi checkAndSkipAd() lo gestirà.
-            } else {
-                showToast("Player in fase di caricamento. Riprova tra un attimo.", 'info');
+        
+window.playTrack = async function(trackId, autoplay = true) {
+    try {
+        let track = AURA_MAP.find(t => t.id === trackId) || AURA_MAP.find(t => t.youtubeId === trackId);
+        if (!track) return;
+        currentTrackData = track;
+        // Resolve YouTube on-demand if this is an Aura item
+        if (String(track.id).startsWith('AURA-') && !track.youtubeId) {
+            const query = track.youtube_search_query || `${track.title} ${track.artist}`;
+            const ytKey = (typeof YT_API_KEY !== 'undefined') ? YT_API_KEY : null;
+            if (!ytKey) {
+                showToast('YouTube API key missing for resolving video', 'error');
+                return;
             }
-            
-            updateUI(track);
-            playerBar.classList.add('active');
-            
-            // *** MODIFICA: Aggiornamento manuale icona quando si carica una nuova traccia ***
-            togglePlayIcon(false); // Assume che stia per partire (mostra ⏯)
+            const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=1&q=${encodeURIComponent(query)}&key=${ytKey}`;
+            const res = await fetch(url);
+            if (!res.ok) { showToast('YouTube search failed: ' + res.status, 'error'); return; }
+            const js = await res.json();
+            const first = js.items && js.items[0];
+            const videoId = first && first.id && (first.id.videoId || first.id);
+            if (!videoId) { showToast('Nessun risultato YouTube per: ' + query, 'error'); return; }
+            track.youtubeId = videoId;
         }
+        if (isPlayerReady && ytPlayer) {
+            try { ytPlayer.loadVideoById(track.youtubeId); if (autoplay) ytPlayer.playVideo && ytPlayer.playVideo(); } catch(e){ try { ytPlayer.loadVideoById(track.youtubeId); } catch(e2){ console.warn(e2); } }
+        } else {
+            showToast('Player non pronto', 'info');
+        }
+        updateUI(track);
+        playerBar.classList.add('active');
+        togglePlayIcon(false);
+    } catch(e){ console.error('playTrack error', e); showToast('Errore: ' + e.message, 'error'); }
+};
+
 
         window.togglePlayPause = function() {
             if (!isPlayerReady) {
@@ -1337,8 +1332,8 @@
                 return;
             }
 
-            // Simula l'URL del brano usando l'ID di YouTube
-            const shareUrl = `https://youtu.be/${track.youtubeId}`;
+            // Simula l'URL del brano usando l'ID di invidious
+            const shareUrl = `https://invidious.video/watch/${track.youtubeId}`;
             const shareTitle = `Ascolta "${track.title}" di ${track.artist} su Aura Music!`;
 
             if (navigator.share) {
@@ -1615,13 +1610,11 @@
             const moodMusicTracks = baseTracks.slice(16, 26);
             const moodMusicHtml = moodMusicTracks.map(getTrackElement).join('');
             allWidgetsHtml += createWidgetBlock('Rilassati con il nostro Flow', 'Playlist curate per il tuo stato d\'animo.', moodMusicHtml, 'horizontal-scroll');
+           
+           
+            
 
-            // NUOVO WIDGET 5: Ritorno al Passato (Horizontal Carousel)
-            const retroTracks = baseTracks.slice(26, 36);
-            const retroHtml = retroTracks.map(getTrackElement).join('');
-            allWidgetsHtml += createWidgetBlock('Ritorno al Passato', 'I successi che non smettono di emozionare.', retroHtml, 'horizontal-scroll');
-
-            // Applica tutti i widget
+// Applica tutti i widget
             container.innerHTML = allWidgetsHtml;
             lucide.createIcons();
         }
@@ -1669,7 +1662,7 @@
                 .filter(t => t);
 
             if (tracksToDisplay.length === 0) {
-                 container.innerHTML = '<p class="text-center p-4 text-gray-500">I tuoi preferiti sono stati eliminati da YouTube.</p>';
+                 container.innerHTML = '<p class="text-center p-4 text-gray-500">I tuoi preferiti sono stati eliminati da invidious.</p>';
                  return;
             }
 
@@ -1716,7 +1709,7 @@
         }
         function closeSearchModal() {
             document.getElementById('search-modal').classList.add('hidden');
-            document.getElementById('search-results').innerHTML = '<p class="text-center text-gray-500">Inizia a digitare per cercare musica su YouTube.</p>';
+            document.getElementById('search-results').innerHTML = '<p class="text-center text-gray-500">Inizia a digitare per cercare musica.</p>';
         }
 
         async function performSearch(isLiveInput = false) {
@@ -1739,7 +1732,7 @@
             try {
                  const response = await fetch(url);
                  if (!response.ok) {
-                     throw new Error(`YouTube API Error! Status: ${response.status}`);
+                     throw new Error(`invidious API Error! Status: ${response.status}`);
                  }
                  const data = await response.json();
 
@@ -1790,7 +1783,7 @@
                  lucide.createIcons();
 
             } catch (error) {
-                console.error("Errore nella ricerca YouTube:", error);
+                console.error("Errore nella ricerca invidious:", error);
                 resultsContainer.innerHTML = `<p class="text-center p-4 text-red-400">Errore: ${error.message}. Riprova più tardi.</p>`;
             }
         }
@@ -1976,7 +1969,7 @@
                 remoteStories = data.map((story, index) => ({
                     id: index + 1,
                     ...story,
-                    trackId: story.trackId, // Stringa YouTube ID
+                    trackId: story.trackId, // Stringa invidious ID
                     video_url: story.videoUrl || story.video_url || ''
                 }));
             } catch (error) {
@@ -2198,7 +2191,74 @@
         // ------------------------------------------------------------
 
 
-        async function initializeAppContent() {
+        
+
+
+// Al click su un risultato aggiunge / aggiorna AURA_MAP e richiama playTrack() che risolve il video YouTube.
+async function performSearch(force=false) {
+    try {
+        const input = document.getElementById('search-input');
+        if(!input) return;
+        const q = String(input.value || '').trim();
+        const resultsContainer = document.getElementById('search-results');
+        if(!q || q.length < 2) {
+            if(resultsContainer) resultsContainer.innerHTML = '<p class="text-center text-gray-500">Digita almeno 2 caratteri per cercare.</p>';
+            return;
+        }
+        if(resultsContainer) resultsContainer.innerHTML = `<p class="text-center text-gray-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Sto cercando: ${q}</p>`;
+        // Aura Search (country IT)
+        const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=20&country=IT`;
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('Aura search failed: ' + res.status);
+        const js = await res.json();
+        const items = js.results || [];
+        if(items.length === 0) {
+            if(resultsContainer) resultsContainer.innerHTML = '<p class="text-center text-gray-500">Nessun risultato trovato.</p>';
+            return;
+        }
+        // Build results list
+        const listHtml = items.map(it => {
+            const title = it.trackName || it.collectionName || 'Unknown Title';
+            const artist = it.artistName || 'Unknown Artist';
+            const cover = (it.artworkUrl100) ? it.artworkUrl100.replace(/100x100bb.jpg$/,'600x600bb.jpg') : 'https://via.placeholder.com/512';
+            const itunesId = it.trackId || it.collectionId || (title + '|' + artist);
+            const id = 'Aura-' + itunesId;
+            // ensure AURA_MAP has this track (avoid duplicates)
+            const exists = AURA_MAP.find(t => t.id === id);
+            if(!exists) {
+                AURA_MAP.push({
+                    id: id,
+                    itunesId: itunesId,
+                    title: title,
+                    artist: artist,
+                    cover: cover,
+                    youtube_search_query: `${title} ${artist}`,
+                    mood: 'Search',
+                    vibe: Math.floor(Math.random()*100)+1,
+                    color: getRandomAccentColor(),
+                    rgb: getRandomAccentRGB()
+                });
+            }
+            return `
+                <div class="p-2 rounded-lg hover:bg-white/5 cursor-pointer flex items-center space-x-3" onclick="(function(e){ e && e.stopPropagation(); playTrack('${id}') })(event)">
+                    <img src="${cover}" class="w-12 h-12 rounded-md object-cover" alt="${title}">
+                    <div class="flex-grow">
+                        <div class="text-sm font-semibold truncate">${title}</div>
+                        <div class="text-xs text-gray-400 truncate">${artist}</div>
+                    </div>
+                    <div class="text-xs text-gray-400">Aura</div>
+                </div>
+            `;
+        }).join('');
+        if(resultsContainer) resultsContainer.innerHTML = listHtml;
+        try { lucide.createIcons && lucide.createIcons(); } catch(e){}
+    } catch(err) {
+        console.error('performSearch error', err);
+        const resultsContainer = document.getElementById('search-results');
+        if(resultsContainer) resultsContainer.innerHTML = `<p class="text-center text-red-400">Errore ricerca: ${err.message}</p>`;
+    }
+}
+async function initializeAppContent() {
             
             // INIEZIONE DINAMICA DEL MANIFEST PWA 
             const pwaLink = document.createElement('link');
@@ -2230,9 +2290,8 @@
 
         document.addEventListener('DOMContentLoaded', initializeAppContent);
     </script>
-
 <script>
-/* Ambient audio autoplay + pause when main YouTube starts */
+/* Ambient audio autoplay + pause when main invidious starts */
 (function(){
   const ambient = document.getElementById('ambient-audio');
   // try to autoplay (may be blocked on some browsers)
@@ -2249,7 +2308,7 @@
     setTimeout(tryPlayAmbient, 300);
   });
 
-  // Pause ambient when the main YouTube player starts playing
+  // Pause ambient when the main invidious player starts playing
   // The main player exposes ytPlayer; we watch for state changes if available
   function onYTStateChangeHandler() {
     try {
@@ -2370,6 +2429,725 @@
   setTimeout(start, 200);
 })();
 </script>
+<!-- invidious + YT-SHIM: provide YT.Player-compatible shim using invidious streams -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.4/dist/hls.min.js"></script>
+<script>
+(function(){
+  
+  const invidious_STREAMS = (id) => `${invidious_BASE}/api/v1/streams/${encodeURIComponent(id)}`;
+  // Ensure audio element exists
+  let audio = document.getElementById('invidious-audio');
+  if(!audio){
+    audio = document.createElement('audio');
+    audio.id = 'invidious-audio';
+    audio.preload = 'auto';
+    document.body.appendChild(audio);
+  }
+  // helper attach
+  async function resolveStreamUrl(id){
+    try{
+      const r = await fetch(invidious_STREAMS(id));
+      if(!r.ok) throw new Error('invidious streams fetch failed: ' + r.status);
+      const data = await r.json();
+      let candidates = [];
+      if(Array.isArray(data)) candidates = data;
+      else if(data.formats) candidates = data.formats;
+      else if(data.streams) candidates = data.streams;
+      else if(data.url) candidates = [{url:data.url, mime:data.mimeType||data.content_type||''}];
+      candidates.sort((a,b)=> (b.bitrate||0)-(a.bitrate||0));
+      let streamUrl = null;
+      for(const c of candidates){
+        const url = c.url||c.src||c.playlist||c.streamUrl||c.uri;
+        if(!url) continue;
+        if(url.endsWith('.m3u8')) { streamUrl = url; break; }
+        if((c.mime||'').includes('audio') || url.match(/\.(mp3|m4a|webm|aac|opus)(\?|$)/i)) { streamUrl = url; break; }
+        if(!streamUrl) streamUrl = url;
+      }
+      if(!streamUrl) throw new Error('No suitable audio stream found');
+      return streamUrl;
+    }catch(e){
+      console.error(e);
+      throw e;
+    }
+  }
+
+  // YT state constants
+  const YT_STATE = {UNSTARTED:-1, ENDED:0, PLAYING:1, PAUSED:2, BUFFERING:3, CUED:5};
+
+  // Minimal HLS attach helper
+  function attachUrl(url, autoplay){
+    if(url.endsWith('.m3u8') && window.Hls && !audio.canPlayType('application/vnd.apple.mpegurl')){
+      if(audio._hls){ try{ audio._hls.destroy(); }catch(e){} audio._hls=null; }
+      const hls = new Hls();
+      audio._hls = hls;
+      hls.loadSource(url);
+      hls.attachMedia(audio);
+      hls.on(Hls.Events.MANIFEST_PARSED, function(){ if(autoplay) audio.play().catch(()=>{}); });
+    } else {
+      audio.src = url;
+      if(autoplay) audio.play().catch(()=>{});
+    }
+  }
+
+  // Define shim Player class
+  function ShimPlayer(elementId, options){
+    this.elementId = elementId;
+    this.options = options || {};
+    this._ready = false;
+    this._currentVideoId = null;
+    // setup event listeners on audio to notify onStateChange
+    audio.addEventListener('play', ()=>{ if(typeof window.onPlayerStateChange === 'function') window.onPlayerStateChange({data: YT_STATE.PLAYING}); });
+    audio.addEventListener('pause', ()=>{ if(typeof window.onPlayerStateChange === 'function') window.onPlayerStateChange({data: YT_STATE.PAUSED}); });
+    audio.addEventListener('ended', ()=>{ if(typeof window.onPlayerStateChange === 'function') window.onPlayerStateChange({data: YT_STATE.ENDED}); });
+    // simulate ready
+    setTimeout(()=>{ this._ready=true; if(this.options.events && typeof this.options.events.onReady==='function') this.options.events.onReady({target:this}); }, 10);
+  }
+  ShimPlayer.prototype.playVideo = function(){ audio.play().catch(()=>{}); };
+  ShimPlayer.prototype.pauseVideo = function(){ audio.pause(); };
+  ShimPlayer.prototype.loadVideoById = async function(id, startSeconds){
+    try{
+      this._currentVideoId = (typeof id === 'object' && id.videoId)? id.videoId : id;
+      const url = await resolveStreamUrl(this._currentVideoId);
+      attachUrl(url, true);
+      if(startSeconds && typeof startSeconds==='number') audio.currentTime = startSeconds;
+    }catch(e){ console.error(e); }
+  };
+  ShimPlayer.prototype.cueVideoById = async function(id, startSeconds){
+    try{
+      this._currentVideoId = (typeof id === 'object' && id.videoId)? id.videoId : id;
+      const url = await resolveStreamUrl(this._currentVideoId);
+      attachUrl(url, false);
+      if(startSeconds && typeof startSeconds==='number') audio.currentTime = startSeconds;
+    }catch(e){ console.error(e); }
+  };
+  ShimPlayer.prototype.seekTo = function(seconds, allowSeekAhead){
+    if(audio.duration) audio.currentTime = seconds;
+  };
+  ShimPlayer.prototype.getCurrentTime = function(){ return audio.currentTime || 0; };
+  ShimPlayer.prototype.getDuration = function(){ return audio.duration || 0; };
+  ShimPlayer.prototype.getPlayerState = function(){
+    if(audio.paused && (audio.currentTime>0 && !audio.ended)) return YT_STATE.PAUSED;
+    if(!audio.paused && (audio.currentTime>0 && !audio.ended)) return YT_STATE.PLAYING;
+    if(audio.ended) return YT_STATE.ENDED;
+    return YT_STATE.UNSTARTED;
+  };
+  ShimPlayer.prototype.getVolume = function(){ return Math.round((audio.volume||1)*100); };
+  ShimPlayer.prototype.setVolume = function(v){ audio.volume = Math.min(1, Math.max(0, v/100)); };
+
+  // Expose global YT.Player and YT object
+  window.YT = window.YT || {};
+  window.YT.Player = function(elementId, options){
+    const p = new ShimPlayer(elementId, options);
+    // also set global ytPlayer for compatibility
+    window.ytPlayer = p;
+    return p;
+  };
+
+  // Also provide a minimal get API for state constants
+  window.YTState = YT_STATE;
+
+  // If original script expected onYouTubeIframeAPIReady to be called, call it now
+  if(typeof window.onYouTubeIframeAPIReady === 'function'){
+    try{ window.onYouTubeIframeAPIReady(); }catch(e){ console.warn('onYouTubeIframeAPIReady error',e); }
+  }
+  // Make playTrack(videoId) map to ytPlayer.loadVideoById if playTrack was not defined
+  if(typeof window.playTrack !== 'function'){
+    window.playTrack = function(videoId){
+      if(window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function'){
+        window.ytPlayer.loadVideoById(videoId, 0);
+      } else {
+        console.warn('ytPlayer not ready yet, trying to call onYouTubeIframeAPIReady and retry');
+        if(typeof window.onYouTubeIframeAPIReady === 'function') window.onYouTubeIframeAPIReady();
+        setTimeout(()=>{ if(window.ytPlayer) window.ytPlayer.loadVideoById(videoId,0); }, 200);
+      }
+    };
+  } else {
+    // wrap existing playTrack to use invidious: keep original but also intercept calls
+    const origPlay = window.playTrack;
+    window.playTrack = function(videoId){
+      if(window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function'){
+        window.ytPlayer.loadVideoById(videoId,0);
+      }
+      try{ origPlay(videoId); }catch(e){}
+    };
+  }
+
+})();
+</script>
+<!-- AurainvidiousCore: invidious-only player engine (replaces invidious dependency) -->
+<script>
+    (function(){
+        var invidious_BASE = 'https://invidious.video';
+        var invidious_SEARCH = function(q){ return invidious_BASE + '/api/v1/search?q=' + encodeURIComponent(q); };
+        var invidious_STREAMS = function(id){ return invidious_BASE + '/api/v1/streams/' + encodeURIComponent(id); };
+
+        // Simple Emitter (ES5)
+        function E(){ this.l = {}; }
+        E.prototype.on = function(n,f){ (this.l[n]=this.l[n]||[]).push(f); };
+        E.prototype.emit = function(n){ var a = Array.prototype.slice.call(arguments,1); var ls = this.l[n]||[]; for(var i=0;i<ls.length;i++){ try{ ls[i].apply(null,a);}catch(e){console.error(e);} } };
+
+        // Core player
+        function AurainvidiousCore(){
+            this.audio = document.getElementById('aura-invidious-audio') || (function(){ var a=document.createElement('audio'); a.id='aura-invidious-audio'; a.preload='auto'; document.body.appendChild(a); return a; })();
+            this.hls = null;
+            this.em = new E();
+            this.state = -1; // -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering
+            this.volume = parseInt(localStorage.getItem('volume')||80,10);
+            try{ this.audio.volume = Math.min(1,Math.max(0,this.volume/100)); }catch(e){}
+            var self = this;
+            this.audio.addEventListener('play', function(){ self.state = 1; self.em.emit('stateChange',1); });
+            this.audio.addEventListener('pause', function(){ if(!self.audio.ended){ self.state = 2; self.em.emit('stateChange',2); } });
+            this.audio.addEventListener('ended', function(){ self.state = 0; self.em.emit('stateChange',0); });
+            this.audio.addEventListener('waiting', function(){ self.state = 3; self.em.emit('stateChange',3); });
+            this.audio.addEventListener('timeupdate', function(){ self.em.emit('time', self.audio.currentTime); });
+            this.audio.addEventListener('error', function(e){ self.em.emit('error', e); });
+        }
+
+        AurainvidiousCore.prototype._resolve = function(id){
+            var url = invidious_STREAMS(id);
+            return fetch(url).then(function(r){ if(!r.ok) throw new Error('invidious streams fetch failed: '+r.status); return r.json(); }).then(function(data){
+                var cand = [];
+                if(Array.isArray(data)) cand = data;
+                else if(data.formats) cand = data.formats;
+                else if(data.streams) cand = data.streams;
+                else if(data.url) cand = [{url: data.url}];
+                cand.sort(function(a,b){ return (b.bitrate||0) - (a.bitrate||0); });
+                var stream = null;
+                for(var i=0;i<cand.length;i++){
+                    var c = cand[i];
+                    var u = c && (c.url||c.src||c.streamUrl||c.playlist||c.uri);
+                    if(!u) continue;
+                    if(u.indexOf('.m3u8') !== -1){ stream = u; break; }
+                    if((c.mime||'').indexOf('audio') !== -1 || (u && u.match(/\.(mp3|m4a|webm|aac|opus)(\?|$)/i))){ stream = u; break; }
+                    if(!stream) stream = u;
+                }
+                return stream;
+            });
+        };
+
+        AurainvidiousCore.prototype._attach = function(streamUrl, autoplay, startSeconds){
+            var audio = this.audio;
+            try{ if(this.hls){ this.hls.destroy(); this.hls = null; } }catch(e){}
+            if(streamUrl.indexOf('.m3u8') !== -1 && window.Hls && !audio.canPlayType('application/vnd.apple.mpegurl')){
+                try{
+                    var h = new Hls();
+                    this.hls = h;
+                    h.loadSource(streamUrl);
+                    h.attachMedia(audio);
+                    h.on(Hls.Events.MANIFEST_PARSED, function(){ try{ if(startSeconds) audio.currentTime = startSeconds; }catch(e){} if(autoplay) audio.play().catch(function(){}); });
+                    h.on(Hls.Events.ERROR, function(ev, data){ console.warn('HLS error', data); });
+                }catch(e){
+                    console.error('HLS attach failed', e);
+                    audio.src = streamUrl;
+                    if(autoplay) audio.play().catch(function(){});
+                }
+            } else {
+                audio.src = streamUrl;
+                try{ if(startSeconds) audio.currentTime = startSeconds; }catch(e){} 
+                if(autoplay) audio.play().catch(function(){});
+            }
+        };
+
+        AurainvidiousCore.prototype.playId = function(id, autoplay, startSeconds){
+            var self = this;
+            this.currentId = id;
+            return this._resolve(id).then(function(s){ if(!s) throw new Error('No stream for id '+id); self._attach(s, autoplay===undefined?true:!!autoplay, startSeconds||0); return s; });
+        };
+        AurainvidiousCore.prototype.play = function(){ try{ this.audio.play().catch(function(){}); }catch(e){} };
+        AurainvidiousCore.prototype.pause = function(){ try{ this.audio.pause(); }catch(e){} };
+        AurainvidiousCore.prototype.seekTo = function(s){ try{ if(this.audio.duration) this.audio.currentTime = s; }catch(e){} };
+        AurainvidiousCore.prototype.getCurrentTime = function(){ return this.audio.currentTime||0; };
+        AurainvidiousCore.prototype.getDuration = function(){ return this.audio.duration||0; };
+        AurainvidiousCore.prototype.setVolume = function(v){ this.volume = v; try{ this.audio.volume = Math.min(1,Math.max(0,v/100)); localStorage.setItem('volume', v); }catch(e){} };
+        AurainvidiousCore.prototype.getVolume = function(){ return this.volume; };
+
+        // expose core
+        window.auraCore = window.auraCore || new AurainvidiousCore();
+
+        // create ytPlayer shim pointing to auraCore to keep UI code intact
+        window.ytPlayer = {
+            loadVideoById: function(id, startSeconds){ return window.auraCore.playId(id, true, startSeconds||0); },
+            cueVideoById: function(id, startSeconds){ return window.auraCore.playId(id, false, startSeconds||0); },
+            playVideo: function(){ return window.auraCore.play(); },
+            pauseVideo: function(){ return window.auraCore.pause(); },
+            seekTo: function(s, allow){ return window.auraCore.seekTo(s); },
+            getCurrentTime: function(){ return window.auraCore.getCurrentTime(); },
+            getDuration: function(){ return window.auraCore.getDuration(); },
+            setVolume: function(v){ return window.auraCore.setVolume(v); },
+            getVolume: function(){ return window.auraCore.getVolume(); },
+            getPlayerState: function(){ return window.auraCore.state; },
+            getAdState: function(){ return 2; }, // always "no ad"
+            // minimal event handlers
+            addEventListener: function(){}, removeEventListener: function(){}
+        };
+
+        // provide YT.PlayerState constants for code that checks them
+        window.YT = window.YT || {};
+        window.YT.PlayerState = { UNSTARTED:-1, ENDED:0, PLAYING:1, PAUSED:2, BUFFERING:3, CUED:5 };
+
+        // Mark player as ready and call original onPlayerReady-like init if present
+        window.isPlayerReady = true;
+        // safe initialize: call original init handlers if they exist, and start fetchTracks if needed
+        try{
+            if(typeof onPlayerReady === 'function') setTimeout(onPlayerReady,50);
+        }catch(e){}
+        try{
+            if(typeof safeInitializeApp === 'function') setTimeout(safeInitializeApp,50);
+            else if(typeof initializeAppContent === 'function') setTimeout(initializeAppContent,50);
+            else if(typeof initApp === 'function') setTimeout(initApp,50);
+        }catch(e){}
+    })();
+    </script>
+<!-- START: Safe Aura-audio player + Aura  search (non-destructive injection) -->
+<script>
+(function(){
+  if (window.__AURA_YT_AUDIO_INJECTED) return;
+  window.__AURA_YT_AUDIO_INJECTED = true;
+
+  // Safe performSearch: queries Aura and populates #search-results
+  async function safePerformSearch(live=false) {
+    try {
+      const input = document.getElementById('search-input');
+      const resultsContainer = document.getElementById('search-results');
+      if (!input || !resultsContainer) return;
+      const q = (input.value || '').trim();
+      if (q.length < 2) {
+        resultsContainer.innerHTML = '<p class="text-center text-gray-500">Digita almeno 2 caratteri per cercare.</p>';
+        return;
+      }
+      resultsContainer.innerHTML = '<p class="text-center text-gray-400">Ricerca in corso...</p>';
+      const url = 'https://itunes.apple.com/search?term=' + encodeURIComponent(q) + '&entity=song&limit=25&country=IT';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Aura error ' + res.status);
+      const js = await res.json();
+      if (!js.results || js.results.length === 0) {
+        resultsContainer.innerHTML = '<p class="text-center text-gray-400">Nessun risultato trovato.</p>';
+        return;
+      }
+      // Build results markup
+      resultsContainer.innerHTML = js.results.map(item=>{
+        const title = item.trackName || item.collectionName || 'Unknown';
+        const artist = item.artistName || 'Unknown';
+        const cover = (item.artworkUrl100||'').replace(/100x100bb\.jpg$/,'300x300bb.jpg') || '';
+        // create safe element with data attributes
+        return '<div class="flex items-center space-x-4 p-2 rounded-lg hover:bg-white/10 cursor-pointer transition search-result-item" '+
+               'data-title="'+encodeURIComponent(title)+'" data-artist="'+encodeURIComponent(artist)+'" data-cover="'+encodeURIComponent(cover)+'">'+
+               '<img src="'+cover+'" class="w-16 h-16 rounded-lg shadow-md" alt="'+title+'">'+
+               '<div class="text-left"><p class="font-semibold text-white truncate">'+title+'</p>'+
+               '<p class="text-sm text-gray-400 truncate">'+artist+'</p></div></div>';
+      }).join('');
+      // attach click handlers (idempotent)
+      Array.from(resultsContainer.querySelectorAll('.search-result-item')).forEach(el=>{
+        if (el.__bound) return;
+        el.__bound = true;
+        el.addEventListener('click', function(){
+          const title = decodeURIComponent(this.getAttribute('data-title')||'');
+          const artist = decodeURIComponent(this.getAttribute('data-artist')||'');
+          const cover = decodeURIComponent(this.getAttribute('data-cover')||'');
+          // ensure previous hidden iframe is stopped and start new one
+          window.__auraPlayFromSearch(title, artist, cover);
+        });
+      });
+    } catch(err) {
+      console.error('safePerformSearch error', err);
+      const resultsContainer = document.getElementById('search-results');
+      if (resultsContainer) resultsContainer.innerHTML = '<p class="text-red-400 text-center">Errore ricerca: '+ (err.message || err) +'</p>';
+    }
+  }
+
+  // Expose performSearch if not present (preserves original otherwise)
+  if (typeof window.performSearch !== 'function') {
+    window.performSearch = safePerformSearch;
+  } else {
+    // wrap original to preserve live behaviour but fallback on error
+    const orig = window.performSearch;
+    window.performSearch = function(live=false){
+      try { return orig(live); } catch(e){ console.warn('orig performSearch failed, using safePerformSearch', e); return safePerformSearch(live); }
+    }
+  }
+
+  // Create hidden YouTube-audio iframe and play by search
+  window.__auraPlayFromSearch = function(title, artist, cover) {
+    try {
+      const query = encodeURIComponent((title + ' ' + (artist||'')).trim());
+      const container = document.getElementById('yt-player-container') || document.body;
+      // remove previous iframe if exists
+      const prev = document.getElementById('aura-yt-audio');
+      if (prev) {
+        try { prev.src = 'about:blank'; } catch(e) {}
+        prev.remove();
+      }
+      const iframe = document.createElement('iframe');
+      iframe.id = 'aura-yt-audio';
+      iframe.width = '1';
+      iframe.height = '1';
+      iframe.style.opacity = '0';
+      iframe.style.position = 'absolute';
+      iframe.style.left = '-9999px';
+      iframe.style.top = '-9999px';
+      iframe.setAttribute('allow', 'autoplay; encrypted-media');
+      iframe.src = 'https://www.youtube.com/embed?listType=search&list=' + query + '&autoplay=1';
+      container.appendChild(iframe);
+
+      // update UI using existing updateUI if available
+      try {
+        const trackObj = {
+          id: 'search-' + Date.now(),
+          title: title || ('Search: '+query),
+          artist: artist || '',
+          cover: cover || (document.getElementById('player-cover')?.src || ''),
+          youtubeId: null,
+          vibe: 50,
+          mood: 'Search'
+        };
+        window.AURA_MAP = window.AURA_MAP || [];
+        window.AURA_MAP.unshift(trackObj);
+        window.currentTrackData = trackObj;
+        if (typeof window.updateUI === 'function') {
+          try { window.updateUI(trackObj); } catch(e){ console.warn(e); }
+        }
+        const pb = document.querySelector('.player-bar') || window.playerBar;
+        if (pb) pb.classList.add('active');
+      } catch(e){ console.warn('UI update failed', e); }
+
+    } catch(err) {
+      console.error('Play from search error', err);
+    }
+  };
+
+  // Override existing playTrack to use hidden YouTube search embed if it refers to external resolver
+  try {
+    const origPlay = window.playTrack;
+    // replace only if original exists and contains youtube API lookup pattern (conservative)
+    if (typeof origPlay === 'function') {
+      const s = origPlay.toString();
+      if (s.includes('YouTube') || s.includes('youtube') || s.includes('YouTube API') || s.includes('youtube.googleapis')) {
+        window.playTrack = async function(trackId, autoplay=true){
+          try {
+            const track = (window.AURA_MAP || []).find(t => t.id === trackId) || (window.AURA_MAP || []).find(t => t.youtubeId === trackId);
+            if (!track) return;
+            // use search embed to play
+            window.__auraPlayFromSearch(track.title, track.artist, track.cover);
+          } catch(e){ console.error('overridden playTrack error', e); }
+        };
+      }
+    }
+  } catch(e){ console.warn('playTrack override check failed', e); }
+
+})();
+</script>
+<!-- END: Safe Aura-audio player + Aura search -->
+<script src="https://www.youtube.com/iframe_api"></script>
+
+
+<!-- BEGIN AURA AD HELPER (FINAL) -->
+<style id="aura-ad-helper-final-style">
+/* Positioning will be relative to #immersive-yt-player-container */
+#immersive-yt-player-container { position: relative; }
+
+.aura-ad-overlay {
+  position: absolute;
+  left: 12px;
+  bottom: 18px;
+  z-index: 1200;
+  background: rgba(10,10,10,0.72);
+  color: #E6F7FF;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 200ms ease, transform 200ms ease;
+  pointer-events: none; /* non-interactive */
+}
+.aura-ad-overlay.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+.aura-ad-overlay .aura-ad-icon {
+  width: 20px; height: 20px; display:inline-flex; align-items:center; justify-content:center;
+  background: linear-gradient(90deg, rgba(0,191,255,0.9), rgba(179,224,255,0.9));
+  border-radius: 6px;
+  color:#072033; font-weight:700;
+}
+.aura-ad-overlay .aura-ad-text { font-weight:600; letter-spacing:0.1px; opacity:0.95; }
+
+/* Skip button styling */
+#aura-skip-button {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 1200;
+  background: rgba(10,10,10,0.78);
+  color: #DFF7FF;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  gap:8px;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 200ms ease, transform 200ms ease;
+  cursor: pointer;
+  pointer-events: none;
+}
+#aura-skip-button.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+#aura-skip-button .dot { width:8px; height:8px; border-radius:50%; background:#00BFFF; box-shadow:0 0 8px rgba(0,191,255,0.4); flex:none; }
+</style>
+
+<script>
+(function(){
+  // Isolated scope
+  const POLL = 500; // ms
+  const overlayHtml = `
+    <div class="aura-ad-overlay" id="__aura_ad_overlay" aria-live="polite" role="status">
+      <div class="aura-ad-icon">♪</div>
+      <div class="aura-ad-text">Annuncio — <span id="__aura_ad_timer">...</span>s</div>
+    </div>`;
+  const skipBtnHtml = `
+    <div id="aura-skip-button" role="button" aria-hidden="true" title="Skip disponibile — clicca per saltare (azione manuale)">
+      <div class="dot"></div><div style="font-weight:600">Skip disponibile</div>
+    </div>`;
+
+  let state = {
+    initialized: false,
+    pollHandle: null,
+    adActive: false,
+    prevVolume: null
+  };
+
+  function safeQuery(sel) { try { return document.querySelector(sel); } catch(e){ return null; } }
+
+  function insertIntoImmersive() {
+    const container = document.getElementById('immersive-yt-player-container');
+    if (!container) return false;
+    // Avoid duplicating
+    if (!document.getElementById('__aura_ad_overlay')) {
+      container.insertAdjacentHTML('beforeend', overlayHtml);
+    }
+    if (!document.getElementById('aura-skip-button')) {
+      container.insertAdjacentHTML('beforeend', skipBtnHtml);
+    }
+    // attach click handler to skip button (manual only)
+    const skipBtn = document.getElementById('aura-skip-button');
+    if (skipBtn && !skipBtn.dataset.attach) {
+      skipBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        // user-initiated: attempt to forward to real skip if present
+        const real = safeQuery('.ytp-ad-skip-button, .ytp-ad-skip-button-container');
+        if (real) {
+          try { real.click(); } catch(err){ try { real.focus(); real.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter'})); } catch(e){} }
+        } else {
+          // no real skip exposed; inform user
+          console.warn('Skip button not found in player DOM.');
+        }
+      });
+      skipBtn.dataset.attach = '1';
+    }
+    return true;
+  }
+
+  function isAdPlaying() {
+    try {
+      if (window.ytPlayer && typeof ytPlayer.getPlayerState === 'function') {
+        // use getAdState if exists
+        if (typeof ytPlayer.getAdState === 'function') {
+          try {
+            const adState = ytPlayer.getAdState();
+            if (typeof adState === 'number' && adState !== 2) return true;
+          } catch(e){}
+        }
+        // DOM indicators
+        const domAd = !!document.querySelector('.ytp-ad-module, .ad-showing, .ytp-ad-player-overlay, .video-ads');
+        if (domAd) return true;
+        const dur = (typeof ytPlayer.getDuration === 'function') ? ytPlayer.getDuration() : 0;
+        const st = (typeof ytPlayer.getPlayerState === 'function') ? ytPlayer.getPlayerState() : null;
+        if (dur > 0 && dur < 120 && st === YT.PlayerState.PLAYING) return true;
+      }
+    } catch(e){}
+    return false;
+  }
+
+  function getRemaining() {
+    try {
+      if (window.ytPlayer && typeof ytPlayer.getDuration === 'function' && typeof ytPlayer.getCurrentTime === 'function') {
+        const dur = ytPlayer.getDuration();
+        const now = ytPlayer.getCurrentTime();
+        if (dur > 0 && dur - now > 0) return Math.max(0, Math.round(dur - now));
+      }
+    } catch(e){}
+    return null;
+  }
+
+  function showOverlay(remaining) {
+    const el = document.getElementById('__aura_ad_overlay');
+    const timer = document.getElementById('__aura_ad_timer');
+    if (!el || !timer) return;
+    timer.textContent = (remaining === null) ? '...' : remaining;
+    el.classList.add('show');
+  }
+  function hideOverlay() {
+    const el = document.getElementById('__aura_ad_overlay');
+    if (!el) return;
+    el.classList.remove('show');
+  }
+  function showSkipBtn() {
+    const el = document.getElementById('aura-skip-button');
+    if (!el) return;
+    el.classList.add('show');
+    el.setAttribute('aria-hidden','false');
+  }
+  function hideSkipBtn() {
+    const el = document.getElementById('aura-skip-button');
+    if (!el) return;
+    el.classList.remove('show');
+    el.setAttribute('aria-hidden','true');
+  }
+
+  function muteForAd() {
+    try {
+      if (window.ytPlayer && typeof ytPlayer.getVolume === 'function' && typeof ytPlayer.setVolume === 'function') {
+        if (state.prevVolume === null) {
+          try { state.prevVolume = ytPlayer.getVolume(); } catch(e){ state.prevVolume = 80; }
+        }
+        ytPlayer.setVolume(0);
+      }
+      // mute ambient/aux audio without destroying their state
+      const nodes = Array.from(document.querySelectorAll('audio#aura-invidious-audio,audio#ambient-audio,video#aura-invidious-video,video#ambient-video'));
+      nodes.forEach(n => {
+        if (n && n.dataset && n.dataset.__auraPrevVol === undefined) {
+          try { n.dataset.__auraPrevVol = (typeof n.volume === 'number') ? n.volume : ''; } catch(e){}
+          try { n.volume = 0; } catch(e){}
+        }
+      });
+    } catch(e){ console.warn('muteForAd', e); }
+  }
+  function restoreAfterAd() {
+    try {
+      if (window.ytPlayer && typeof ytPlayer.setVolume === 'function') {
+        const prev = (state.prevVolume !== null) ? state.prevVolume : (typeof currentVolume !== 'undefined' ? currentVolume : 80);
+        try { ytPlayer.setVolume(prev); } catch(e){}
+      }
+      const nodes = Array.from(document.querySelectorAll('audio#aura-invidious-audio,audio#ambient-audio,video#aura-invidious-video,video#ambient-video'));
+      nodes.forEach(n => {
+        if (n && n.dataset && n.dataset.__auraPrevVol !== undefined && n.dataset.__auraPrevVol !== '') {
+          try { n.volume = parseFloat(n.dataset.__auraPrevVol); } catch(e){}
+          delete n.dataset.__auraPrevVol;
+        }
+      });
+      state.prevVolume = null;
+    } catch(e){ console.warn('restoreAfterAd', e); }
+  }
+
+  function checkOnce() {
+    // ensure elements inserted in immersive container
+    insertIntoImmersive();
+
+    const adNow = isAdPlaying();
+    const rem = getRemaining();
+
+    if (adNow && !state.adActive) {
+      state.adActive = true;
+      muteForAd();
+      showOverlay(rem);
+      // show skip button only if real skip exists
+      const realSkip = safeQuery('.ytp-ad-skip-button, .ytp-ad-skip-button-container');
+      if (realSkip) showSkipBtn(); else hideSkipBtn();
+    } else if (!adNow && state.adActive) {
+      state.adActive = false;
+      restoreAfterAd();
+      hideOverlay();
+      hideSkipBtn();
+    } else if (adNow && state.adActive) {
+      // update countdown and skip presence
+      showOverlay(rem);
+      const realSkip2 = safeQuery('.ytp-ad-skip-button, .ytp-ad-skip-button-container');
+      if (realSkip2) showSkipBtn(); else hideSkipBtn();
+    } else {
+      // nothing to do
+      hideOverlay();
+      hideSkipBtn();
+    }
+  }
+
+  function start() {
+    if (state.pollHandle) clearInterval(state.pollHandle);
+    state.pollHandle = setInterval(checkOnce, POLL);
+    // run immediately
+    checkOnce();
+  }
+
+  // init when DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+
+  // expose for debug
+  window.__auraAdHelperFinal = { start: start, stop: function(){ if(state.pollHandle) clearInterval(state.pollHandle); state.pollHandle = null; } };
+})();
+</script>
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Aura Music</title>
+<link rel="icon" href="https://via.placeholder.com/192x192"/>
+<link rel="apple-touch-icon" href="https://via.placeholder.com/192x192"/>
+<meta name="theme-color" content="#171717"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="ryzn-bg">
+
+<!-- Contenuto originale dell'applicazione -->
+<div id="app-container">
+  <!-- simulazione contenuto per mantenere compatibilità -->
+</div>
+
+<!-- 🔔 Annuncio Major Update (popup semitrasparente) -->
+<div id="major-update-popup" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[160] hidden flex items-center justify-center">
+  <div class="depth-glass bg-ryzn-bg/90 p-6 rounded-2xl max-w-md w-[90%] text-center relative border border-white/10 shadow-2xl">
+    <button id="close-update-popup" class="absolute top-3 right-3 text-gray-400 hover:text-white transition">
+      <i data-lucide="x" class="w-6 h-6"></i>
+    </button>
+    <h3 class="text-2xl font-bold mb-3 accent-text">🚀 Major Update Rilasciato!</h3>
+    <p class="text-gray-300 mb-2">Un importante aggiornamento OTA è stato rilasciato alle <strong>01:00 (ora italiana)</strong>.</p>
+    <p class="text-gray-400 text-sm">L’esperienza utente resta invariata, ma in backend è stata <strong>ricostruita la logica e l’intero database</strong> per garantire performance e stabilità superiori.</p>
+  </div>
+</div>
+
+<script>
+  // Mostra il popup solo se non è già stato chiuso
+  document.addEventListener("DOMContentLoaded", () => {
+    const hasSeenPopup = localStorage.getItem("aura_major_update_seen");
+    const popup = document.getElementById("major-update-popup");
+    const closeBtn = document.getElementById("close-update-popup");
+
+    if (!hasSeenPopup && popup) {
+      popup.classList.remove("hidden");
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        popup.classList.add("hidden");
+        localStorage.setItem("aura_major_update_seen", "true");
+      });
+    }
+  });
+</script>
+
 
 </body>
 </html>
