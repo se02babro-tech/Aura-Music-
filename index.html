@@ -8,7 +8,107 @@
 <link href="https://via.placeholder.com/192x192" rel="icon"/>
 <link href="https://via.placeholder.com/192x192" rel="apple-touch-icon"/>
 <meta content="#171717" name="theme-color"/>
-<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com">
+// --- FIX Barra di Progresso Immersiva + AutoNext ---
+function setupProgressInterval() {
+    clearInterval(progressInterval);
+    progressInterval = setInterval(updateProgress, 500);
+}
+
+function updateProgress() {
+    if (!ytPlayer) return;
+    const duration = ytPlayer.getDuration();
+    const currentTime = ytPlayer.getCurrentTime();
+    if (duration > 0) {
+        const percentage = (currentTime / duration) * 100;
+        if (progressBar) progressBar.style.width = `${percentage}%`;
+        if (progressBarImmersive) progressBarImmersive.style.width = `${percentage}%`;
+    }
+}
+
+// Auto-next alla fine del brano se non in loop
+if (typeof onPlayerStateChange === 'function') {
+    const originalOnStateChange = onPlayerStateChange;
+    onPlayerStateChange = function(event) {
+        originalOnStateChange(event);
+        if (event.data === YT.PlayerState.ENDED && !isLooping) {
+            skipForward();
+        }
+    }
+}
+
+// Clic sulla barra di progresso immersiva per cercare nel brano
+function setupSeekListeners() {
+    if (progressBarContainer) progressBarContainer.onclick = handleSeek;
+    if (progressBarImmersiveContainer) progressBarImmersiveContainer.onclick = handleSeek;
+}
+
+
+// --- FIX Barra Immersiva Interattiva + Avvio Player Più Rapido ---
+
+// Rende interattiva la barra di progresso immersiva
+function makeImmersiveSeekable() {
+    const immersiveBarContainer = document.getElementById("progress-bar-immersive-container");
+    const immersiveBar = document.getElementById("progress-bar-immersive");
+
+    if (!immersiveBarContainer || !audioEl) return;
+
+    immersiveBarContainer.addEventListener("click", (event) => {
+        const rect = immersiveBarContainer.getBoundingClientRect();
+        const clickX = event.clientX - rect.left;
+        const width = rect.width;
+        const percent = clickX / width;
+        if (audioEl.duration > 0) {
+            audioEl.currentTime = percent * audioEl.duration;
+            immersiveBar.style.width = `${percent * 100}%`;
+        }
+    });
+}
+
+// Avvio più rapido del player (riduzione ritardi)
+const originalPlayTrack = window.playTrack;
+window.playTrack = async function(trackId, autoplay = true) {
+    if (!AURA_MAP || !AURA_MAP.length) return;
+    const track = AURA_MAP.find(t => t.id === trackId);
+    if (!track) return;
+
+    currentTrack = track;
+    const query = encodeURIComponent(`${track.title} ${track.artist}`);
+
+    try {
+        // Effettua la ricerca su Invidious e ottiene la prima fonte audio
+        const res = await fetch(`${invidiousBase}/api/v1/search?q=${query}`);
+        const results = await res.json();
+        const first = results[0];
+        if (!first || !first.videoId) {
+            showToast("Nessun risultato Invidious trovato per questo brano.", "error");
+            return;
+        }
+        const audioUrl = `${invidiousBase}/latest_version?id=${first.videoId}&itag=140`;
+        audioEl.src = audioUrl;
+
+        // Inizio riproduzione appena i metadati sono caricati (più veloce dell'autoPlay standard)
+        audioEl.addEventListener("loadedmetadata", () => {
+            if (autoplay) {
+                audioEl.play().catch(() => {});
+            }
+        }, { once: true });
+
+        updateUI(track);
+        playerBar.classList.add('active');
+        togglePlayIcon(false);
+        showToast(`🎧 In riproduzione: ${track.title}`, 'info');
+        makeImmersiveSeekable();
+    } catch (e) {
+        console.error("Errore durante la ricerca Invidious:", e);
+        showToast("Errore Invidious: " + e.message, "error");
+    }
+};
+
+// Inizializza il listener dopo il caricamento del DOM
+document.addEventListener("DOMContentLoaded", makeImmersiveSeekable);
+
+</script>
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
         /* Variabili di Tema Dinamiche (Glaciale/Natale) */
@@ -188,7 +288,7 @@
             white-space: normal;
         }
         .widget-quick-access {
-  @apply w-full h-24 flex items-center p-3 depth-glass rounded-xl transition hover:bg-white/10;
+  
 }
         
         /* NUOVI STILI PER TITOLO SCORREVOLE (MARQUEE) */
@@ -379,6 +479,35 @@
 
 /* ensure modals and player keep their z-index priority (already high in original CSS) */
 
+/* ===== SNOW EFFECT: FALLING + GROUND ACCUMULATION ===== */
+#snow-fall {
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0; /* behind main content */
+}
+#snow-fall canvas { width:100%; height:100%; display:block; }
+
+/* Snow 'accumulation' at page bottom behind content */
+#snow-ground {
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  height:140px;
+  z-index:0;
+  pointer-events:none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06));
+  mask-image: linear-gradient(180deg, transparent 0%, black 30%);
+  opacity:0.18;
+  filter: blur(2px) saturate(120%);
+}
+
+/* ensure main app content sits above snow */
+.container-app { position:relative; z-index:10; }
+
+/* ensure modals and player keep their z-index priority (already high in original CSS) */
+  </style>
 </style>
 <style id="aura-stories-fix">
 /* Strong overrides for Stories Aura centering (specific to this file) */
@@ -412,9 +541,9 @@
 <body class="ryzn-bg">
 <div id="toast-container"></div>
 <!-- Ambient background audio (replace assets/ambient_christmas_soft.mp3 with your file) -->
-<audio id="ambient-audio" loop="" preload="auto" src="assets/ambient_christmas_soft.mp3">
+<audio id="ambient-audio" loop preload="auto" src="assets/ambient_christmas_soft.mp3"></audio>
 <!-- invidious audio element -->
-<audio id="aura-invidious-audio" preload="auto"></audio>
+
 </audio>
 <!-- Snow visual layers: falling snow canvas + ground accumulation -->
 <div aria-hidden="true" id="snow-fall"><canvas id="snow-canvas"></canvas></div>
@@ -601,7 +730,7 @@
 <h2 class="text-3xl font-bold">Aura story's</h2>
 </div>
 <div class="flex space-x-6 mb-10 overflow-x-auto pb-2 scrollbar-hide" id="stories-bubble-container">
-<p class="text-center p-4 text-gray-500" id="no-stories-message"><nessuna disponibile="" storia=""></nessuna></p>
+<p class="text-center p-4 text-gray-500" id="no-stories-message"></p>
 </div>
 <hr class="border-white/10 my-10"/>
 <div id="new-releases-feed">
@@ -644,7 +773,7 @@
 <script>
         // --- CONFIGURAZIONE YOUTUBE ---
         // --- Dati & Configurazione Locali ---
-        const YT_API_KEY = "AIzaSyDA193edXRCzTfQahcqGq7nOsRAHF_pxJ0";
+        const YT_API_KEY = "AIzaSyCohnVT3KEG_6wMjEHQu9STCWBDXpPkSVc";
 const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/"; 
         const STORIES_MANIFEST_URL = GITHUB_RAW_BASE + "User_videos.json"; 
         
@@ -3095,59 +3224,91 @@ async function initializeAppContent() {
   // expose for debug
   window.__auraAdHelperFinal = { start: start, stop: function(){ if(state.pollHandle) clearInterval(state.pollHandle); state.pollHandle = null; } };
 })();
-</script>
 
-<!DOCTYPE html>
-<html lang="it">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Aura Music</title>
-<link rel="icon" href="https://via.placeholder.com/192x192"/>
-<link rel="apple-touch-icon" href="https://via.placeholder.com/192x192"/>
-<meta name="theme-color" content="#171717"/>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest"></script>
-</head>
-<body class="ryzn-bg">
+<!-- END AURA AD HELPER (FINAL) -->
+   // Aura Invidious Player Integration
+const invidiousBase = "https://inv.perditum.com";
+const audioEl = document.getElementById("aura-invidious-audio");
+let currentTrack = null;
+let isPlaying = false;
 
-<!-- Contenuto originale dell'applicazione -->
-<div id="app-container">
-  <!-- simulazione contenuto per mantenere compatibilità -->
-</div>
+window.playTrack = async function(trackId, autoplay = true) {
+    const track = AURA_MAP.find(t => t.id === trackId);
+    if (!track) return;
 
-<!-- 🔔 Annuncio Major Update (popup semitrasparente) -->
-<div id="major-update-popup" class="fixed inset-0 bg-black/60 backdrop-blur-md z-[160] hidden flex items-center justify-center">
-  <div class="depth-glass bg-ryzn-bg/90 p-6 rounded-2xl max-w-md w-[90%] text-center relative border border-white/10 shadow-2xl">
-    <button id="close-update-popup" class="absolute top-3 right-3 text-gray-400 hover:text-white transition">
-      <i data-lucide="x" class="w-6 h-6"></i>
-    </button>
-    <h3 class="text-2xl font-bold mb-3 accent-text">🚀 Major Update Rilasciato!</h3>
-    <p class="text-gray-300 mb-2">Un importante aggiornamento OTA è stato rilasciato alle <strong>01:00 (ora italiana)</strong>.</p>
-    <p class="text-gray-400 text-sm">L’esperienza utente resta invariata, ma in backend è stata <strong>ricostruita la logica e l’intero database</strong> per garantire performance e stabilità superiori.</p>
-  </div>
-</div>
+    currentTrack = track;
 
-<script>
-  // Mostra il popup solo se non è già stato chiuso
-  document.addEventListener("DOMContentLoaded", () => {
-    const hasSeenPopup = localStorage.getItem("aura_major_update_seen");
-    const popup = document.getElementById("major-update-popup");
-    const closeBtn = document.getElementById("close-update-popup");
+    // Search Invidious for the track
+    const query = encodeURIComponent(`${track.title} ${track.artist}`);
+    try {
+        const res = await fetch(`${invidiousBase}/api/v1/search?q=${query}`);
+        const results = await res.json();
+        const first = results[0];
+        if (!first || !first.videoId) {
+            showToast("Nessun risultato Invidious trovato per questo brano.", "error");
+            return;
+        }
+        const videoId = first.videoId;
+        const audioUrl = `${invidiousBase}/latest_version?id=${videoId}&itag=140`;
 
-    if (!hasSeenPopup && popup) {
-      popup.classList.remove("hidden");
+        audioEl.src = audioUrl;
+        if (autoplay) audioEl.play();
+        updateUI(track);
+        playerBar.classList.add('active');
+        togglePlayIcon(false);
+        showToast(`🎧 In riproduzione: ${track.title}`, 'info');
+    } catch (e) {
+        console.error("Errore durante la ricerca Invidious:", e);
+        showToast("Errore Invidious: " + e.message, "error");
     }
+};
 
-    if (closeBtn) {
-      closeBtn.addEventListener("click", () => {
-        popup.classList.add("hidden");
-        localStorage.setItem("aura_major_update_seen", "true");
-      });
+window.togglePlayPause = function() {
+    if (!audioEl.src) {
+        showToast("Nessun brano caricato.", "info");
+        return;
     }
-  });
-</script>
+    if (audioEl.paused) {
+        audioEl.play();
+        togglePlayIcon(false);
+    } else {
+        audioEl.pause();
+        togglePlayIcon(true);
+    }
+};
 
+window.skipForward = function() {
+    if (!currentTrack) return;
+    const currentIndex = AURA_MAP.findIndex(t => t.id === currentTrack.id);
+    const nextIndex = (currentIndex + 1) % AURA_MAP.length;
+    playTrack(AURA_MAP[nextIndex].id);
+};
 
+window.skipBackward = function() {
+    if (!currentTrack) return;
+    const currentIndex = AURA_MAP.findIndex(t => t.id === currentTrack.id);
+    let prevIndex = currentIndex - 1;
+    if (prevIndex < 0) prevIndex = AURA_MAP.length - 1;
+    playTrack(AURA_MAP[prevIndex].id);
+};
+
+audioEl.addEventListener("timeupdate", () => {
+    const progress = (audioEl.currentTime / audioEl.duration) * 100;
+    document.getElementById("progress-bar").style.width = `${progress}%`;
+    document.getElementById("progress-bar-immersive").style.width = `${progress}%`;
+});
+
+window.setVolume = function(volume) {
+    audioEl.volume = volume / 100;
+    currentVolume = volume;
+};
+
+window.toggleLoop = function() {
+    isLooping = !isLooping;
+    audioEl.loop = isLooping;
+    updateLoopButton(isLooping);
+    showToast(isLooping ? "Ripetizione Brano Attiva" : "Ripetizione Brano Disattiva", "info");
+};
+  </script>
 </body>
 </html>
