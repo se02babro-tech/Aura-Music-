@@ -3310,5 +3310,121 @@ window.toggleLoop = function() {
     showToast(isLooping ? "Ripetizione Brano Attiva" : "Ripetizione Brano Disattiva", "info");
 };
   </script>
+
+<!-- BEGIN: Invidious-integrated Home & Search (appended by assistant) -->
+<script>
+// Invidious mirror base (primary)
+let invidiousBase = "https://invidious.snopyta.org";
+
+// Override fetchTracks to load home feed from Invidious
+async function fetchTracks(filter = 'Trending') {
+    const container = document.getElementById('home-widgets-container');
+    if (container) {
+        container.innerHTML = `<p class="text-center text-gray-400 col-span-full">
+        <i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i>
+        Caricamento brani italiani da Invidious (${filter})...
+        </p>`;
+    }
+
+    try {
+        const query = (filter === 'Trending')
+            ? 'musica italiana OR canzoni italiane OR pop italiano OR trap italiana'
+            : filter;
+
+        // attempt primary invidious instance
+        let res = await fetch(`${invidiousBase}/api/v1/search?q=${encodeURIComponent(query)}&type=video`);
+        let data = await res.json();
+
+        // if data is not an array (some instances return object), normalize
+        if (!Array.isArray(data) && data && data.results) {
+            data = data.results;
+        }
+        if (!Array.isArray(data)) data = [];
+
+        // Build results
+        const results = data.slice(0, 24).map(item => ({
+            id: 'AURA-' + (item.videoId || item.video_id || item.id || ''),
+            title: item.title || item.video.title || 'Untitled',
+            artist: item.author || (item.video && item.video.author) || 'Unknown',
+            cover: (item.videoThumbnails && item.videoThumbnails[item.videoThumbnails.length - 1] && item.videoThumbnails[item.videoThumbnails.length - 1].url) 
+                    || (item.thumbnail && item.thumbnail.url) 
+                    || 'https://via.placeholder.com/512',
+            youtubeId: item.videoId || item.video_id || item.id || '',
+            mood: filter,
+            vibe: Math.floor(Math.random() * 100) + 1,
+            color: getRandomAccentColor(),
+            rgb: getRandomAccentRGB()
+        })).filter(r => r.youtubeId);
+
+        AURA_MAP = results;
+        renderHomePageWidgets();
+    } catch (err) {
+        console.error('fetchTracks Invidious error', err);
+        if (container)
+            container.innerHTML = `<p class="text-center p-4 text-red-400 col-span-full">
+            Errore caricamento da Invidious: ${err.message}
+            </p>`;
+        AURA_MAP = [];
+    }
+}
+
+// Override performSearch to use Invidious
+async function performSearch(initial = false) {
+    const input = document.getElementById('search-input');
+    if (!input) return;
+    const query = input.value.trim();
+    if (!query) return;
+
+    const resultsContainer = document.getElementById('search-results');
+    if (!resultsContainer) return;
+    resultsContainer.innerHTML = `<p class="text-center text-gray-400">
+    <i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i>
+    Ricerca su Invidious...
+    </p>`;
+
+    try {
+        const res = await fetch(`${invidiousBase}/api/v1/search?q=${encodeURIComponent(query)}&type=video`);
+        let data = await res.json();
+
+        // normalize
+        if (!Array.isArray(data) && data && data.results) data = data.results;
+        if (!Array.isArray(data)) data = [];
+
+        const resultsHtml = data.slice(0, 20).map(v => {
+            const thumb = (v.videoThumbnails && v.videoThumbnails[0] && v.videoThumbnails[0].url) || (v.thumbnail && v.thumbnail.url) || 'https://via.placeholder.com/64';
+            const title = v.title || v.video && v.video.title || 'Untitled';
+            const author = v.author || v.video && v.video.author || '';
+            const vid = v.videoId || v.video_id || v.id || '';
+            return `
+            <div onclick="playTrack('AURA-${vid}')" 
+                class="flex items-center space-x-3 p-2 hover:bg-white/10 rounded-lg cursor-pointer transition">
+                <img src="${thumb}" alt="${title}" class="w-16 h-16 rounded-lg object-cover">
+                <div class="truncate">
+                    <p class="font-semibold text-white truncate">${title}</p>
+                    <p class="text-sm text-gray-400 truncate">${author}</p>
+                </div>
+            </div>
+            `;
+        }).join('');
+
+        resultsContainer.innerHTML = resultsHtml || `<p class="text-center text-gray-400">Nessun risultato trovato.</p>`;
+    } catch (err) {
+        console.error('performSearch Invidious error', err);
+        resultsContainer.innerHTML = `<p class="text-center text-red-400">Errore Invidious: ${err.message}</p>`;
+    }
+}
+
+// Helper color functions
+function getRandomAccentColor() {
+    const colors = ['#00BFFF', '#34D399', '#FCD34D', '#FF007F', '#8B5CF6'];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+function getRandomAccentRGB() {
+    const rgbs = ['0 191 255', '52 211 153', '252 211 77', '255 0 127', '139 92 246'];
+    return rgbs[Math.floor(Math.random() * rgbs.length)];
+}
+</script>
+<!-- END: Invidious-integrated Home & Search -->
+
 </body>
 </html>
