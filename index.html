@@ -757,8 +757,8 @@ document.addEventListener("DOMContentLoaded", makeImmersiveSeekable);
 </button>
 </div>
 <div class="flex items-center justify-end space-x-4 w-1/3">
-<button class="text-white/50 hover:text-white transition hidden lg:block" id="add-to-playlist-button" onclick="event.stopPropagation(); openAddToPlaylistModal()">
-<i class="w-5 h-5" data-lucide="list-plus"></i>
+<button class="text-white/50 hover:text-white transition" id="add-to-playlist-button" onclick="event.stopPropagation(); openAddToPlaylistModal()">
+  <i class="w-5 h-5" data-lucide="list-plus"></i>
 </button>
 <button class="text-white/50 hover:text-red-400 transition" id="like-button" onclick="event.stopPropagation(); toggleLike()">
 <i class="w-5 h-5 fill-current" data-lucide="heart"></i>
@@ -1106,6 +1106,8 @@ window.playTrack = async function(trackId, autoplay = true) {
         let track = AURA_MAP.find(t => t.id === trackId) || AURA_MAP.find(t => t.youtubeId === trackId);
         if (!track) return;
         currentTrackData = track;
+        trackIdToAdd = track.id;
+        console.log("🎵 Brano in riproduzione:", track.title);
         // Resolve YouTube on-demand if this is an Aura item
         if (String(track.id).startsWith('AURA-') && !track.youtubeId) {
             const query = track.youtube_search_query || `${track.title} ${track.artist}`;
@@ -1265,9 +1267,10 @@ window.playTrack = async function(trackId, autoplay = true) {
         }
 
         function updateUI(track) {
-            playerTitle.textContent = track.title;
-            playerArtist.textContent = track.artist;
-            playerCover.src = track.cover;
+    playerTitle.textContent = track.title;
+    playerArtist.textContent = track.artist;
+    playerCover.src = track.cover;
+trackIdToAdd = track.id;
 
             // Logica Marquee per il titolo del player immersivo
             immersiveArtist.textContent = track.artist;
@@ -3423,8 +3426,33 @@ function getRandomAccentRGB() {
     const rgbs = ['0 191 255', '52 211 153', '252 211 77', '255 0 127', '139 92 246'];
     return rgbs[Math.floor(Math.random() * rgbs.length)];
 }
+
+// === AUTO SKIP AUTOMATICO QUANDO FINISCE IL BRANO ===
+function enableAutoSkip() {
+    // --- Caso 1: Player YouTube / Invidious ---
+    if (window.ytPlayer && typeof YT !== "undefined") {
+        const oldHandler = window.onPlayerStateChange;
+        window.onPlayerStateChange = function(event) {
+            if (typeof oldHandler === "function") oldHandler(event);
+            if (event.data === YT.PlayerState.ENDED) {
+                console.log("Brano terminato → skip automatico");
+                skipForward();
+            }
+        };
+    }
+
+    // --- Caso 2: Player Invidious Audio (<audio>) ---
+    if (window.audioEl) {
+        audioEl.addEventListener("ended", () => {
+            console.log("Audio terminato → skip automatico");
+            skipForward();
+        });
+    }
+}
+
+// Attiva automaticamente dopo il caricamento del DOM
+document.addEventListener("DOMContentLoaded", enableAutoSkip);
 </script>
 <!-- END: Invidious-integrated Home & Search -->
-
 </body>
 </html>
