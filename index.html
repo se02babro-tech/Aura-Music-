@@ -1,130 +1,2646 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AURA — Versione Stabile</title>
-  <style>
-    :root{--bg:#02060a;--accent:#52e3c2;--text:#e8faff;--glow:#7af0e5}
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#03141d 0%,#01070d 80%);color:var(--text);font-family:"JetBrains Mono", monospace;display:flex;align-items:center;justify-content:center;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Music </title>
+    
+    <link rel="icon" href="https://via.placeholder.com/192x192">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192x192">
+    <meta name="theme-color" content="#171717">
 
-    #start-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;background:radial-gradient(circle at 50% 50%,#020c14,#000610 80%);}
-    #start-btn{font-family:"Poppins",sans-serif;font-size:22px;font-weight:600;padding:18px 48px;border:none;border-radius:14px;cursor:pointer;color:#fff;background:linear-gradient(90deg,#52e3c2,#6ad1ff);box-shadow:0 0 20px rgba(82,227,194,0.5);transition:transform 0.3s ease, box-shadow 0.3s ease;}
-    #start-btn:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(82,227,194,0.8);}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+     
 
-    canvas#fireworks-bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+    <style>
+        /* Variabili di Tema Dinamiche (Glaciale/Natale) */
+        :root {
+            --ryzn-color-hex: #00BFFF; /* Glacial Blue */
+            --ryzn-color-rgb: 0 191 255;
+            --ryzn-bg-color: #171717; 
+            --ryzn-color-dark: 0 150 200; /* Darker blue shade */
+        }
 
-    .card{position:relative;z-index:2;width:880px;max-width:95%;border-radius:18px;padding:36px;backdrop-filter:blur(10px);background:rgba(255,255,255,0.04);box-shadow:0 0 60px rgba(0,255,255,0.15);display:flex;flex-direction:column;align-items:center;gap:24px;display:none;}
+        /* Classi Tailwind Dinamiche */
+        .ryzn-bg { background-color: var(--ryzn-bg-color); }
+        .accent-text { color: var(--ryzn-color-hex); }
+        .accent-bg { background-color: var(--ryzn-color-hex); }
+        .accent-border { border-color: var(--ryzn-color-hex); }
+        .accent-hover:hover { filter: brightness(1.2); }
+        .shadow-ryzn-accent\/30 { box-shadow: 0 10px 15px -3px rgba(var(--ryzn-color-rgb) / 0.3), 0 4px 6px -2px rgba(var(--ryzn-color-rgb) / 0.1); }
+        .fill-ryzn-accent\/30 { fill: rgba(var(--ryzn-color-rgb) / 0.3); }
 
-    .logo{display:flex;align-items:center;gap:12px;}
-    .logo .mark{width:60px;height:60px;border-radius:14px;display:grid;place-items:center;background:conic-gradient(from 200deg,#5af2d0,#6ad1ff 40%,#b58bff);font-weight:700;color:#012;box-shadow:0 0 25px rgba(82,227,194,0.25);}
-    .logo .title{font-size:22px;letter-spacing:1px;text-shadow:0 0 8px var(--glow)}
+        /* Effetto Glassmorphism (Depth-Glass) - FONDAMENTALE PER LA GRAFICA */
+        .depth-glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-    .terminal{width:100%;max-width:820px;height:420px;border-radius:14px;padding:18px;background:linear-gradient(180deg,#031017 0%,#051821 100%);border:1px solid rgba(82,227,194,0.2);box-shadow:inset 0 0 25px rgba(0,0,0,0.8);display:flex;flex-direction:column;overflow:hidden;}
-    .term-header{display:flex;align-items:center;gap:10px;padding:6px 8px}
-    .dot{width:10px;height:10px;border-radius:50%}
-    .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#2ecc71}
-    .term-body{flex:1;padding:8px 12px;overflow:auto;font-size:14px;line-height:1.35;color:var(--text);}
-    .line{white-space:pre-wrap;animation:fadein 0.3s ease-in;}
-    @keyframes fadein{from{opacity:0;}to{opacity:1;}}
+        /* Stile Logo con Gradiente Dinamico (Palette Glaciale) */
+        .logo-aura { font-size: 2.5rem; font-weight: 900; }
+        .logo-text {
+            /* Palette Glaciale: Da Blu Vivo a Bianco/Celeste */
+            background: linear-gradient(45deg, var(--ryzn-color-hex), #B3E0FF); 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+        }
+        
+        /* Nuove Transizioni per Icone (Subito dopo il logo-text) */
+        .animated-icon {
+            transition: transform 0.2s ease, opacity 0.2s ease, fill 0.3s ease;
+        }
+        
+        /* Contenitore Principale e Sezioni (Animazioni di Transizione) */
+        body {
+            background-color: var(--ryzn-bg-color);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 96px; 
+            overflow-x: hidden;
+        }
 
-    .final{margin-top:10px;padding:14px;border-radius:10px;background:linear-gradient(90deg,rgba(82,227,194,0.08),rgba(106,209,255,0.04));border:1px solid rgba(82,227,194,0.1);font-weight:600;text-align:center;text-shadow:0 0 10px var(--glow);}
+        .container-app {
+            flex-grow: 1;
+            padding: 1rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
 
-    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:100;}
-    .modal.active{display:flex;}
-    .modal-content{position:relative;width:90%;max-width:750px;padding:40px 50px;border-radius:18px;background:radial-gradient(circle at 50% 30%,#051622,#0c1c29);border:1px solid rgba(82,227,194,0.25);box-shadow:0 0 40px rgba(82,227,194,0.3);overflow:hidden;text-align:center;z-index:2;}
-    h2{font-size:26px;margin-bottom:18px;color:var(--accent);text-shadow:0 0 12px var(--glow)}
-    #poem{font-family:"Poppins",sans-serif;font-size:18px;line-height:1.6;white-space:pre-wrap;color:#e8faff;font-weight:400;text-shadow:0 0 8px rgba(255,255,255,0.25)}
-  </style>
+        .section-page {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease; /* Transizione per le sezioni */
+        }
+        .section-page.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Navigazione */
+        .nav-item.active {
+            color: var(--ryzn-color-hex);
+            font-weight: bold;
+            border-bottom: 2px solid var(--ryzn-color-hex);
+        }
+        
+        /* Player Bar (PIP) */
+        .player-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 110px;
+  padding: 1rem 1.5rem;
+  backdrop-filter: blur(15px);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  z-index: 100;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-out;
+}
+        .player-bar.active {
+             transform: translateY(0);
+        }
+        
+        /* Modal di Ricerca e Autenticazione */
+        .modal {
+            animation: fadeIn 0.3s ease-out; /* Animazione Modal */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Toast Container */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 200;
+        }
+        
+        /* Stili per Bolle Storie (Instagram Style) */
+        .story-bubble {
+            width: 70px; 
+            height: 70px;
+            padding: 2px; 
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .story-bubble-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: var(--ryzn-bg-color); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem; 
+            border: 3px solid var(--ryzn-bg-color); 
+        }
+        .story-bubble-watched {
+            background: rgba(255, 255, 255, 0.1); 
+        }
+        /* Nasconde la scrollbar orizzontale */
+        .scrollbar-hide {
+            -ms-overflow-style: none;  
+            scrollbar-width: none;  
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;  
+        }
+        
+        /* invidious Player Nascosto per Audio */
+        #yt-player-container {
+            position: absolute;
+            top: -9999px; 
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            opacity: 0;
+        }
+        
+        /* NUOVI STILI PER WIDGET HOME (Ispirati a invidious Music / iOS) */
+        .widget-row {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 10px; /* Spazio per scrollbar su desktop */
+        }
+        .widget-row::-webkit-scrollbar {
+            display: none;
+        }
+        .widget-row-item {
+            display: inline-block;
+            width: 160px; /* Larghezza fissa per widget orizzontale */
+            margin-right: 12px;
+            vertical-align: top;
+            white-space: normal;
+        }
+        .widget-quick-access {
+  @apply w-full h-24 flex items-center p-3 depth-glass rounded-xl transition hover:bg-white/10;
+}
+        
+        /* NUOVI STILI PER TITOLO SCORREVOLE (MARQUEE) */
+        .marquee-container {
+            overflow: hidden;
+            width: 100%;
+            padding-top: 5px; /* Spazio superiore */
+            padding-bottom: 5px; /* Spazio inferiore */
+            text-align: center; 
+        }
+        .marquee-text {
+            white-space: nowrap;
+            display: inline-block;
+            animation: marquee 10s linear infinite; /* Animazione di default */
+            min-width: 100%;
+            animation-play-state: running; /* Inizialmente in esecuzione */
+        }
+        .marquee-text:hover {
+            animation-play-state: paused; /* Metti in pausa al passaggio del mouse */
+        }
+        @keyframes marquee {
+            0%   { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .text-4xl.font-extrabold.truncate {
+             /* Assicura che la classe truncate non prevalga sul marquee */
+             white-space: normal;
+        }
+
+    
+/* =========================================================
+   ✨ SEZIONE MIGLIORATA: Accesso Veloce & Categorie Scorrevoli
+   ========================================================= */
+
+/* Effetto glow pulsante blu glaciale */
+@keyframes frost-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(0,191,255,0.3), inset 0 0 10px rgba(255,255,255,0.05); }
+  50% { box-shadow: 0 0 30px rgba(0,191,255,0.5), inset 0 0 15px rgba(255,255,255,0.1); }
+}
+
+/* --- Accesso Veloce --- */
+.widget-quick-access {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(0,191,255,0.15), rgba(255,255,255,0.05));
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 0 20px rgba(0,191,255,0.2);
+  transition: all 0.35s ease;
+  overflow: hidden;
+}
+
+.widget-quick-access img {
+  border-radius: 0.75rem;
+  transition: transform 0.35s ease;
+  border: 2px solid rgba(255,255,255,0.15);
+}
+
+.widget-quick-access:hover {
+  transform: translateY(-3px) scale(1.03);
+  animation: frost-glow 2s ease-in-out infinite;
+  background: linear-gradient(135deg, rgba(0,191,255,0.25), rgba(255,255,255,0.08));
+}
+
+.widget-quick-access:hover img {
+  transform: scale(1.1);
+}
+
+/* Pulsante play fluttuante */
+.widget-quick-access::after {
+  content: "▶️";
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%) scale(0.8);
+  font-size: 1.4rem;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+.widget-quick-access:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+  filter: drop-shadow(0 0 8px rgba(0,191,255,0.7));
+}
+
+/* --- Categorie Scorrevoli (Brani) --- */
+.widget-row-item {
+  display: inline-block;
+  width: 160px;
+  margin-right: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 0 15px rgba(0,191,255,0.15);
+  transition: all 0.35s ease;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+
+.widget-row-item img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  transition: transform 0.4s ease;
+}
+
+.widget-row-item:hover img {
+  transform: scale(1.08);
+}
+
+.widget-row-item:hover {
+  transform: translateY(-4px) scale(1.05);
+  animation: frost-glow 2.2s ease-in-out infinite;
+}
+
+/* Testo */
+.widget-row-item p {
+  padding: 0.3rem 0.6rem;
+}
+
+/* Overlay magico */
+.widget-row-item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top left, rgba(0,191,255,0.25), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.widget-row-item:hover::before {
+  opacity: 1;
+}
+
+/* Etichetta Mood/Vibe */
+.widget-row-item::after {
+  content: attr(data-mood);
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  background: rgba(0,191,255,0.15);
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 2px 6px;
+  border-radius: 0.5rem;
+  font-size: 0.65rem;
+  color: #B3E0FF;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: all 0.3s ease;
+}
+.widget-row-item:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+/* AREA DESTINATA AI BANNER ON AIR E COMUNICAZIONI DA PARTE DI HORIZON E RYZN, L'AREA DEVE RESTARE VUOTA E UTILIZZABILE PER LE OPERAZIONE AUTOGESTITE IN BACKEND
+
+/* ===== SNOW EFFECT: FALLING + GROUND ACCUMULATION ===== */
+#snow-fall {
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0; /* behind main content */
+}
+#snow-fall canvas { width:100%; height:100%; display:block; }
+
+/* Snow 'accumulation' at page bottom behind content */
+#snow-ground {
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  height:140px;
+  z-index:0;
+  pointer-events:none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06));
+  mask-image: linear-gradient(180deg, transparent 0%, black 30%);
+  opacity:0.18;
+  filter: blur(2px) saturate(120%);
+}
+
+/* ensure main app content sits above snow */
+.container-app { position:relative; z-index:10; }
+
+/* ensure modals and player keep their z-index priority (already high in original CSS) */
+
+</style>
 </head>
-<body>
-  <div id="start-screen">
-    <button id="start-btn">Avvia Ryzn</button>
-  </div>
+<body class="ryzn-bg">
 
-  <canvas id="fireworks-bg"></canvas>
+    <div id="toast-container"></div>
+    <!-- Ambient background audio (replace assets/ambient_christmas_soft.mp3 with your file) -->
+    <audio id="ambient-audio" src="assets/ambient_christmas_soft.mp3" loop preload="auto">
+    <!-- invidious audio element -->
+    <audio id="aura-invidious-audio" preload="auto"></audio>
+</audio>
 
-  <div class="card" id="main-card">
-    <div class="logo">
-      <div class="mark">A</div>
-      <div class="title">Dev.Ryzn.console</div>
+    <!-- Snow visual layers: falling snow canvas + ground accumulation -->
+    <div id="snow-fall" aria-hidden="true"><canvas id="snow-canvas"></canvas></div>
+    <div id="snow-ground" aria-hidden="true"></div>
+    
+    
+    <div id="yt-player-container">
+        <div id="ytPlayer"></div>
     </div>
 
-    <div class="terminal" id="terminal">
-      <div class="term-header">
-        <div class="dot d1"></div><div class="dot d2"></div><div class="dot d3"></div>
-        <span style="opacity:.6"> ./run-decrypt.joit</span>
-      </div>
-      <div class="term-body" id="term-body"></div>
+
+    <div id="auth-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4 modal">
+        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
+            <h3 id="auth-title" class="text-2xl font-bold mb-6 accent-text text-center">Accedi ad Aura Music</h3>
+            
+            <input type="email" id="auth-email" placeholder="Email" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-3">
+            <input type="password" id="auth-password" placeholder="Password" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-6">
+            
+            <button id="auth-main-button" onclick="handleAuthAction('login')" class="w-full py-3 accent-bg rounded-lg text-white font-bold accent-hover transition">Accedi</button>
+            
+            <div class="text-center mt-4">
+                <button id="auth-switch-link" onclick="switchAuthMode('register')" class="text-sm text-gray-400 hover:accent-text transition">Registrati</button>
+            </div>
+             <button onclick="closeAuthModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
     </div>
-    <div id="final" class="final" style="display:none"></div>
-  </div>
-
-  <div class="modal" id="popup">
-    <div class="modal-content">
-      <h2>✨ Fine della Beta — Benvenuta Aura Stabile ✨</h2>
-      <div id="poem"></div>
+    
+    <div id="search-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex flex-col p-4 modal">
+        <div class="w-full max-w-2xl mx-auto depth-glass bg-ryzn-bg p-6 rounded-2xl shadow-2xl relative">
+            <div class="flex items-center mb-4">
+                <input type="text" id="search-input" oninput="performSearch(true)" placeholder="Cerca brani, artisti o mood..." class="flex-grow p-3 rounded-l-lg bg-white/10 border border-white/20 text-white placeholder-gray-500 focus:outline-none">
+                <button onclick="performSearch()" class="p-3 accent-bg rounded-r-lg accent-hover"><i data-lucide="search" class="w-6 h-6"></i></button>
+            </div>
+            <div id="search-results" class="max-h-96 overflow-y-auto space-y-3 p-2">
+                <p class="text-center text-gray-500">Inizia a digitare per cercare musica su invidious.</p>
+            </div>
+            <button onclick="closeSearchModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
     </div>
-  </div>
+    
+    <div id="create-playlist-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
+        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
+            <h3 class="text-xl font-bold mb-4 accent-text">Crea Nuova Sessione</h3>
+            <input type="text" id="playlist-name-input" placeholder="Nome della sessione" class="w-full p-3 rounded-lg bg-white/10 border border-white/20 focus:accent-border text-white placeholder-gray-500 mb-4">
+            
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeCreatePlaylistModal()" class="px-4 py-2 text-gray-400 hover:text-white transition rounded-lg">Annulla</button>
+                <button onclick="createPlaylist()" class="px-4 py-2 accent-bg rounded-lg text-white font-bold accent-hover transition">Crea</button>
+            </div>
+            <button onclick="closeCreatePlaylistModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
+    </div>
 
-  <audio id="bg-music" src="https://cdn.ai-music-generator.ai/NmM0YjJmZTUtNDk1ZC00YWM2LWEwMGQtMmJiNDZiZGI2MjM5.mp3" loop preload="auto"></audio>
+    <div id="add-to-playlist-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
+        <div class="depth-glass bg-ryzn-bg p-6 rounded-2xl w-full max-w-sm shadow-2xl relative">
+            <h3 class="text-xl font-bold mb-4 accent-text">Aggiungi a Sessione</h3>
+            <div id="playlist-selection-list" class="max-h-64 overflow-y-auto space-y-2 p-1">
+                <p class="text-center text-gray-500">Nessuna sessione trovata.</p>
+            </div>
+            <button onclick="closeAddToPlaylistModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
+    </div>
+    
+    
+<div id="immersive-mode" class="fixed inset-0 bg-gradient-to-b from-[#0a1f33] via-[#112f44] to-[#0b1e2d] backdrop-blur-2xl z-[150] hidden flex flex-col items-center justify-center text-white p-6 modal">
+    
+    <div class="absolute top-6 left-6 flex items-center space-x-4">
+        <button onclick="exitImmersiveMode()" class="text-white/80 hover:text-white transition">
+            <i data-lucide="chevron-down" class="w-8 h-8"></i>
+        </button>
+        <h2 class="text-xl font-semibold text-white/70">In Riproduzione</h2>
+    </div>
 
-  <script>
-  document.addEventListener('DOMContentLoaded',()=>{
-    const startScreen=document.getElementById('start-screen');
-    const startBtn=document.getElementById('start-btn');
-    const card=document.getElementById('main-card');
-    const music=document.getElementById('bg-music');
-    const body=document.getElementById('term-body');
-    const finalBox=document.getElementById('final');
-    const popup=document.getElementById('popup');
-    const poemEl=document.getElementById('poem');
-    const bg=document.getElementById('fireworks-bg');
+    <div class="flex flex-col items-center justify-center space-y-8 max-w-md w-full mt-8">
+        
+        <div id="immersive-yt-player-container" class="w-full max-w-xs aspect-square rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(0,191,255,0.4)] bg-black/30">
+            <img id="immersive-cover" src="" alt="Album Cover" class="w-full h-full object-cover opacity-90">
+        </div>
 
-    function typeLine(text,cb,speed=30){
-      const el=document.createElement('div');el.className='line';body.appendChild(el);
-      let i=0;const interval=setInterval(()=>{el.textContent=text.slice(0,i);i++;if(i>text.length){clearInterval(interval);if(cb)cb();}body.scrollTop=body.scrollHeight;},speed);
+        <div class="text-center space-y-2">
+            <div class="marquee-container">
+                <h3 id="immersive-title" class="text-3xl font-extrabold bg-gradient-to-r from-white to-[#B3E0FF] bg-clip-text text-transparent">Titolo Brano</h3>
+            </div>
+            <p id="immersive-artist" class="text-lg text-white/70 truncate">Artista</p>
+        </div>
+
+        <div id="progress-bar-immersive-container" class="w-full h-2 bg-white/20 rounded-full cursor-pointer relative overflow-hidden">
+            <div id="progress-bar-immersive" class="h-2 rounded-full bg-gradient-to-r from-[#00BFFF] to-[#B3E0FF]" style="width: 0;"></div>
+        </div>
+
+        <div class="flex space-x-8 items-center justify-center mt-4">
+            <button id="loop-button-immersive" onclick="event.stopPropagation(); toggleLoop()" class="text-white/60 hover:text-white transition">
+                <i data-lucide="repeat" class="w-7 h-7"></i>
+            </button>
+            <button onclick="event.stopPropagation(); skipBackward()" class="text-white/80 hover:text-white transition">
+                <i data-lucide="skip-back" class="w-8 h-8"></i>
+            </button>
+            <button onclick="event.stopPropagation(); togglePlayPause(true)" class="p-5 rounded-full bg-gradient-to-r from-[#00BFFF] to-[#66D9FF] hover:scale-110 transition shadow-xl shadow-[#00BFFF]/40 flex items-center justify-center">
+                <span id="immersive-play-icon" class="text-4xl text-[#0a1f33] leading-none">▶️</span>
+            </button>
+            <button onclick="event.stopPropagation(); skipForward()" class="text-white/80 hover:text-white transition">
+                <i data-lucide="skip-forward" class="w-8 h-8"></i>
+            </button>
+            <button onclick="event.stopPropagation(); toggleLike()" id="like-button-immersive" class="text-white/70 hover:text-red-400 transition">
+                <i data-lucide="heart" class="w-6 h-6 fill-current"></i>
+            </button>
+        </div>
+
+        <div class="flex items-center space-x-3 w-full justify-center mt-4">
+            <i data-lucide="volume" class="w-5 h-5 text-white/70"></i>
+            <input type="range" id="volume-slider-immersive" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-32 h-1 bg-white/30 rounded-lg appearance-none cursor-pointer accent-bg">
+        </div>
+
+    </div>
+</div>
+
+<div id="story-player-modal" class="fixed inset-0 bg-black z-[200] hidden flex items-center justify-center modal">
+        <div class="absolute inset-0 flex items-center justify-center">
+            <video id="story-video-player" class="w-full h-full object-cover" autoplay playsinline></video>
+        </div>
+        
+        <div class="absolute inset-x-0 top-0 p-4 pt-6 flex flex-col justify-start z-10">
+            <div id="story-progress-bar-container" class="flex space-x-1 mb-3">
+                </div>
+            <div id="story-info" class="flex items-center space-x-3 text-white">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-xl bg-gray-700">
+                    <span id="story-emoji">🎄</span>
+                </div>
+                <div>
+                    <p id="story-username" class="font-bold text-sm">Utente</p>
+                    <p id="story-track-title" class="text-xs text-gray-300"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute inset-y-0 w-1/2 left-0 z-20" onclick="prevStory()"></div>
+        <div class="absolute inset-y-0 w-1/2 right-0 z-20" onclick="nextStory()"></div>
+
+        <button onclick="closeStoryPlayer()" class="absolute top-4 right-4 text-white/80 hover:text-white transition z-30">
+            <i data-lucide="x" class="w-8 h-8"></i>
+        </button>
+
+        <button id="story-play-pause-button" onclick="toggleStoryPlayPause()" class="absolute inset-0 flex items-center justify-center text-white z-10 transition-opacity opacity-0">
+            <i data-lucide="play" class="w-20 h-20 fill-current"></i>
+        </button>
+    </div>
+
+    <div class="container-app">
+        
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-8">
+                <a href="#" onclick="resetHomePage()" class="cursor-pointer">
+                    <h1 class="logo-aura flex items-center space-x-2">
+                        <i data-lucide="sparkles" class="w-7 h-7 accent-text fill-ryzn-accent/30"></i>
+                        <span class="logo-text">Aura</span>
+                    </h1>
+                </a>
+                <nav class="hidden sm:flex space-x-6 text-gray-400 text-lg font-medium">
+                    <button id="nav-music" onclick="showSection('music')" class="nav-item hover:accent-text transition pb-1">Scopri</button>
+                </nav>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                 <button onclick="showSection('stories')" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition border-2 border-transparent hover:accent-border">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                 </button>
+                 <button onclick="showSection('playlists')" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
+                    <i data-lucide="list-music" class="w-6 h-6"></i>
+                 </button>
+                 <button onclick="showSection('library')" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
+                    <i data-lucide="heart" class="w-6 h-6 fill-current"></i>
+                 </button>
+                 <button onclick="openSearchModal()" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
+                    <i data-lucide="search" class="w-6 h-6"></i>
+                 </button>
+                 <button id="auth-button-header" onclick="loggedInUser ? showSection('profile') : openAuthModal('login')" class="p-2 depth-glass rounded-full text-white hover:bg-white/10 transition">
+                    <i data-lucide="user" class="w-6 h-6"></i>
+                 </button>
+            </div>
+        </header>
+
+        <section id="music-section" class="section-page active">
+            <h2 id="home-greeting" class="text-4xl font-extrabold mb-8 text-white">Buonasera. La tua Vibe è pronta.</h2>
+            
+             
+<div id="home-widgets-container" class="space-y-10">
+                <p class="text-center text-gray-400 col-span-full">Caricamento in corso...</p>
+            </div>
+        </section>
+        <section id="library-section" class="section-page">
+            <h2 class="text-3xl font-bold mb-6">I Tuoi Brani Salvati</h2>
+            <div id="liked-tracks-list" class="space-y-3">
+                <p class="text-center p-4 text-gray-500">Nessun brano salvato.</p>
+            </div>
+        </section>
+
+        <section id="playlists-section" class="section-page">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold">Le Tue Sessioni</h2>
+                <button onclick="openCreatePlaylistModal()" class="flex items-center px-4 py-2 accent-bg rounded-full text-sm font-semibold accent-hover transition">
+                    <i data-lucide="plus" class="w-4 h-4 mr-1"></i> Crea Sessione
+                </button>
+            </div>
+            <div id="playlists-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <p class="text-center p-4 text-gray-500 col-span-full">Nessuna sessione creata.</p>
+            </div>
+        </section>
+
+        <section id="profile-section" class="section-page">
+            <h2 class="text-3xl font-bold mb-6">Profilo Utente</h2>
+            <div class="depth-glass p-6 rounded-xl max-w-lg space-y-4">
+                <p id="profile-info" class="text-lg font-semibold">Stato: Disconnesso</p>
+                <div id="vibe-score-display" class="text-xl accent-text font-bold">Stato: 0/100</div>
+                <button onclick="handleLogout()" class="px-4 py-2 bg-red-600 rounded-lg text-white font-bold hover:bg-red-700 transition">Disconnetti</button>
+            </div>
+        </section>
+
+        <section id="stories-section" class="section-page">
+             <div class="flex justify-between items-center mb-6">
+                 <h2 class="text-3xl font-bold">Aura story's</h2>
+                 </div>
+             
+             <div id="stories-bubble-container" class="flex space-x-6 mb-10 overflow-x-auto pb-2 scrollbar-hide">
+                 <p id="no-stories-message" class="text-center p-4 text-gray-500"><Nessuna Storia Disponibile></p>
+             </div>
+             
+             <hr class="border-white/10 my-10">
+
+             <div id="new-releases-feed">
+                 <p class="text-center p-4 text-gray-500">Caricamento nuove uscite...</p>
+             </div>
+             </section>
+
+        </div> 
+    
+    <div onclick="enterImmersiveMode()" class="player-bar depth-glass bg-ryzn-bg/80 border-t border-white/10 flex items-center justify-between px-4 sm:px-8 cursor-pointer">
+        
+        <div class="flex items-center space-x-4 w-1/3">
+            <img id="player-cover" src="https://via.placeholder.com/64" alt="Album Cover" class="w-12 h-12 rounded-md object-cover">
+            <div class="truncate">
+                <p id="player-title" class="font-bold truncate text-sm">Nessun Brano</p>
+                <p id="player-artist" class="text-xs text-gray-400 truncate">Tocca per iniziare</p>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-center space-x-4 w-1/3">
+            <button onclick="event.stopPropagation(); skipBackward()" class="text-white/70 hover:text-white transition hidden md:block">
+                 <i data-lucide="skip-back" class="w-5 h-5 fill-current"></i>
+            </button>
+            <button onclick="event.stopPropagation(); togglePlayPause()" class="p-2 accent-bg rounded-full hover:scale-105 transition shadow-lg shadow-ryzn-accent/30 flex items-center justify-center">
+                <span id="play-icon" class="text-2xl text-ryzn-bg animated-icon leading-none">▶️</span>
+            </button>
+            <button onclick="event.stopPropagation(); skipForward()" class="text-white/70 hover:text-white transition hidden md:block">
+                 <i data-lucide="skip-forward" class="w-5 h-5 fill-current"></i>
+            </button>
+        </div>
+
+        <div class="flex items-center justify-end space-x-4 w-1/3">
+            <button id="add-to-playlist-button" onclick="event.stopPropagation(); openAddToPlaylistModal()" class="text-white/50 hover:text-white transition hidden lg:block">
+                <i data-lucide="list-plus" class="w-5 h-5"></i>
+            </button>
+            <button id="like-button" onclick="event.stopPropagation(); toggleLike()" class="text-white/50 hover:text-red-400 transition">
+                <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+            </button>
+            
+            <i data-lucide="volume" class="w-5 h-5 text-white/70 hidden lg:block"></i>
+            <input type="range" id="volume-slider" min="0" max="100" value="80" oninput="setVolume(this.value)" class="w-20 h-1 bg-white/20 rounded-lg appearance-none cursor-pointer accent-bg hidden lg:block">
+        </div>
+
+        <div id="progress-bar-container" class="absolute bottom-0 left-0 w-full h-1 bg-transparent cursor-pointer">
+            <div id="progress-bar" class="h-1 accent-bg" style="width: 0;"></div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- CONFIGURAZIONE YOUTUBE ---
+        // --- Dati & Configurazione Locali ---
+        const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/se02babro-tech/Aura-Music-/main/"; 
+        const STORIES_MANIFEST_URL = GITHUB_RAW_BASE + "User_videos.json"; 
+        
+        let AURA_MAP = []; // Contiene i metadati dei brani invidious
+        
+        // --- Stili e Icone per Mood Grid Migliorata (Natale/Glaciale) ---
+        const MOOD_STYLES = {
+            "Invernale": "bg-blue-900/40 border-blue-600 text-blue-300", 
+            "Party": "bg-red-900/40 border-red-600 text-red-300", 
+            "Ambient": "bg-gray-800/40 border-gray-600 text-gray-300",
+            "Chill": "bg-cyan-900/40 border-cyan-600 text-cyan-300",
+            // NUOVI MOODS PER GRIGLIA 2x3
+            "Focus": "bg-yellow-900/40 border-yellow-600 text-yellow-300",
+            "Energia": "bg-pink-900/40 border-pink-600 text-pink-300"
+        };
+        
+        const ALL_MOODS = Object.keys(MOOD_STYLES); // 6 moods totali
+        const YOUTUBE_MOOD_QUERIES = {
+            "Invernale": "Musica Invernale", 
+            "Party": "Tecno Music",
+            "Ambient": "House Music",
+            "Chill": "lofi beats",
+            // NUOVE QUERY
+            "Focus": "Rap e trap ",
+            "Energia": "Europop tecno hardcore pop"
+        };
+        // -------------------------------------------------------------
+        
+        let currentTrackData = null;
+        let ytPlayer = null; // Oggetto del Player IFrame di invidious
+        let isPlayerReady = false; 
+
+        let likedTracks = new Set();
+        let userPlaylists = [];
+        let remoteStories = []; 
+        let activeFilter = 'Trending'; // Filtro di default per invidious
+        let isLooping = false;
+        let loggedInUser = null;
+        
+        let progressBar, progressBarImmersive, playIcon, immersivePlayIcon, playerTitle, playerArtist, playerCover, immersiveCover, immersiveTitle, immersiveArtist, likeButton, vibeScoreDisplay, volumeSlider, volumeSliderImmersive, progressBarContainer, progressBarImmersiveContainer, loopButtonImmersive, playerBar;
+
+        let progressInterval = null;
+        let adCheckInterval = null; // NUOVO: Intervallo per il blocco pubblicità
+        let currentVolume = 80; // Volume in percentuale (0-100) per invidious API
+        let trackIdToAdd = null; 
+        
+        // Dati Storie Video (Natale/Glaciale)
+        const CHRISTMAS_EMOJIS = ["🎄", "🎅", "🎁", "❄️", "☃️", "🔔", "🌟", "🕯️", "🧣", "🦌"];
+        const STORY_COLORS = ["#00BFFF", "#FFFFFF", "#FF0000", "#1E8449", "#D5DBDB"]; // Glacial/Christmas Colors
+        let currentStoryIndex = 0;
+        let storyVideoPlayer;
+        let storyProgressInterval = null;
+        let storyWatchedStatus = new Set(); 
+        
+        // ====================================================================
+        // FUNZIONI YOUTUBE PLAYER API (Punto Critico)
+        // ====================================================================
+
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('ytPlayer', {
+                height: '390', 
+                width: '640', 
+                videoId: '', 
+                playerVars: {
+                    'controls': 0, 
+                    'disablekb': 1,
+                    'modestbranding': 1,
+                    'rel': 0,
+                    'showinfo': 0,
+                    'iv_load_policy': 3,
+                    'playsinline': 1, // CRITICO: Permette riproduzione senza fullscreen su iOS
+                    'enablejsapi': 1,
+                    'autoplay': 0 // Mantiene l'autoplay disabilitato per evitare blocchi
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+        window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady; 
+
+        function onPlayerReady(event) {
+            console.log("invidious Player Ready. Inizializzazione controlli.");
+            isPlayerReady = true; 
+
+            // ** MODIFICA CRITICA PER MOBILE/BACKGROUND **
+            // Aggiunge l'attributo 'allow' all'IFrame per abilitare la riproduzione in background.
+            const iframe = document.getElementById('ytPlayer');
+            if (iframe && iframe.tagName === 'IFRAME') {
+                 // Setta gli attributi di policy di riproduzione nel browser (autoplay, Picture-in-Picture)
+                 iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+            }
+            // ********************************************
+
+            setVolume(currentVolume); 
+            
+            if (AURA_MAP.length > 0 && !currentTrackData) {
+                 currentTrackData = AURA_MAP[0];
+            }
+
+            if (currentTrackData) {
+                 ytPlayer.cueVideoById(currentTrackData.youtubeId);
+                 updateUI(currentTrackData); 
+            }
+            
+            // NUOVO: Inizia il controllo degli annunci
+            startAdCheckInterval();
+        }
+
+        function onPlayerStateChange(event) {
+            const state = event.data; 
+            if (state === YT.PlayerState.PLAYING) {
+                // *** MODIFICA: Icona rimossa qui. Ora cambia solo al click su togglePlayPause() ***
+                setupProgressInterval();
+                updateMediaSession();
+                playerBar.classList.add('active');
+                // checkAndSkipAd(); // Controllo immediato all'avvio: Rimosso da qui, si affida all'intervallo
+            } else if (state === YT.PlayerState.PAUSED) {
+                 // *** MODIFICA: Icona rimossa qui. Ora cambia solo al click su togglePlayPause() ***
+                clearInterval(progressInterval);
+                updateMediaSession();
+            } else if (state === YT.PlayerState.ENDED) {
+                clearInterval(progressInterval);
+                if (isLooping) {
+                    ytPlayer.seekTo(0, true);
+                    ytPlayer.playVideo();
+                    // L'icona resta su 'Stop' se è in loop
+                } else {
+                    skipForward();
+                    // Il cambio traccia chiama playTrack() che aggiorna l'icona
+                }
+            } else if (state === YT.PlayerState.BUFFERING) {
+                // checkAndSkipAd(); // Controllo anche durante il buffering: Rimosso da qui, si affida all'intervallo
+            }
+        }
+
+        // --- LOGICA DI BLOCCO ANNUNCI (Basata su API IFrame) ---
+        function startAdCheckInterval() {
+            clearInterval(adCheckInterval);
+            adCheckInterval = setInterval(checkAndSkipAd, 1000); 
+        }
+
+        function checkAndSkipAd() {
+            if (!isPlayerReady || !ytPlayer || !ytPlayer.getAdState || !ytPlayer.getPlayerState) return;
+            
+            const playerState = ytPlayer.getPlayerState();
+            // L'API YT IFrame definisce AD_STATE: 1=PLAYING, 2=ENDED, 3=SKIPPABLE.
+            // Purtroppo, non c'è una costante pubblica per AD_STATE_PLAYING. Usiamo lo stato del player e un controllo
+            const adState = ytPlayer.getAdState(); 
+            
+            // Lo stato AD_ENDED (2) indica che non c'è un annuncio. 
+            // Se AD_ENDED non è lo stato attuale, c'è un annuncio in corso o in queue (Stato 1=PLAYING/3=SKIPPABLE).
+            const isAdPlaying = adState !== 2 && (playerState === YT.PlayerState.PLAYING || playerState === YT.PlayerState.BUFFERING); 
+
+            if (isAdPlaying) {
+                // console.log("Annuncio rilevato o imminente. Silenzia e tento il salto.");
+                
+                // Silenzia
+                ytPlayer.setVolume(0); 
+                
+                // Tenta di saltare avanti di 5 secondi se possibile (utile per gli annunci skippable o i pre-roll corti)
+                try {
+                    ytPlayer.seekTo(ytPlayer.getCurrentTime() + 5, true); 
+                } catch (e) {
+                     // console.log("SeekTo fallito durante l'ad, probabile annuncio non skippable.");
+                     // Ignora l'errore se il seekTo non è permesso durante l'ad
+                }
+            } else {
+                 // Nessun annuncio. Se il volume è a zero a causa del blocco, lo ripristina
+                 if (ytPlayer.getVolume() === 0 && currentVolume > 0) {
+                     ytPlayer.setVolume(currentVolume);
+                 }
+            }
+        }
+        
+        // ====================================================================
+        // FUNZIONI DI GESTIONE DATI E API (DINAMICHE)
+        // ====================================================================
+
+        /**
+         * Carica i brani da invidious in base al filtro/query.
+         */
+        
+
+async function fetchTracks(filter = 'Trending') {
+    const container = document.getElementById('home-widgets-container');
+    if (container) {
+        container.innerHTML = `<p class="text-center text-gray-400 col-span-full"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Caricamento brani da Invidious... (${filter})</p>`;
+        try { lucide.createIcons && lucide.createIcons(); } catch(e){}
     }
 
-    function simulate(){
-      const lines=["Allocating crypto engine...","Loading interpreter for .joit...","Feeding payload to sandbox...","Performing integrity checks...","Attempting decryption passes..."];
-      let i=0;function next(){if(i<lines.length){typeLine(lines[i],()=>{i++;next();});}else showFinal();}next();
-    }
+    try {
+        var query = (filter === 'Trending') ? 'musica in tendenza' : (filter || 'musica');
+        const proxy = "https://api.allorigins.win/raw?url=";
+        const targetUrl = `https://yewtu.be/api/v1/search?q=${encodeURIComponent(query)}`;
+        const url = proxy + encodeURIComponent(targetUrl);
 
-    function showFinal(){
-      typeLine('[system] --- DECRYPTION COMPLETE ---',()=>{
-        finalBox.style.display='block';
-        finalBox.innerHTML='<strong>AURA NON È PIÙ IN FASE BETA!</strong><br>Attendi le <span style="color:var(--accent)">03:00</span> per accedere alla piattaforma definitiva.<br><em>Da questo momento le demo sono scollegate dal server beta.</em><br><br><strong>Ci vediamo alle 3:01 per il download definitivo.</strong>';
-        setTimeout(showPopup,1500);
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('Invidious proxy search failed: ' + res.status);
+        const data = await res.json();
+
+        var items = Array.isArray(data) ? data : (data.items || data.videos || []);
+
+        const results = items.map(function(item){
+            var id = item.videoId || item.id;
+            var title = item.title || 'Unknown Title';
+            var artist = item.author || 'Unknown Artist';
+            var cover = item.videoThumbnails && item.videoThumbnails[0] ? item.videoThumbnails[0].url : 'https://via.placeholder.com/128';
+            return {
+                id: id,
+                youtubeId: id,
+                title: title,
+                artist: artist,
+                cover: cover,
+                mood: (filter === 'Trending') ? getTrackMood() : filter,
+                vibe: Math.floor(Math.random() * 100) + 1,
+                color: getRandomAccentColor(),
+                rgb: getRandomAccentRGB()
+            };
+        }).filter(function(t){ return t.id; });
+
+        AURA_MAP = results;
+        renderHomePageWidgets();
+    } catch(err) {
+        console.error('fetchTracks error', err);
+        if(container) container.innerHTML = `<p class="text-center p-4 text-red-400 col-span-full">Errore caricamento da Invidious (proxy): ${err.message}</p>`;
+        AURA_MAP = [];
+    }
+}
+
+function getRandomAccentColor() {
+            const colors = ['#00BFFF', '#34D399', '#FCD34D', '#FF007F', '#8B5CF6']; // Glacial, Mint, Gold, Magenta, Violet
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+        function getRandomAccentRGB() {
+            const rgbs = ['0 191 255', '52 211 153', '252 211 77', '255 0 127', '139 92 246'];
+            return rgbs[Math.floor(Math.random() * rgbs.length)];
+        }
+        function getTrackMood() {
+            // Assegna un mood casuale per i trending
+            const moods = ALL_MOODS;
+            return moods[Math.floor(Math.random() * moods.length)];
+        }
+
+        // --- Gestione Reset Home ---
+        window.resetHomePage = function() {
+            // Riporta il filtro allo stato iniziale (Trending)
+            activeFilter = 'Trending';
+            // Ricarica i brani di tendenza da invidious
+            fetchTracks('Trending'); 
+            // Mostra la sezione Music (Home)
+            showSection('music'); 
+            // Resetta lo scorrimento della pagina
+            window.scrollTo(0, 0); 
+        }
+
+        // --- Funzioni di Autenticazione (OMESSE PER BREVITÀ, RIMANGONO UGUALI) ---
+        function openAuthModal(mode) {
+             document.getElementById('auth-modal').classList.remove('hidden');
+             switchAuthMode(mode);
+        }
+        function closeAuthModal() {
+             document.getElementById('auth-modal').classList.add('hidden');
+        }
+        function switchAuthMode(mode) {
+            const title = document.getElementById('auth-title');
+            const button = document.getElementById('auth-main-button');
+            const link = document.getElementById('auth-switch-link');
+            
+            if (mode === 'login') {
+                title.textContent = 'Accedi ad Aura Music';
+                button.textContent = 'Accedi';
+                button.onclick = () => handleAuthAction('login');
+                link.textContent = 'Registrati';
+                link.onclick = () => switchAuthMode('register');
+            } else {
+                title.textContent = 'Registrazione';
+                button.textContent = 'Registrati';
+                button.onclick = () => handleAuthAction('register');
+                link.textContent = 'Accedi';
+                link.onclick = () => switchAuthMode('login');
+            }
+        }
+        function handleAuthAction(mode) {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            
+            if (!email || !password || password.length < 6) {
+                showToast("Inserisci un'email valida e una password di almeno 6 caratteri.", 'error');
+                return;
+            }
+            
+            // Logica di autenticazione fittizia (in un'app reale: chiamata API)
+            if (mode === 'register') {
+                loggedInUser = { email: email, vibeScore: 0 };
+                showToast("Registrazione Eseguita!", 'success');
+            } else {
+                loggedInUser = { email: email, vibeScore: 50 };
+                showToast("Login Eseguito!", 'success');
+            }
+            
+            saveLocalData();
+            updateAuthUI(loggedInUser);
+            closeAuthModal();
+            showSection('profile');
+        }
+        window.handleLogout = function() {
+            loggedInUser = null;
+            saveLocalData();
+            updateAuthUI(null);
+            showToast("Logout Eseguito.", 'info');
+            showSection('music'); // Torna alla home
+        }
+
+
+        /**
+         * Funzioni di riproduzione del player invidious
+         */
+        window.playTrack = function(trackId, autoplay = true) {
+            const track = AURA_MAP.find(t => t.id === trackId);
+            if (!track) return;
+            currentTrackData = track;
+            
+            if (isPlayerReady) {
+                ytPlayer.loadVideoById(trackId);
+                // Il player imposterà il volume predefinito, poi checkAndSkipAd() lo gestirà.
+            } else {
+                showToast("Player in fase di caricamento. Riprova tra un attimo.", 'info');
+            }
+            
+            updateUI(track);
+            playerBar.classList.add('active');
+            
+            // *** MODIFICA: Aggiornamento manuale icona quando si carica una nuova traccia ***
+            togglePlayIcon(false); // Assume che stia per partire (mostra ⏯)
+        }
+
+        window.togglePlayPause = function() {
+            if (!isPlayerReady) {
+                showToast("Riprova.", 'error');
+                return;
+            }
+            
+            if (!currentTrackData) {
+                if (AURA_MAP.length > 0) {
+                    playTrack(AURA_MAP[0].id);
+                } else {
+                    showToast("Nessun brano da riprodurre. Prova a cercare qualcosa.", 'info');
+                }
+                return;
+            }
+
+            const playerState = ytPlayer.getPlayerState();
+            
+            if (playerState === YT.PlayerState.PLAYING) {
+                ytPlayer.pauseVideo();
+                // *** MODIFICA: CAMBIO ICONA SUBITO AL CLICK - Stato successivo: PAUSA ***
+                togglePlayIcon(true); // Imposta su PAUSA (mostra  ▶.)
+            } else if (playerState === YT.PlayerState.PAUSED || playerState === YT.PlayerState.CUED) {
+                // Tentativo di riproduzione con gestione del blocco Autoplay
+                const attemptPlay = ytPlayer.playVideo();
+                // *** MODIFICA: CAMBIO ICONA SUBITO AL CLICK - Stato successivo: PLAY ***
+                togglePlayIcon(false); // Imposta su PLAY (mostra ⏯)
+                if (attemptPlay && typeof attemptPlay.catch === 'function') {
+                    attemptPlay.catch(e => {
+                        showToast("Riproduzione manuale richiesta.", 'info');
+                    });
+                }
+            } else {
+                // Se è ENDED o CUED, riavvia
+                playTrack(currentTrackData.id, true);
+                // *** MODIFICA: CAMBIO ICONA SUBITO AL CLICK - Stato successivo: PLAY ***
+                togglePlayIcon(false); // Imposta su PLAY (mostra ⏯)
+            }
+        }
+
+        window.skipForward = function() {
+            if (!currentTrackData) return;
+            const currentIndex = AURA_MAP.findIndex(t => t.id === currentTrackData.id);
+            const nextIndex = (currentIndex + 1) % AURA_MAP.length;
+            playTrack(AURA_MAP[nextIndex].id);
+        }
+
+        window.skipBackward = function() {
+            if (!currentTrackData) return;
+            const currentIndex = AURA_MAP.findIndex(t => t.id === currentTrackData.id);
+            let prevIndex = (currentIndex - 1);
+            if (prevIndex < 0) prevIndex = AURA_MAP.length - 1; 
+            playTrack(AURA_MAP[prevIndex].id);
+        }
+        
+        window.setVolume = function(volume) {
+            currentVolume = parseInt(volume);
+            if (ytPlayer && isPlayerReady) {
+                // Applica il volume solo se l'adblock non lo ha silenziato
+                if (ytPlayer.getVolume() !== 0) { 
+                    ytPlayer.setVolume(currentVolume);
+                }
+                // Aggiorna tutti gli slider
+                if(volumeSlider) volumeSlider.value = currentVolume;
+                if(volumeSliderImmersive) volumeSliderImmersive.value = currentVolume;
+            }
+        }
+        
+        window.toggleLoop = function() {
+            isLooping = !isLooping;
+            updateLoopButton(isLooping);
+            showToast(isLooping ? "Ripetizione Brano Attiva" : "Ripetizione Brano Disattiva", 'info');
+        }
+
+        function updateLoopButton(isLooping) {
+            const button = document.getElementById('loop-button-immersive');
+            if(button) {
+                button.classList.toggle('text-white', isLooping);
+                button.classList.toggle('text-white/70', !isLooping);
+            }
+        }
+
+        function setupProgressInterval() {
+            clearInterval(progressInterval);
+            progressInterval = setInterval(updateProgress, 1000);
+        }
+
+        function updateProgress() {
+            if (!ytPlayer || !progressBar || !progressBarImmersive) return;
+            const duration = ytPlayer.getDuration();
+            const currentTime = ytPlayer.getCurrentTime();
+
+            if (duration > 0) {
+                const percentage = (currentTime / duration) * 100;
+                progressBar.style.width = `${percentage}%`;
+                progressBarImmersive.style.width = `${percentage}%`;
+            }
+        }
+
+        window.enterImmersiveMode = function() {
+            document.getElementById('immersive-mode').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            updateProgress(); // Aggiorna immediatamente la barra
+        }
+
+        window.exitImmersiveMode = function() {
+            document.getElementById('immersive-mode').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function handleSeek(event) {
+            if (!ytPlayer || !currentTrackData) return;
+            const duration = ytPlayer.getDuration();
+            if (duration <= 0) return;
+
+            const container = event.currentTarget;
+            const rect = container.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const width = container.offsetWidth;
+            const seekTime = (clickX / width) * duration;
+
+            ytPlayer.seekTo(seekTime, true);
+        } 
+
+        // Aggiunge l'event listener per il seek, altrimenti funziona solo per il click sul player bar
+        function setupSeekListeners() {
+            if(progressBarContainer) progressBarContainer.addEventListener('click', handleSeek);
+            if(progressBarImmersiveContainer) progressBarImmersiveContainer.addEventListener('click', handleSeek);
+        }
+
+        function updateUI(track) {
+            playerTitle.textContent = track.title;
+            playerArtist.textContent = track.artist;
+            playerCover.src = track.cover;
+
+            // Logica Marquee per il titolo del player immersivo
+            immersiveArtist.textContent = track.artist;
+            immersiveCover.src = track.cover;
+            
+            const titleElement = document.getElementById('immersive-title');
+            titleElement.textContent = track.title;
+            
+            // Se il titolo è troppo lungo, applica la classe marquee
+            // 35 caratteri è una soglia euristica per titoli che potrebbero non stare su una riga
+            if (track.title.length > 35) {
+                titleElement.classList.add('marquee-text');
+            } else {
+                titleElement.classList.remove('marquee-text');
+            }
+            
+            vibeScoreDisplay.textContent = `Vibe Score: ${track.vibe}/100`;
+
+            updateAmbientLight(track.color || '#00BFFF', track.rgb || '0 191 255');
+            updateLikeButton(track.id);
+
+            // Forza il re-render delle icone Lucide (critico per animazioni)
+            lucide.createIcons();
+            
+            // Aggiorna la Media Session per il controllo esterno
+            updateMediaSession();
+        }
+
+        // START: FUNZIONE PER IL CAMBIO EMOJI (RESTANO INVARIATE)
+        function togglePlayIcon(isPaused) {
+            // isPaused = true -> Player in pausa, mostra Play emoji (▶)
+            // isPaused = false -> Player in riproduzione, mostra Stop emoji (⏯)
+            const emoji = isPaused ? '▶' : ' ≡ '; 
+
+            if (playIcon) {
+                // Aggiorniamo il contenuto dell'elemento <span>
+                playIcon.textContent = emoji;
+                // Rimuoviamo l'attributo lucide, non più necessario
+                playIcon.removeAttribute('data-lucide'); 
+            }
+            if (immersivePlayIcon) {
+                immersivePlayIcon.textContent = emoji;
+                immersivePlayIcon.removeAttribute('data-lucide');
+            }
+        }
+        // END: FUNZIONE PER IL CAMBIO EMOJI
+
+
+        // --- Gestione Ambient Light (Cambio colore tema dinamico) ---
+        function updateAmbientLight(hexColor, rgbColor) {
+            if (hexColor) {
+                document.documentElement.style.setProperty('--ryzn-color-hex', hexColor);
+            }
+            if (rgbColor) {
+                document.documentElement.style.setProperty('--ryzn-color-rgb', rgbColor);
+            }
+        }
+        
+        // --- Gestione Stato Locale (OMESSE PER BREVITÀ, RIMANGONO UGUALI) ---
+        function saveLocalData() {
+            localStorage.setItem('likedTracks', JSON.stringify(Array.from(likedTracks)));
+            localStorage.setItem('userPlaylists', JSON.stringify(userPlaylists));
+            if (loggedInUser) {
+                 localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+            } else {
+                 localStorage.removeItem('loggedInUser');
+            }
+            localStorage.setItem('storyWatchedStatus', JSON.stringify(Array.from(storyWatchedStatus)));
+        }
+
+        function loadLocalData() {
+            const storedTracks = localStorage.getItem('likedTracks');
+            if (storedTracks) {
+                likedTracks = new Set(JSON.parse(storedTracks));
+            }
+            const storedPlaylists = localStorage.getItem('userPlaylists');
+            if (storedPlaylists) {
+                userPlaylists = JSON.parse(storedPlaylists);
+            }
+            const storedUser = localStorage.getItem('loggedInUser');
+            if (storedUser) {
+                loggedInUser = JSON.parse(storedUser);
+                updateAuthUI(loggedInUser);
+            }
+            const storedWatchedStories = localStorage.getItem('storyWatchedStatus');
+            if (storedWatchedStories) {
+                storyWatchedStatus = new Set(JSON.parse(storedWatchedStories));
+            }
+        }
+
+        function updateAuthUI(user) {
+            const authButton = document.getElementById('auth-button-header');
+            const profileInfo = document.getElementById('profile-info');
+            
+            if (user) {
+                authButton.innerHTML = `<i data-lucide="user-check" class="w-6 h-6 accent-text"></i>`;
+                profileInfo.textContent = `Loggato come: ${user.email}`;
+            } else {
+                authButton.innerHTML = `<i data-lucide="user" class="w-6 h-6"></i>`;
+                if(profileInfo) profileInfo.textContent = `Stato: Disconnesso`;
+            }
+            // Forza il re-render delle icone Lucide
+            lucide.createIcons();
+        }
+        
+        // --- Gestione Sezioni ---
+        window.showSection = function(sectionId) {
+            // Rimuove la classe active da ogni sezione, tranne la player bar se attiva
+            document.querySelectorAll('.section-page').forEach(section => {
+                section.classList.remove('active');
+            });
+            const targetSection = document.getElementById(`${sectionId}-section`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            // Aggiorna la navigazione
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            const activeItem = document.getElementById(`nav-${sectionId}`);
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+
+            // Ricarica i contenuti della sezione
+            if (sectionId === 'music') {
+                renderHomePageWidgets();
+            } else if (sectionId === 'library') {
+                renderLikedTracks();
+            } else if (sectionId === 'playlists') {
+                renderPlaylists();
+            } else if (sectionId === 'stories') {
+                renderStories();
+                renderNewReleases(); // NUOVO: Chiama il rendering del feed di nuove uscite
+            }
+        }
+
+        window.toggleLike = function(optionalTrackId) {
+            const trackId = optionalTrackId || currentTrackData?.id;
+            if (!trackId) {
+                showToast("Seleziona una traccia prima.", 'error');
+                return;
+            }
+            
+            const track = AURA_MAP.find(t => t.id === trackId);
+            if (!track) return;
+            
+            if (likedTracks.has(trackId)) {
+                likedTracks.delete(trackId);
+                showToast(`Rimosso: ${track.title}`, 'info');
+            } else {
+                likedTracks.add(trackId);
+                showToast(`Aggiunto ai Preferiti: ${track.title}`, 'success');
+            }
+            
+            saveLocalData();
+            updateLikeButton(trackId);
+            renderLikedTracks(); // Aggiorna la libreria se visibile
+        }
+
+        function updateLikeButton(trackId) {
+            const isLiked = likedTracks.has(trackId);
+            
+            const button = document.getElementById('like-button');
+            if (button) {
+                button.classList.toggle('text-red-400', isLiked);
+                button.classList.toggle('text-white/50', !isLiked);
+            }
+            
+            const buttonImmersive = document.getElementById('like-button-immersive');
+            if (buttonImmersive) {
+                buttonImmersive.classList.toggle('text-red-400', isLiked);
+                buttonImmersive.classList.toggle('text-white/70', !isLiked);
+            }
+            // Forza il re-render di tutte le icone 'heart' nel DOM
+            lucide.createIcons();
+        }
+
+        // ====================================================================
+        // FUNZIONI DI WIDGET RENDERING
+        // ====================================================================
+        
+        /**
+         * Attiva la condivisione nativa del brano (navigator.share).
+         */
+        window.shareNewRelease = async function(trackId) {
+            const track = AURA_MAP.find(t => t.id === trackId);
+            if (!track) {
+                showToast("Dati del brano non disponibili per la condivisione.", 'error');
+                return;
+            }
+
+            // Simula l'URL del brano usando l'ID di invidious
+            const shareUrl = `https://invidious.video/watch/${track.youtubeId}`;
+            const shareTitle = `Ascolta "${track.title}" di ${track.artist} su Aura Music!`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: shareTitle,
+                        text: `Nuova Uscita: ${track.title} - ${track.artist}`,
+                        url: shareUrl,
+                    });
+                    // console.log('Condivisione riuscita.');
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        // console.error('Errore durante la condivisione:', error);
+                        showToast("Condivisione annullata o fallita.", 'info');
+                    }
+                }
+            } else {
+                // Fallback per browser non supportati (es. desktop)
+                navigator.clipboard.writeText(shareUrl)
+                    .then(() => showToast("URL del brano copiato negli appunti!", 'success'))
+                    .catch(() => showToast("Impossibile copiare l'URL.", 'error'));
+            }
+        }
+        
+
+        /**
+         * Genera il markup per un singolo brano in un carosello.
+         */
+        function getTrackElement(track) {
+            return `
+                <div onclick="playTrack('${track.id}')" class="widget-row-item cursor-pointer hover:scale-[1.03] transition-transform">
+                    <img src="${track.cover}" alt="${track.title}" class="w-14 h-14 rounded-xl object-cover shadow-md flex-shrink-0 mr-3">
+                    <p class="text-sm font-semibold text-white truncate">${track.title}</p>
+                    <p class="text-xs text-gray-400 truncate">${track.artist}</p>
+                </div>
+            `;
+        }
+        
+        /**
+         * Genera il markup per il widget Quick Access (due per riga).
+         */
+        function getQuickAccessWidget(track) {
+            if (!track) return '';
+            const styleClass = MOOD_STYLES[track.mood] || 'bg-gray-700/40 border-gray-500 text-gray-300';
+            return `
+                <div onclick="playTrack('${track.id}')" class="widget-quick-access depth-glass p-4 rounded-2xl cursor-pointer transition hover:scale-[1.03] hover:bg-white/10 border-l-4 shadow-lg shadow-black/30 bg-gradient-to-br from-white/5 to-white/0">
+                    <img src="${track.cover}" alt="${track.title}" class="w-14 h-14 rounded-xl object-cover shadow-md flex-shrink-0 mr-3">
+                    <div class="truncate">
+                        <p class="text-white font-bold truncate">${track.title}</p>
+                        <p class="text-sm text-gray-400 truncate">${track.artist}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        /**
+         * Crea il blocco contenitore per i widget.
+         */
+        function createWidgetBlock(title, subtitle, contentHtml, layoutClass = 'horizontal-scroll') {
+            return `
+                <div class="widget-block">
+                    <h3 class="text-2xl font-bold mb-1">${title}</h3>
+                    <p class="text-gray-400 mb-4">${subtitle}</p>
+                    <div class="${layoutClass} widget-row">
+                        ${contentHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Restituisce l'icona o l'emoji corretta per il Mood.
+         */
+        function getMoodIcon(mood) {
+            switch (mood) {
+                case "Invernale": return "🎄"; // Albero di Natale Emoji
+                case "Party": return "sparkles";
+                case "Ambient": return "cloud-drizzle";
+                case "Chill": return "snowflake";
+                // NUOVI MOODS
+                case "Focus": return "brain"; 
+                case "Energia": return "bolt"; 
+                default: return "music";
+            }
+        }
+
+        /**
+         * Genera il markup per la griglia dei Moods ("Scegli la Vibe").
+         */
+        function getMoodGridHtml() {
+            return ALL_MOODS.map(mood => {
+                const styleClass = MOOD_STYLES[mood] || 'bg-gray-700/40 border-gray-500 text-gray-300';
+                const iconOrEmoji = getMoodIcon(mood);
+                let iconHtml;
+
+                if (iconOrEmoji.length > 2) { // È un nome Lucide (es. "sparkles")
+                    // Icona Lucide
+                    iconHtml = `<i data-lucide="${iconOrEmoji}" class="w-8 h-8 ${MOOD_STYLES[mood].includes('text-') ? '' : 'text-white'}"></i>`;
+                } else { // È un'emoji (es. "🎄")
+                    // Emoji, usa uno span con dimensione fissa
+                    iconHtml = `<span class="text-3xl">${iconOrEmoji}</span>`;
+                }
+                
+                // *** IMPORTANTE: Usa showMoodTracks per caricare i brani del mood, ma ripristina la vista Home
+                return `
+                    <div onclick="showMoodTracks('${mood}')" class="depth-glass ${styleClass} p-4 rounded-xl cursor-pointer transition hover:scale-[1.03] border-2 shadow-lg flex flex-col items-center justify-center text-center space-y-2 min-h-[120px]">
+                        ${iconHtml}
+                        <p class="font-bold text-lg">${mood}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        /**
+         * Genera un post "Nuova Uscita" in stile Instagram.
+         */
+        function getNewReleasePost(track, username, postDate, caption) {
+            // Uso il colore del mood del brano per l'accento
+            const accentColor = track.color || '#00BFFF';
+            
+            // Icona temporanea per il profilo
+            const profileEmoji = username.startsWith('Aura') ? '✨' : '🎤';
+            
+            const isLiked = likedTracks.has(track.id);
+
+            return `
+                <div class="new-release-post bg-black/50 depth-glass rounded-xl overflow-hidden mb-8 border border-white/10 shadow-2xl">
+                    
+                    <div class="flex items-center p-4">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl bg-gray-700/50 mr-3 border-2" style="border-color: ${accentColor};">
+                            <span>${profileEmoji}</span>
+                        </div>
+                        <div class="flex-grow">
+                            <p class="font-bold text-white truncate">${username}</p>
+                            <p class="text-xs text-gray-400">Nuova Uscita · ${postDate}</p>
+                        </div>
+                        <button onclick="showToast('Altre opzioni per ${track.title}', 'info')" class="text-gray-400 hover:text-white transition p-1">
+                            <i data-lucide="more-horizontal" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div class="relative w-full aspect-square" onclick="playTrack('${track.id}')">
+                        <img src="${track.cover}" alt="Cover di ${track.title}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition duration-300">
+                            <i data-lucide="play-circle" class="w-20 h-20 text-white opacity-80 fill-current"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center p-3 space-x-4">
+                        <button onclick="event.stopPropagation(); toggleLike('${track.id}')" class="text-white/70 hover:text-red-400 transition ${isLiked ? 'text-red-400' : ''}">
+                            <i data-lucide="heart" class="w-7 h-7 fill-current"></i>
+                        </button>
+                        <button onclick="showToast('Commenti non abilitati', 'info')" class="text-white/70 hover:text-white transition">
+                            <i data-lucide="message-circle" class="w-7 h-7"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); shareNewRelease('${track.id}')" class="text-white/70 hover:text-white transition">
+                            <i data-lucide="send" class="w-7 h-7"></i>
+                        </button>
+                        <button onclick="openAddToPlaylistModal('${track.id}')" class="ml-auto text-white/70 hover:accent-text transition">
+                             <i data-lucide="list-plus" class="w-7 h-7"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-4 pt-0">
+                        <p class="text-sm font-semibold mb-1">${track.artist}</p>
+                        <p class="text-white text-lg font-bold">${track.title}</p>
+                        <p class="text-sm text-gray-300 mt-2">${caption}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Renderizza i post delle nuove uscite musicali.
+         */
+        function renderNewReleases() {
+            const container = document.getElementById('new-releases-feed');
+            if (!container) return;
+            
+            // Prendiamo i primi 5 brani da AURA_MAP per simulare le nuove uscite.
+            const newReleaseTracks = AURA_MAP.slice(0, 5); 
+
+            if (newReleaseTracks.length === 0) {
+                container.innerHTML = '<p class="text-center p-4 text-gray-500">Nessuna nuova uscita da mostrare.</p>';
+                return;
+            }
+            
+            // Dati fittizi per i post Instagram
+            const postData = [
+                { username: "Aura Ai", date: "1h fa", caption: "Finalmente qui! La nostra nuova Vibe ti aspetta. Ascolta subito il brano completo!" },
+                { username: newReleaseTracks[1]?.artist || "Artista Anonimo", date: "3h fa", caption: "Vibrazioni Glaciali per questo inverno. L'ultimo singolo è su Aura Music." },
+                { username: "Community Picks", date: "1g fa", caption: "Scelto dalla nostra community! Questo brano è un must-have." },
+                { username: newReleaseTracks[3]?.artist || "Beat Maker", date: "2g fa", caption: "Il nuovo EP è fuori ora! Link in bio. #NuovaMusica #AuraVibe" },
+                { username: "Aura Recommends", date: "3g fa", caption: "Da non perdere: un viaggio sonoro mozzafiato. Trovato in esclusiva su Aura." },
+            ];
+            
+            let feedHtml = '';
+            
+            newReleaseTracks.forEach((track, index) => {
+                const data = postData[index] || postData[0];
+                feedHtml += getNewReleasePost(track, data.username, data.date, data.caption);
+            });
+            
+            container.innerHTML = `
+                <h2 class="text-3xl font-bold mt-12 mb-6 border-b border-white/10 pb-4">🌟 Nuove Uscite Musicali</h2>
+                <div class="max-w-xl mx-auto"> ${feedHtml}
+                </div>
+            `;
+            
+            // Aggiorna le icone (cruciale per il pulsante 'heart' e 'send')
+            lucide.createIcons();
+        }
+
+
+        /**
+         * Ridisegna l'intera home page con il layout a widget.
+         */
+        window.renderHomePageWidgets = function() {
+            const container = document.getElementById('home-widgets-container');
+            if (!container) return;
+            
+            // Imposta l'intestazione corretta per la Home
+            let greeting = "La tua Vibe è pronta.";
+            if (activeFilter !== 'Trending') {
+                 // Se stiamo visualizzando i brani filtrati per un Mood (Vibe), cambiamo l'intestazione
+                 greeting = `Vibrazioni per: ${activeFilter}`;
+            } else {
+                 const currentHour = new Date().getHours();
+                 if (currentHour < 12) greeting = "Buongiorno. La tua Vibe è pronta.";
+                 else if (currentHour < 18) greeting = "Buon Pomeriggio. La tua Vibe è pronta.";
+                 else greeting = "Buonasera. La tua Vibe è pronta.";
+            }
+            document.getElementById('home-greeting').textContent = greeting;
+
+            if (AURA_MAP.length === 0) {
+                 container.innerHTML = '<p class="text-center p-4 text-gray-500">Nessun brano trovato. Prova a ricaricare o a cercare.</p>';
+                 return;
+            }
+
+            let allWidgetsHtml = '';
+            
+            // Filtra AURA_MAP in base all'activeFilter se non è 'Trending'
+            const filteredTracks = activeFilter === 'Trending' 
+                ? AURA_MAP
+                : AURA_MAP.filter(t => t.mood === activeFilter);
+            
+            // Se l'activeFilter non è 'Trending' e i filtri sono vuoti, torniamo a 'Trending'
+            if (activeFilter !== 'Trending' && filteredTracks.length === 0) {
+                 // Torna a Trending se il filtro non ha dato risultati (e carica)
+                 activeFilter = 'Trending';
+                 fetchTracks('Trending');
+                 return; 
+            }
+            
+            const baseTracks = filteredTracks.length > 0 ? filteredTracks : AURA_MAP;
+
+            // WIDGET 1: Brani Recenti/Quick Access (Ora i primi 6 brani)
+            const quickAccessTracks = baseTracks.slice(0, 6); // MODIFICA: Da 4 a 6
+            const quickAccessHtml = quickAccessTracks.map(getQuickAccessWidget).join('');
+            // La classe 'flex flex-wrap gap-4' sul contenitore genitore gestisce le due colonne e le 3 linee.
+            allWidgetsHtml += createWidgetBlock('Accesso Veloce', 'I brani recenti e i tuoi preferiti in un click.', quickAccessHtml, 'grid grid-cols-2 sm:grid-cols-3 gap-4');
+
+            // WIDGET 2: Mood Grid (Griglia dei mood, sempre visibile)
+            const moodGridHtml = getMoodGridHtml();
+            // La classe 'grid grid-cols-2 gap-4' assicura un layout 2 a 2 per le 6 Vibes
+            allWidgetsHtml += createWidgetBlock('Scegli la Vibe', 'Seleziona il tuo mood attuale e inizia ad ascoltare.', moodGridHtml, 'grid grid-cols-2 gap-4'); 
+
+            // WIDGET 3: Deep Dive Discovery (Horizontal Carousel)
+            const deepDiveTracks = baseTracks.slice(6, 16); // Parte dal sesto brano
+            const deepDiveHtml = deepDiveTracks.map(getTrackElement).join('');
+            allWidgetsHtml += createWidgetBlock('Deep Dive Discovery', 'Nuove vibrazioni solo per te.', deepDiveHtml, 'horizontal-scroll');
+
+            // NUOVO WIDGET 4: Rilassati con il nostro Flow (Horizontal Carousel)
+            const moodMusicTracks = baseTracks.slice(16, 26);
+            const moodMusicHtml = moodMusicTracks.map(getTrackElement).join('');
+            allWidgetsHtml += createWidgetBlock('Rilassati con il nostro Flow', 'Playlist curate per il tuo stato d\'animo.', moodMusicHtml, 'horizontal-scroll');
+
+            // NUOVO WIDGET 5: Ritorno al Passato (Horizontal Carousel)
+            const retroTracks = baseTracks.slice(26, 36);
+            const retroHtml = retroTracks.map(getTrackElement).join('');
+            allWidgetsHtml += createWidgetBlock('Ritorno al Passato', 'I successi che non smettono di emozionare.', retroHtml, 'horizontal-scroll');
+
+            // Applica tutti i widget
+            container.innerHTML = allWidgetsHtml;
+            lucide.createIcons();
+        }
+
+        /**
+         * Funzione per mostrare i brani di un Mood specifico. 
+         * Ora chiama fetchTracks che a sua volta chiama renderHomePageWidgets per aggiornare i contenuti.
+         */
+        window.showMoodTracks = function(mood) {
+            activeFilter = mood; // Imposta il filtro attivo
+            fetchTracks(mood);    // Forza il ricaricamento dei dati con la query del mood
+            // La funzione renderHomePageWidgets() verrà chiamata al termine di fetchTracks()
+        }
+
+        // ====================================================================
+        // FUNZIONI PRE-ESISTENTI (OMESSE PER BREVITÀ, RIMANGONO UGUALI)
+        // ====================================================================
+        
+        function getLikedTrackElement(track) {
+            return `
+                <div onclick="playTrack('${track.id}')" class="depth-glass p-3 rounded-xl flex items-center space-x-4 cursor-pointer hover:bg-white/10 transition">
+                    <img src="${track.cover}" alt="${track.title}" class="w-14 h-14 rounded-xl object-cover shadow-md flex-shrink-0 mr-3">
+                    <div class="flex-grow truncate">
+                        <p class="text-white font-bold truncate">${track.title}</p>
+                        <p class="text-gray-400 text-sm truncate">${track.artist}</p>
+                    </div>
+                    <button onclick="event.stopPropagation(); toggleLike('${track.id}')" class="flex-shrink-0 p-2 text-red-400 hover:text-white transition">
+                        <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderLikedTracks() {
+            const container = document.getElementById('liked-tracks-list');
+            const likedArray = Array.from(likedTracks);
+            
+            if (likedArray.length === 0) {
+                 container.innerHTML = '<p class="text-center p-4 text-gray-500">Nessun brano salvato.</p>';
+                 return;
+            }
+
+            const tracksToDisplay = likedArray
+                .map(id => AURA_MAP.find(t => t.id === id))
+                .filter(t => t);
+
+            if (tracksToDisplay.length === 0) {
+                 container.innerHTML = '<p class="text-center p-4 text-gray-500">I tuoi preferiti sono stati eliminati da invidious.</p>';
+                 return;
+            }
+
+            container.innerHTML = tracksToDisplay.map(getLikedTrackElement).join('');
+            lucide.createIcons();
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            let bgColor = 'bg-gray-700';
+            let icon = 'info';
+
+            if (type === 'success') {
+                bgColor = 'bg-green-600';
+                icon = 'check-circle';
+            } else if (type === 'error') {
+                bgColor = 'bg-red-600';
+                icon = 'x-circle';
+            } else if (type === 'info') {
+                bgColor = 'bg-blue-600';
+                icon = 'bell';
+            }
+
+            toast.className = `p-4 mb-3 rounded-lg text-white shadow-xl ${bgColor} flex items-center transition-all duration-300 transform translate-x-0 opacity-100`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 mr-3 flex-shrink-0"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // Animazione di scomparsa
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'translate-x-full');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 3000);
+        }
+
+        function openSearchModal() {
+            document.getElementById('search-modal').classList.remove('hidden');
+            document.getElementById('search-input').focus();
+        }
+        function closeSearchModal() {
+            document.getElementById('search-modal').classList.add('hidden');
+            document.getElementById('search-results').innerHTML = '<p class="text-center text-gray-500">Inizia a digitare per cercare musica su invidious.</p>';
+        }
+
+        async function performSearch(isLiveInput = false) {
+            const query = document.getElementById('search-input').value.trim();
+            const resultsContainer = document.getElementById('search-results');
+
+            if (query.length === 0) {
+                resultsContainer.innerHTML = '<p class="text-center text-gray-500">Digita almeno 3 caratteri e premi Cerca.</p>';
+                return;
+            } else if (query.length < 3 && isLiveInput) {
+                resultsContainer.innerHTML = '<p class="text-center text-gray-500">Continua a digitare...</p>';
+                return;
+            }
+
+            resultsContainer.innerHTML = '<p class="text-center text-gray-400"><i data-lucide="loader-2" class="w-5 h-5 animate-spin inline-block mr-2"></i> Ricerca in corso...</p>';
+            lucide.createIcons();
+
+            const url = `${YOUTUBE_API_BASE_URL}search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=15&key=${YOUTUBE_API_KEY}`;
+            
+            try {
+                 const response = await fetch(url);
+                 if (!response.ok) {
+                     throw new Error(`invidious API Error! Status: ${response.status}`);
+                 }
+                 const data = await response.json();
+
+                 if (data.items.length === 0) {
+                      resultsContainer.innerHTML = '<p class="text-center text-gray-500">Nessun risultato trovato per la ricerca.</p>';
+                      return;
+                 }
+                 
+                 // Mappa i risultati e li aggiunge all'AURA_MAP se non presenti
+                 const newTracks = data.items
+                     .map(item => ({
+                         id: item.id.videoId,
+                         youtubeId: item.id.videoId,
+                         title: item.snippet.title,
+                         artist: item.snippet.channelTitle,
+                         cover: item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : 'https://via.placeholder.com/64',
+                         mood: 'Search',
+                         vibe: Math.floor(Math.random() * 100) + 1,
+                         color: getRandomAccentColor(),
+                         rgb: getRandomAccentRGB()
+                     }))
+                     .filter(track => !AURA_MAP.some(t => t.id === track.id));
+
+                 AURA_MAP.push(...newTracks);
+
+                 const searchResultsHtml = data.items.map(item => {
+                    const trackId = item.id.videoId;
+                    const track = AURA_MAP.find(t => t.id === trackId);
+
+                    return `
+                        <div class="depth-glass p-3 rounded-xl flex items-center space-x-4 cursor-pointer hover:bg-white/10 transition">
+                            <img src="${track.cover}" alt="${track.title}" class="w-14 h-14 rounded-xl object-cover shadow-md flex-shrink-0 mr-3">
+                            <div onclick="playTrack('${trackId}')" class="flex-grow truncate">
+                                <p class="text-white font-bold truncate">${track.title}</p>
+                                <p class="text-gray-400 text-sm truncate">${track.artist}</p>
+                            </div>
+                            <button onclick="event.stopPropagation(); openAddToPlaylistModal('${trackId}')" class="flex-shrink-0 p-1 text-white/50 hover:accent-text transition">
+                                <i data-lucide="list-plus" class="w-5 h-5"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); toggleLike('${trackId}')" class="flex-shrink-0 p-1 ${likedTracks.has(trackId) ? 'text-red-400' : 'text-white/50'} hover:text-red-400 transition">
+                                <i data-lucide="heart" class="w-5 h-5 fill-current"></i>
+                            </button>
+                        </div>
+                    `;
+                 }).join('');
+
+                 resultsContainer.innerHTML = searchResultsHtml;
+                 lucide.createIcons();
+
+            } catch (error) {
+                console.error("Errore nella ricerca invidious:", error);
+                resultsContainer.innerHTML = `<p class="text-center p-4 text-red-400">Errore: ${error.message}. Riprova più tardi.</p>`;
+            }
+        }
+        
+        function openCreatePlaylistModal() {
+            document.getElementById('create-playlist-modal').classList.remove('hidden');
+            document.getElementById('playlist-name-input').focus();
+        }
+        function closeCreatePlaylistModal() {
+            document.getElementById('create-playlist-modal').classList.add('hidden');
+            document.getElementById('playlist-name-input').value = '';
+        }
+        
+        window.createPlaylist = function() {
+            const name = document.getElementById('playlist-name-input').value.trim();
+            if (name.length < 3) {
+                showToast("Il nome della Sessione deve avere almeno 3 caratteri.", 'error');
+                return;
+            }
+            
+            const newPlaylist = {
+                id: Date.now().toString(),
+                name: name,
+                tracks: []
+            };
+            
+            userPlaylists.push(newPlaylist);
+            saveLocalData();
+            showToast(`Sessione "${name}" creata!`, 'success');
+            closeCreatePlaylistModal();
+            renderPlaylists();
+        }
+
+        function renderPlaylists() {
+            const container = document.getElementById('playlists-list');
+            if (userPlaylists.length === 0) {
+                container.innerHTML = '<p class="text-center p-4 text-gray-500 col-span-full">Nessuna sessione creata.</p>';
+                return;
+            }
+
+            container.innerHTML = userPlaylists.map(playlist => {
+                const trackCount = playlist.tracks.length;
+                // Simula le copertine con i primi 4 brani della playlist
+                const covers = playlist.tracks.slice(0, 4)
+                    .map(id => AURA_MAP.find(t => t.id === id)?.cover || 'https://via.placeholder.com/64');
+
+                return `
+                    <div class="depth-glass p-4 rounded-xl space-y-3 flex flex-col justify-between cursor-pointer transition hover:bg-white/10 relative">
+                        <div>
+                            <h3 class="text-xl font-bold accent-text truncate">${playlist.name}</h3>
+                            <p class="text-sm text-gray-400 mb-3">${trackCount} brani</p>
+                        </div>
+                        
+                        <div onclick="event.stopPropagation(); playPlaylist('${playlist.id}')" class="flex items-center justify-between">
+                            <div class="grid grid-cols-2 gap-1 w-24 aspect-square rounded-lg overflow-hidden flex-shrink-0">
+                                ${covers.map(cover => `<img src="${cover}" alt="Cover" class="w-full h-full object-cover">`).join('')}
+                            </div>
+                            <button onclick="event.stopPropagation(); playPlaylist('${playlist.id}')" class="p-3 accent-bg rounded-full hover:scale-110 transition shadow-lg shadow-ryzn-accent/50 ml-4">
+                                <i data-lucide="play" class="w-6 h-6 text-ryzn-bg fill-ryzn-bg"></i>
+                            </button>
+                        </div>
+
+                        <button onclick="event.stopPropagation(); deletePlaylist('${playlist.id}')" class="absolute top-3 right-3 text-gray-500 hover:text-red-500 transition">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        window.openAddToPlaylistModal = function(trackId) {
+            if (!loggedInUser) {
+                 showToast("Devi accedere per creare e gestire Sessioni.", 'error');
+                 return;
+            }
+            trackIdToAdd = trackId || currentTrackData?.id;
+            if (!trackIdToAdd) {
+                 showToast("Nessun brano selezionato.", 'error');
+                 return;
+            }
+            
+            document.getElementById('add-to-playlist-modal').classList.remove('hidden');
+            renderPlaylistSelection();
+        }
+        function closeAddToPlaylistModal() {
+            document.getElementById('add-to-playlist-modal').classList.add('hidden');
+            trackIdToAdd = null;
+        }
+
+        function renderPlaylistSelection() {
+             const list = document.getElementById('playlist-selection-list');
+             if (userPlaylists.length === 0) {
+                 list.innerHTML = `<p class="text-center text-gray-500">Nessuna sessione trovata. <button onclick="closeAddToPlaylistModal(); openCreatePlaylistModal()" class="accent-text font-bold">Creane una!</button></p>`;
+                 return;
+             }
+             
+             list.innerHTML = userPlaylists.map(playlist => {
+                 const isAdded = playlist.tracks.includes(trackIdToAdd);
+                 const statusText = isAdded ? 'Aggiunto' : 'Aggiungi';
+                 const statusColor = isAdded ? 'text-green-400' : 'accent-text';
+                 const buttonAction = isAdded ? `showToast('Già presente nella Sessione!', 'info')` : `addTrackToPlaylist('${playlist.id}', '${trackIdToAdd}')`;
+
+                 return `
+                     <div onclick="${buttonAction}" class="depth-glass p-3 rounded-lg flex items-center justify-between cursor-pointer hover:bg-white/10 transition">
+                         <p class="text-white font-bold truncate">${playlist.name}</p>
+                         <span class="text-sm ${statusColor} font-semibold">${statusText}</span>
+                     </div>
+                 `;
+             }).join('');
+        }
+
+        window.addTrackToPlaylist = function(playlistId, trackId) {
+            const playlist = userPlaylists.find(p => p.id === playlistId);
+            const track = AURA_MAP.find(t => t.id === trackId);
+            
+            if (playlist && track && !playlist.tracks.includes(trackId)) {
+                playlist.tracks.push(trackId);
+                saveLocalData();
+                showToast(`"${track.title}" aggiunto a "${playlist.name}"!`, 'success');
+                renderPlaylistSelection(); // Aggiorna lo stato nel modal
+                renderPlaylists();
+            } else if (playlist.tracks.includes(trackId)) {
+                showToast('Brano già presente nella sessione.', 'info');
+            } else {
+                showToast('Errore nell\'aggiunta del brano alla sessione.', 'error');
+            }
+        }
+        
+        window.deletePlaylist = function(playlistId) {
+            const index = userPlaylists.findIndex(p => p.id === playlistId);
+            if (index > -1) {
+                const name = userPlaylists[index].name;
+                userPlaylists.splice(index, 1);
+                saveLocalData();
+                showToast(`Sessione "${name}" eliminata.`, 'info');
+                renderPlaylists();
+            }
+        }
+        
+        window.playPlaylist = function(playlistId) {
+            const playlist = userPlaylists.find(p => p.id === playlistId);
+            if (!playlist || playlist.tracks.length === 0) {
+                showToast("Sessione vuota. Aggiungi brani!", 'error');
+                return;
+            }
+
+            // Aggiunge i brani della playlist alla AURA_MAP (per skipForward/Backward)
+            // e filtra quelli che non sono in AURA_MAP
+            const playableTracks = playlist.tracks
+                .map(id => AURA_MAP.find(t => t.id === id))
+                .filter(t => t);
+            
+            if (playableTracks.length === 0) {
+                showToast("Nessun brano valido trovato per questa sessione.", 'error');
+                return;
+            }
+
+            // Sovrascrive temporaneamente AURA_MAP con i brani della playlist per la riproduzione in sequenza
+            AURA_MAP = playableTracks;
+            playTrack(playableTracks[0].id);
+            showSection('music'); // Torna alla home per un'esperienza più pulita
+            showToast(`Riproduzione Playlist: ${playlist.name}`, 'info');
+
+            // Ricarica AURA_MAP originale dopo un timeout (o al cambio di sezione) per ripristinare i trending
+            setTimeout(() => {
+                fetchTracks('Trending');
+            }, 60000);
+        }
+
+        // --- Logica Storie (Video) (OMESSE PER BREVITÀ, RIMANGONO UGUALI) ---
+        async function loadRemoteStories() {
+            try {
+                const response = await fetch(STORIES_MANIFEST_URL);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        remoteStories = [];
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                remoteStories = data.map((story, index) => ({
+                    id: index + 1,
+                    ...story,
+                    trackId: story.trackId, // Stringa invidious ID
+                    video_url: story.videoUrl || story.video_url || ''
+                }));
+            } catch (error) {
+                console.warn("Impossibile caricare storie da GitHub (User_videos.json).", error);
+                remoteStories = [];
+            }
+        }
+
+        function renderStories() {
+            const container = document.getElementById('stories-bubble-container');
+            const message = document.getElementById('no-stories-message');
+
+            if (remoteStories.length === 0) {
+                if (message) message.style.display = 'block';
+                container.innerHTML = '';
+                return;
+            }
+            if (message) message.style.display = 'none';
+
+            container.innerHTML = remoteStories.map((story, index) => {
+                const emoji = CHRISTMAS_EMOJIS[index % CHRISTMAS_EMOJIS.length];
+                const color1 = STORY_COLORS[index % STORY_COLORS.length];
+                const color2 = STORY_COLORS[(index + 1) % STORY_COLORS.length];
+                
+                const isWatched = storyWatchedStatus.has(story.id);
+                const borderStyle = isWatched ? 'rgba(255, 255, 255, 0.1)' : `linear-gradient(45deg, ${color1}, ${color2})`;
+                const bubbleClass = isWatched ? 'story-bubble-watched' : '';
+
+                return `
+                    <div onclick="openStoryPlayer(${index})" class="story-bubble ${bubbleClass}" 
+                         style="background: ${isWatched ? borderStyle : borderStyle};">
+                        <div class="story-bubble-inner">
+                            <span>${emoji}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openStoryPlayer(index) {
+            if (index < 0 || index >= remoteStories.length) return;
+
+            currentStoryIndex = index;
+            const story = remoteStories[index];
+
+            storyWatchedStatus.add(story.id);
+            saveLocalData();
+            renderStories(); // Aggiorna le bolle per mostrare l'indicatore "visto"
+            
+            storyVideoPlayer = document.getElementById('story-video-player');
+            storyVideoPlayer.src = story.video_url;
+
+            document.getElementById('story-player-modal').classList.remove('hidden');
+            document.getElementById('story-play-pause-button').style.opacity = '0'; // Nasconde il pulsante Play
+
+            updateStoryInfo();
+            renderStoryProgressBars();
+            
+            // Reinizializza gli handler video
+            storyVideoPlayer.ontimeupdate = storyProgressPlayer;
+            storyVideoPlayer.onended = nextStory;
+
+            // Inizializza l'intervallo di progresso solo quando il video inizia a suonare
+            storyVideoPlayer.onplay = storyProgressPlayer;
+            
+            const attemptPlay = storyVideoPlayer.play();
+            if (attemptPlay && typeof attemptPlay.catch === 'function') {
+                attemptPlay.catch(e => {
+                    console.warn("Autoplay video story bloccato.", e);
+                    // Mostra il pulsante di riproduzione per richiedere l'interazione
+                    document.getElementById('story-play-pause-button').style.opacity = '1';
+                });
+            }
+        }
+
+        function closeStoryPlayer() {
+            document.getElementById('story-player-modal').classList.add('hidden');
+            storyVideoPlayer.pause();
+            clearInterval(storyProgressInterval);
+        }
+
+        function nextStory() {
+            clearInterval(storyProgressInterval);
+            if (currentStoryIndex < remoteStories.length - 1) {
+                openStoryPlayer(currentStoryIndex + 1);
+            } else {
+                closeStoryPlayer();
+                showToast("Tutte le storie visualizzate!", 'info');
+            }
+        }
+
+        function prevStory() {
+            clearInterval(storyProgressInterval);
+            if (currentStoryIndex > 0) {
+                openStoryPlayer(currentStoryIndex - 1);
+            } else {
+                // Riavvolgi la storia corrente se è la prima
+                openStoryPlayer(currentStoryIndex);
+            }
+        }
+
+        function toggleStoryPlayPause() {
+            if (storyVideoPlayer.paused) {
+                storyVideoPlayer.play();
+                document.getElementById('story-play-pause-button').style.opacity = '0';
+            } else {
+                storyVideoPlayer.pause();
+                document.getElementById('story-play-pause-button').style.opacity = '1';
+            }
+        }
+
+        function updateStoryInfo() {
+            const story = remoteStories[currentStoryIndex];
+            document.getElementById('story-username').textContent = story.username;
+            document.getElementById('story-emoji').textContent = CHRISTMAS_EMOJIS[currentStoryIndex % CHRISTMAS_EMOJIS.length];
+
+            // Cerca il brano associato
+            const track = AURA_MAP.find(t => t.youtubeId === story.trackId);
+            document.getElementById('story-track-title').textContent = track ? `🎵 ${track.title}` : 'Musica di sottofondo';
+        }
+
+        function renderStoryProgressBars() {
+            const container = document.getElementById('story-progress-bar-container');
+            container.innerHTML = remoteStories.map((_, index) => `
+                <div class="flex-1 h-1 bg-white/30 rounded-full overflow-hidden">
+                    <div id="story-progress-bar-${index}" class="h-1 accent-bg" style="width: ${index < currentStoryIndex ? '100%' : '0%'}; transition: width 0.1s linear;">
+                    </div>
+                </div>
+            `).join('');
+            
+            const currentProgressBar = document.getElementById(`story-progress-bar-${currentStoryIndex}`);
+            if (currentProgressBar) {
+                 currentProgressBar.style.width = '0%';
+            }
+        }
+
+        function storyProgressPlayer() {
+             const video = storyVideoPlayer;
+             const progressBar = document.getElementById(`story-progress-bar-${currentStoryIndex}`);
+             
+             if (video && progressBar && video.duration > 0) {
+                  const percentage = (video.currentTime / video.duration) * 100;
+                  progressBar.style.width = `${percentage}%`;
+             }
+        }
+        
+        // --- Media Session API (per notifiche e controlli esterni) ---
+        function updateMediaSession() {
+             if (!('mediaSession' in navigator) || !currentTrackData) return;
+
+             navigator.mediaSession.metadata = new MediaMetadata({
+                 title: currentTrackData.title,
+                 artist: currentTrackData.artist,
+                 album: 'Aura Music',
+                 artwork: [
+                     { src: currentTrackData.cover, sizes: '64x64', type: 'image/jpeg' },
+                     { src: 'https://via.placeholder.com/96', sizes: '96x96', type: 'image/png' },
+                     { src: 'https://via.placeholder.com/128', sizes: '128x128', type: 'image/png' },
+                     { src: 'https://via.placeholder.com/192', sizes: '192x192', type: 'image/png' },
+                 ]
+             });
+             
+             navigator.mediaSession.setActionHandler('play', () => togglePlayPause());
+             navigator.mediaSession.setActionHandler('pause', () => togglePlayPause());
+             navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+                 const seekTime = ytPlayer.getCurrentTime() - (details.seekOffset || 10);
+                 ytPlayer.seekTo(seekTime, true);
+             });
+             navigator.mediaSession.setActionHandler('seekforward', (details) => {
+                 const seekTime = ytPlayer.getCurrentTime() + (details.seekOffset || 10);
+                 ytPlayer.seekTo(seekTime, true);
+             });
+             navigator.mediaSession.setActionHandler('previoustrack', () => skipBackward());
+             navigator.mediaSession.setActionHandler('nexttrack', () => skipForward());
+        }
+
+        // --- Inizializzazione ---
+        function getDOMElements() {
+            progressBar = document.getElementById('progress-bar');
+            progressBarImmersive = document.getElementById('progress-bar-immersive');
+            // Elementi modificati per le emoji
+            playIcon = document.getElementById('play-icon'); 
+            immersivePlayIcon = document.getElementById('immersive-play-icon');
+            
+            playerTitle = document.getElementById('player-title');
+            playerArtist = document.getElementById('player-artist');
+            playerCover = document.getElementById('player-cover');
+            
+            immersiveTitle = document.getElementById('immersive-title');
+            immersiveArtist = document.getElementById('immersive-artist');
+            immersiveCover = document.getElementById('immersive-cover');
+            
+            likeButton = document.getElementById('like-button');
+            vibeScoreDisplay = document.getElementById('vibe-score-display');
+            volumeSlider = document.getElementById('volume-slider');
+            volumeSliderImmersive = document.getElementById('volume-slider-immersive');
+            loopButtonImmersive = document.getElementById('loop-button-immersive');
+
+            progressBarContainer = document.getElementById('progress-bar-container');
+            progressBarImmersiveContainer = document.getElementById('progress-bar-immersive-container');
+            playerBar = document.querySelector('.player-bar');
+
+            // Aggiunge event listener per il seek
+            setupSeekListeners();
+        }
+        
+        // --- PWA Service Worker (non implementato in questo file, solo boilerplate) ---
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    // Questa parte è fittizia perché il file SW non è incluso
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .catch(error => {
+                            console.error('Registrazione SW fallita:', error);
+                        });
+                });
+            }
+        }
+        // ------------------------------------------------------------
+
+
+        async function initializeAppContent() {
+            
+            // INIEZIONE DINAMICA DEL MANIFEST PWA 
+            const pwaLink = document.createElement('link');
+            pwaLink.rel = 'manifest';
+            pwaLink.href = 'manifest.json'; 
+            document.head.appendChild(pwaLink);
+
+            loadLocalData();
+            
+            // FIX CRITICO PER CRASH: Inizializza i riferimenti DOM PRIMA di qualsiasi chiamata asincrona
+            getDOMElements(); 
+            
+            // CARICAMENTO ASINCRONO DEI DATI 
+            await fetchTracks('Trending'); 
+            await loadRemoteStories(); 
+            
+
+            // Imposta uno sfondo di default (Mantiene la grafica)
+            updateAmbientLight('#00BFFF', '0 191 255'); 
+            
+            updateLoopButton(isLooping); 
+            
+            showSection('music'); 
+            setVolume(currentVolume); 
+            
+             // Assicura che la barra player sia inizialmente nascosta, poi mostrata al primo play
+             if (playerBar) playerBar.classList.remove('active'); 
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeAppContent);
+    </script>
+
+<script>
+/* Ambient audio autoplay + pause when main invidious starts */
+(function(){
+  const ambient = document.getElementById('ambient-audio');
+  // try to autoplay (may be blocked on some browsers)
+  function tryPlayAmbient(){
+    if(!ambient) return;
+    ambient.volume = 0.28;
+    const p = ambient.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(()=>{/* autoplay blocked, will play on first user gesture */});
+    }
+  }
+  // Attempt play after short timeout to prioritize user gesture scenarios
+  window.addEventListener('load', () => {
+    setTimeout(tryPlayAmbient, 300);
+  });
+
+  // Pause ambient when the main invidious player starts playing
+  // The main player exposes ytPlayer; we watch for state changes if available
+  function onYTStateChangeHandler() {
+    try {
+      if (window.ytPlayer && typeof window.ytPlayer.getPlayerState === 'function') {
+        const state = window.ytPlayer.getPlayerState();
+        // YT.PlayerState.PLAYING === 1
+        if (state === 1) {
+          if (!ambient.paused) ambient.pause();
+        } else {
+          // resume only if ambient was playing before and user hasn't manually paused it
+          // we avoid forcing play on mobile browsers; attempt play but ignore failures
+          try { ambient.play().catch(()=>{}); } catch(e){}
+        }
+      }
+    } catch(e){}
+  }
+  // Poll for presence of global ytPlayer and attach to its onStateChange if possible
+  let ytPoll = setInterval(()=>{
+    if(window.ytPlayer && typeof window.ytPlayer.addEventListener === 'function') {
+      // Some YT API instances don't expose addEventListener; instead observe via interval below
+      clearInterval(ytPoll);
+    }
+    // fallback: set up an interval watcher to pause/resume ambient appropriately
+  }, 500);
+
+  // Observe changes via interval safely
+  setInterval(onYTStateChangeHandler, 700);
+
+  // Also pause ambient when any interactively started audio/video element plays on the page
+  document.addEventListener('play', (e) => {
+    if (e.target && e.target.tagName === 'VIDEO') {
+      if (!ambient.paused) ambient.pause();
+    }
+  }, true);
+
+  // Provide global helpers to open banner links (user can replace with real handlers)
+  window.openRyznLaunch = function() {
+    showToast('Apertura pagine evento Ryzn (sostituire con link reale).', 'info');
+  };
+  window.openRyznRules = function() {
+    showToast('Mostra regolamento Ryzn XMAS Contest (sostituire con contenuti reali).', 'info');
+  };
+
+  // Allow user to toggle ambient with a simple keyboard shortcut (M) for convenience
+  window.addEventListener('keydown', (ev) => {
+    if (ev.key && ev.key.toLowerCase() === 'm') {
+      if (!ambient) return;
+      if (ambient.paused) {
+        ambient.play().catch(()=>{ showToast('Autoplay bloccato: interagisci con la pagina per ascoltare.', 'info'); });
+      } else {
+        ambient.pause();
+      }
+    }
+  });
+
+})();
+
+/* Simple snow particle system drawn into canvas (lightweight) */
+(function(){
+  const canvas = document.getElementById('snow-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let width, height, particles = [];
+
+  function resize() {
+    width = canvas.width = Math.floor(window.innerWidth * devicePixelRatio);
+    height = canvas.height = Math.floor(window.innerHeight * devicePixelRatio);
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+  }
+  function initParticles() {
+    particles = [];
+    const count = Math.round((window.innerWidth / 100) * 4); // adaptive count
+    for(let i=0;i<count;i++){
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height - height,
+        r: (Math.random()*2 + 0.8) * devicePixelRatio,
+        vx: (Math.random()*0.6 - 0.3) * devicePixelRatio,
+        vy: (Math.random()*1.2 + 0.6) * devicePixelRatio,
+        o: 0.6 + Math.random()*0.4
       });
     }
-
-    function showPopup(){
-      popup.classList.add('active');
-      const poem="Ecco la fine di un atto, un primo battito,\nla Beta si dissolve come nebbia al mattino.\nNasce la Versione Stabile, chiara e viva,\nun porto sicuro di luce e algoritmo.\n\nAura respira, libera e definitiva.\nAlle 03:00, il mondo si apre al nuovo inizio.";
-      let i=0;poemEl.textContent='';
-      const typer=setInterval(()=>{poemEl.textContent=poem.slice(0,i);i++;if(i>poem.length)clearInterval(typer);},25);
+  }
+  function step() {
+    ctx.clearRect(0,0,width,height);
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    for(const p of particles){
+      p.x += p.vx;
+      p.y += p.vy;
+      if(p.y > height + 50) {
+        p.y = -10 - Math.random()*height*0.2;
+        p.x = Math.random()*width;
+      }
+      if(p.x > width + 20) p.x = -20;
+      if(p.x < -20) p.x = width + 20;
+      ctx.globalAlpha = p.o;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fill();
     }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(step);
+  }
 
-    function startFireworks(canvas){
-      const ctx=canvas.getContext('2d');
-      function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}resize();window.addEventListener('resize',resize);
-      const particles=[];
-      function spawn(x,y,color){for(let i=0;i<60;i++){particles.push({x,y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8,life:100,color});}}
-      setInterval(()=>{spawn(Math.random()*canvas.width,Math.random()*canvas.height*0.8,`hsl(${Math.random()*360},90%,65%)`);},500);
-      function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.04;p.life--;ctx.beginPath();ctx.globalAlpha=Math.max(p.life/100,0);ctx.fillStyle=p.color;ctx.arc(p.x,p.y,3.5,0,Math.PI*2);ctx.fill();});for(let i=particles.length-1;i>=0;i--)if(particles[i].life<=0)particles.splice(i,1);requestAnimationFrame(draw);}draw();
-    }
+  function start() {
+    resize();
+    initParticles();
+    step();
+  }
 
-    startBtn.addEventListener('click',()=>{
-      startScreen.style.display='none';
-      card.style.display='flex';
-      music.volume=0.4;
-      music.play().catch(()=>{});
-      typeLine('Inizializzazione motore .joit — caricamento...',simulate);
-      startFireworks(bg);
-    });
+  window.addEventListener('resize', () => {
+    resize();
+    initParticles();
   });
-  </script>
+
+  // start after short delay to avoid blocking initial paint
+  setTimeout(start, 200);
+})();
+</script>
+
+
+<!-- invidious + YT-SHIM: provide YT.Player-compatible shim using invidious streams -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.4/dist/hls.min.js"></script>
+<script>
+(function(){
+  
+  const invidious_STREAMS = (id) => `${invidious_BASE}/api/v1/streams/${encodeURIComponent(id)}`;
+  // Ensure audio element exists
+  let audio = document.getElementById('invidious-audio');
+  if(!audio){
+    audio = document.createElement('audio');
+    audio.id = 'invidious-audio';
+    audio.preload = 'auto';
+    document.body.appendChild(audio);
+  }
+  // helper attach
+  async function resolveStreamUrl(id){
+    try{
+      const r = await fetch(invidious_STREAMS(id));
+      if(!r.ok) throw new Error('invidious streams fetch failed: ' + r.status);
+      const data = await r.json();
+      let candidates = [];
+      if(Array.isArray(data)) candidates = data;
+      else if(data.formats) candidates = data.formats;
+      else if(data.streams) candidates = data.streams;
+      else if(data.url) candidates = [{url:data.url, mime:data.mimeType||data.content_type||''}];
+      candidates.sort((a,b)=> (b.bitrate||0)-(a.bitrate||0));
+      let streamUrl = null;
+      for(const c of candidates){
+        const url = c.url||c.src||c.playlist||c.streamUrl||c.uri;
+        if(!url) continue;
+        if(url.endsWith('.m3u8')) { streamUrl = url; break; }
+        if((c.mime||'').includes('audio') || url.match(/\.(mp3|m4a|webm|aac|opus)(\?|$)/i)) { streamUrl = url; break; }
+        if(!streamUrl) streamUrl = url;
+      }
+      if(!streamUrl) throw new Error('No suitable audio stream found');
+      return streamUrl;
+    }catch(e){
+      console.error(e);
+      throw e;
+    }
+  }
+
+  // YT state constants
+  const YT_STATE = {UNSTARTED:-1, ENDED:0, PLAYING:1, PAUSED:2, BUFFERING:3, CUED:5};
+
+  // Minimal HLS attach helper
+  function attachUrl(url, autoplay){
+    if(url.endsWith('.m3u8') && window.Hls && !audio.canPlayType('application/vnd.apple.mpegurl')){
+      if(audio._hls){ try{ audio._hls.destroy(); }catch(e){} audio._hls=null; }
+      const hls = new Hls();
+      audio._hls = hls;
+      hls.loadSource(url);
+      hls.attachMedia(audio);
+      hls.on(Hls.Events.MANIFEST_PARSED, function(){ if(autoplay) audio.play().catch(()=>{}); });
+    } else {
+      audio.src = url;
+      if(autoplay) audio.play().catch(()=>{});
+    }
+  }
+
+  // Define shim Player class
+  function ShimPlayer(elementId, options){
+    this.elementId = elementId;
+    this.options = options || {};
+    this._ready = false;
+    this._currentVideoId = null;
+    // setup event listeners on audio to notify onStateChange
+    audio.addEventListener('play', ()=>{ if(typeof window.onPlayerStateChange === 'function') window.onPlayerStateChange({data: YT_STATE.PLAYING}); });
+    audio.addEventListener('pause', ()=>{ if(typeof window.onPlayerStateChange === 'function') window.onPlayerStateChange({data: YT_STATE.PAUSED}); });
+    audio.addEventListener('ended', ()=>{ if(typeof window.onPlayerStateChange === 'function') window.onPlayerStateChange({data: YT_STATE.ENDED}); });
+    // simulate ready
+    setTimeout(()=>{ this._ready=true; if(this.options.events && typeof this.options.events.onReady==='function') this.options.events.onReady({target:this}); }, 10);
+  }
+  ShimPlayer.prototype.playVideo = function(){ audio.play().catch(()=>{}); };
+  ShimPlayer.prototype.pauseVideo = function(){ audio.pause(); };
+  ShimPlayer.prototype.loadVideoById = async function(id, startSeconds){
+    try{
+      this._currentVideoId = (typeof id === 'object' && id.videoId)? id.videoId : id;
+      const url = await resolveStreamUrl(this._currentVideoId);
+      attachUrl(url, true);
+      if(startSeconds && typeof startSeconds==='number') audio.currentTime = startSeconds;
+    }catch(e){ console.error(e); }
+  };
+  ShimPlayer.prototype.cueVideoById = async function(id, startSeconds){
+    try{
+      this._currentVideoId = (typeof id === 'object' && id.videoId)? id.videoId : id;
+      const url = await resolveStreamUrl(this._currentVideoId);
+      attachUrl(url, false);
+      if(startSeconds && typeof startSeconds==='number') audio.currentTime = startSeconds;
+    }catch(e){ console.error(e); }
+  };
+  ShimPlayer.prototype.seekTo = function(seconds, allowSeekAhead){
+    if(audio.duration) audio.currentTime = seconds;
+  };
+  ShimPlayer.prototype.getCurrentTime = function(){ return audio.currentTime || 0; };
+  ShimPlayer.prototype.getDuration = function(){ return audio.duration || 0; };
+  ShimPlayer.prototype.getPlayerState = function(){
+    if(audio.paused && (audio.currentTime>0 && !audio.ended)) return YT_STATE.PAUSED;
+    if(!audio.paused && (audio.currentTime>0 && !audio.ended)) return YT_STATE.PLAYING;
+    if(audio.ended) return YT_STATE.ENDED;
+    return YT_STATE.UNSTARTED;
+  };
+  ShimPlayer.prototype.getVolume = function(){ return Math.round((audio.volume||1)*100); };
+  ShimPlayer.prototype.setVolume = function(v){ audio.volume = Math.min(1, Math.max(0, v/100)); };
+
+  // Expose global YT.Player and YT object
+  window.YT = window.YT || {};
+  window.YT.Player = function(elementId, options){
+    const p = new ShimPlayer(elementId, options);
+    // also set global ytPlayer for compatibility
+    window.ytPlayer = p;
+    return p;
+  };
+
+  // Also provide a minimal get API for state constants
+  window.YTState = YT_STATE;
+
+  // If original script expected onYouTubeIframeAPIReady to be called, call it now
+  if(typeof window.onYouTubeIframeAPIReady === 'function'){
+    try{ window.onYouTubeIframeAPIReady(); }catch(e){ console.warn('onYouTubeIframeAPIReady error',e); }
+  }
+  // Make playTrack(videoId) map to ytPlayer.loadVideoById if playTrack was not defined
+  if(typeof window.playTrack !== 'function'){
+    window.playTrack = function(videoId){
+      if(window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function'){
+        window.ytPlayer.loadVideoById(videoId, 0);
+      } else {
+        console.warn('ytPlayer not ready yet, trying to call onYouTubeIframeAPIReady and retry');
+        if(typeof window.onYouTubeIframeAPIReady === 'function') window.onYouTubeIframeAPIReady();
+        setTimeout(()=>{ if(window.ytPlayer) window.ytPlayer.loadVideoById(videoId,0); }, 200);
+      }
+    };
+  } else {
+    // wrap existing playTrack to use invidious: keep original but also intercept calls
+    const origPlay = window.playTrack;
+    window.playTrack = function(videoId){
+      if(window.ytPlayer && typeof window.ytPlayer.loadVideoById === 'function'){
+        window.ytPlayer.loadVideoById(videoId,0);
+      }
+      try{ origPlay(videoId); }catch(e){}
+    };
+  }
+
+})();
+</script>
+
+
+    <!-- AurainvidiousCore: invidious-only player engine (replaces invidious dependency) -->
+    <script>
+    (function(){
+        var invidious_BASE = 'https://invidious.video';
+        var invidious_SEARCH = function(q){ return invidious_BASE + '/api/v1/search?q=' + encodeURIComponent(q); };
+        var invidious_STREAMS = function(id){ return invidious_BASE + '/api/v1/streams/' + encodeURIComponent(id); };
+
+        // Simple Emitter (ES5)
+        function E(){ this.l = {}; }
+        E.prototype.on = function(n,f){ (this.l[n]=this.l[n]||[]).push(f); };
+        E.prototype.emit = function(n){ var a = Array.prototype.slice.call(arguments,1); var ls = this.l[n]||[]; for(var i=0;i<ls.length;i++){ try{ ls[i].apply(null,a);}catch(e){console.error(e);} } };
+
+        // Core player
+        function AurainvidiousCore(){
+            this.audio = document.getElementById('aura-invidious-audio') || (function(){ var a=document.createElement('audio'); a.id='aura-invidious-audio'; a.preload='auto'; document.body.appendChild(a); return a; })();
+            this.hls = null;
+            this.em = new E();
+            this.state = -1; // -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering
+            this.volume = parseInt(localStorage.getItem('volume')||80,10);
+            try{ this.audio.volume = Math.min(1,Math.max(0,this.volume/100)); }catch(e){}
+            var self = this;
+            this.audio.addEventListener('play', function(){ self.state = 1; self.em.emit('stateChange',1); });
+            this.audio.addEventListener('pause', function(){ if(!self.audio.ended){ self.state = 2; self.em.emit('stateChange',2); } });
+            this.audio.addEventListener('ended', function(){ self.state = 0; self.em.emit('stateChange',0); });
+            this.audio.addEventListener('waiting', function(){ self.state = 3; self.em.emit('stateChange',3); });
+            this.audio.addEventListener('timeupdate', function(){ self.em.emit('time', self.audio.currentTime); });
+            this.audio.addEventListener('error', function(e){ self.em.emit('error', e); });
+        }
+
+        AurainvidiousCore.prototype._resolve = function(id){
+            var url = invidious_STREAMS(id);
+            return fetch(url).then(function(r){ if(!r.ok) throw new Error('invidious streams fetch failed: '+r.status); return r.json(); }).then(function(data){
+                var cand = [];
+                if(Array.isArray(data)) cand = data;
+                else if(data.formats) cand = data.formats;
+                else if(data.streams) cand = data.streams;
+                else if(data.url) cand = [{url: data.url}];
+                cand.sort(function(a,b){ return (b.bitrate||0) - (a.bitrate||0); });
+                var stream = null;
+                for(var i=0;i<cand.length;i++){
+                    var c = cand[i];
+                    var u = c && (c.url||c.src||c.streamUrl||c.playlist||c.uri);
+                    if(!u) continue;
+                    if(u.indexOf('.m3u8') !== -1){ stream = u; break; }
+                    if((c.mime||'').indexOf('audio') !== -1 || (u && u.match(/\.(mp3|m4a|webm|aac|opus)(\?|$)/i))){ stream = u; break; }
+                    if(!stream) stream = u;
+                }
+                return stream;
+            });
+        };
+
+        AurainvidiousCore.prototype._attach = function(streamUrl, autoplay, startSeconds){
+            var audio = this.audio;
+            try{ if(this.hls){ this.hls.destroy(); this.hls = null; } }catch(e){}
+            if(streamUrl.indexOf('.m3u8') !== -1 && window.Hls && !audio.canPlayType('application/vnd.apple.mpegurl')){
+                try{
+                    var h = new Hls();
+                    this.hls = h;
+                    h.loadSource(streamUrl);
+                    h.attachMedia(audio);
+                    h.on(Hls.Events.MANIFEST_PARSED, function(){ try{ if(startSeconds) audio.currentTime = startSeconds; }catch(e){} if(autoplay) audio.play().catch(function(){}); });
+                    h.on(Hls.Events.ERROR, function(ev, data){ console.warn('HLS error', data); });
+                }catch(e){
+                    console.error('HLS attach failed', e);
+                    audio.src = streamUrl;
+                    if(autoplay) audio.play().catch(function(){});
+                }
+            } else {
+                audio.src = streamUrl;
+                try{ if(startSeconds) audio.currentTime = startSeconds; }catch(e){} 
+                if(autoplay) audio.play().catch(function(){});
+            }
+        };
+
+        AurainvidiousCore.prototype.playId = function(id, autoplay, startSeconds){
+            var self = this;
+            this.currentId = id;
+            return this._resolve(id).then(function(s){ if(!s) throw new Error('No stream for id '+id); self._attach(s, autoplay===undefined?true:!!autoplay, startSeconds||0); return s; });
+        };
+        AurainvidiousCore.prototype.play = function(){ try{ this.audio.play().catch(function(){}); }catch(e){} };
+        AurainvidiousCore.prototype.pause = function(){ try{ this.audio.pause(); }catch(e){} };
+        AurainvidiousCore.prototype.seekTo = function(s){ try{ if(this.audio.duration) this.audio.currentTime = s; }catch(e){} };
+        AurainvidiousCore.prototype.getCurrentTime = function(){ return this.audio.currentTime||0; };
+        AurainvidiousCore.prototype.getDuration = function(){ return this.audio.duration||0; };
+        AurainvidiousCore.prototype.setVolume = function(v){ this.volume = v; try{ this.audio.volume = Math.min(1,Math.max(0,v/100)); localStorage.setItem('volume', v); }catch(e){} };
+        AurainvidiousCore.prototype.getVolume = function(){ return this.volume; };
+
+        // expose core
+        window.auraCore = window.auraCore || new AurainvidiousCore();
+
+        // create ytPlayer shim pointing to auraCore to keep UI code intact
+        window.ytPlayer = {
+            loadVideoById: function(id, startSeconds){ return window.auraCore.playId(id, true, startSeconds||0); },
+            cueVideoById: function(id, startSeconds){ return window.auraCore.playId(id, false, startSeconds||0); },
+            playVideo: function(){ return window.auraCore.play(); },
+            pauseVideo: function(){ return window.auraCore.pause(); },
+            seekTo: function(s, allow){ return window.auraCore.seekTo(s); },
+            getCurrentTime: function(){ return window.auraCore.getCurrentTime(); },
+            getDuration: function(){ return window.auraCore.getDuration(); },
+            setVolume: function(v){ return window.auraCore.setVolume(v); },
+            getVolume: function(){ return window.auraCore.getVolume(); },
+            getPlayerState: function(){ return window.auraCore.state; },
+            getAdState: function(){ return 2; }, // always "no ad"
+            // minimal event handlers
+            addEventListener: function(){}, removeEventListener: function(){}
+        };
+
+        // provide YT.PlayerState constants for code that checks them
+        window.YT = window.YT || {};
+        window.YT.PlayerState = { UNSTARTED:-1, ENDED:0, PLAYING:1, PAUSED:2, BUFFERING:3, CUED:5 };
+
+        // Mark player as ready and call original onPlayerReady-like init if present
+        window.isPlayerReady = true;
+        // safe initialize: call original init handlers if they exist, and start fetchTracks if needed
+        try{
+            if(typeof onPlayerReady === 'function') setTimeout(onPlayerReady,50);
+        }catch(e){}
+        try{
+            if(typeof safeInitializeApp === 'function') setTimeout(safeInitializeApp,50);
+            else if(typeof initializeAppContent === 'function') setTimeout(initializeAppContent,50);
+            else if(typeof initApp === 'function') setTimeout(initApp,50);
+        }catch(e){}
+    })();
+    </script>
+
 </body>
 </html>
