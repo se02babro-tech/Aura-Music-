@@ -9,9 +9,13 @@
     *{box-sizing:border-box;margin:0;padding:0}
     html,body{height:100%;overflow:hidden;background:radial-gradient(circle at 50% 40%,#03141d 0%,#01070d 80%);color:var(--text);font-family:"JetBrains Mono", monospace;display:flex;align-items:center;justify-content:center;}
 
+    #start-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:10;background:radial-gradient(circle at 50% 50%,#020c14,#000610 80%);}
+    #start-btn{font-family:"Poppins",sans-serif;font-size:22px;font-weight:600;padding:18px 48px;border:none;border-radius:14px;cursor:pointer;color:#fff;background:linear-gradient(90deg,#52e3c2,#6ad1ff);box-shadow:0 0 20px rgba(82,227,194,0.5);transition:transform 0.3s ease, box-shadow 0.3s ease;}
+    #start-btn:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(82,227,194,0.8);}
+
     canvas#fireworks-bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
 
-    .card{position:relative;z-index:2;width:880px;max-width:95%;border-radius:18px;padding:36px;backdrop-filter:blur(10px);background:rgba(255,255,255,0.04);box-shadow:0 0 60px rgba(0,255,255,0.15);display:flex;flex-direction:column;align-items:center;gap:24px;}
+    .card{position:relative;z-index:2;width:880px;max-width:95%;border-radius:18px;padding:36px;backdrop-filter:blur(10px);background:rgba(255,255,255,0.04);box-shadow:0 0 60px rgba(0,255,255,0.15);display:flex;flex-direction:column;align-items:center;gap:24px;display:none;}
 
     .logo{display:flex;align-items:center;gap:12px;}
     .logo .mark{width:60px;height:60px;border-radius:14px;display:grid;place-items:center;background:conic-gradient(from 200deg,#5af2d0,#6ad1ff 40%,#b58bff);font-weight:700;color:#012;box-shadow:0 0 25px rgba(82,227,194,0.25);}
@@ -35,12 +39,16 @@
   </style>
 </head>
 <body>
+  <div id="start-screen">
+    <button id="start-btn">Avvia Ryzn</button>
+  </div>
+
   <canvas id="fireworks-bg"></canvas>
 
-  <div class="card">
+  <div class="card" id="main-card">
     <div class="logo">
       <div class="mark">A</div>
-      <div class="title">AURA — Dev.Ryzn Server Access</div>
+      <div class="title">Dev.Ryzn.console</div>
     </div>
 
     <div class="terminal" id="terminal">
@@ -60,8 +68,14 @@
     </div>
   </div>
 
+  <audio id="bg-music" src="https://cdn.ai-music-generator.ai/NmM0YjJmZTUtNDk1ZC00YWM2LWEwMGQtMmJiNDZiZGI2MjM5.mp3" loop preload="auto"></audio>
+
   <script>
   document.addEventListener('DOMContentLoaded',()=>{
+    const startScreen=document.getElementById('start-screen');
+    const startBtn=document.getElementById('start-btn');
+    const card=document.getElementById('main-card');
+    const music=document.getElementById('bg-music');
     const body=document.getElementById('term-body');
     const finalBox=document.getElementById('final');
     const popup=document.getElementById('popup');
@@ -102,9 +116,14 @@
       function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.04;p.life--;ctx.beginPath();ctx.globalAlpha=Math.max(p.life/100,0);ctx.fillStyle=p.color;ctx.arc(p.x,p.y,3.5,0,Math.PI*2);ctx.fill();});for(let i=particles.length-1;i>=0;i--)if(particles[i].life<=0)particles.splice(i,1);requestAnimationFrame(draw);}draw();
     }
 
-    body.innerHTML='';
-    typeLine('Inizializzazione motore .joit — caricamento...',simulate);
-    startFireworks(bg);
+    startBtn.addEventListener('click',()=>{
+      startScreen.style.display='none';
+      card.style.display='flex';
+      music.volume=0.4;
+      music.play().catch(()=>{});
+      typeLine('Inizializzazione motore .joit — caricamento...',simulate);
+      startFireworks(bg);
+    });
   });
   </script>
 </body>
