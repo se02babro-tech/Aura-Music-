@@ -33,12 +33,11 @@
     .final{margin-top:10px;padding:14px;border-radius:10px;background:linear-gradient(90deg,rgba(82,227,194,0.08),rgba(106,209,255,0.04));border:1px solid rgba(82,227,194,0.1);font-weight:600;text-align:center;text-shadow:0 0 10px var(--glow);}
 
     .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:100;}
-    .modal.active{display:flex;}
-    .modal-content{position:relative;width:90%;max-width:750px;padding:40px 50px;border-radius:18px;background:radial-gradient(circle at 50% 30%,#051622,#0c1c29);border:1px solid rgba(82,227,194,0.25);box-shadow:0 0 40px rgba(82,227,194,0.3);overflow:hidden;text-align:center;z-index:2;}
+    .modal.active{display:flex;animation:fadein 1s ease-in-out;}
+    .modal-content{position:relative;width:90%;max-width:750px;padding:40px 50px;border-radius:18px;background:radial-gradient(circle at 50% 30%,#051622,#0c1c29);border:1px solid rgba(82,227,194,0.25);box-shadow:0 0 40px rgba(82,227,194,0.3);overflow:hidden;text-align:center;z-index:2;animation:popupIn 1s ease forwards;}
+    @keyframes popupIn{from{opacity:0;transform:scale(0.8);}to{opacity:1;transform:scale(1);}}
     h2{font-size:26px;margin-bottom:18px;color:var(--accent);text-shadow:0 0 12px var(--glow)}
     #poem{font-family:"Poppins",sans-serif;font-size:18px;line-height:1.6;white-space:pre-wrap;color:#e8faff;font-weight:400;text-shadow:0 0 8px rgba(255,255,255,0.25)}
-
-    #mini-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:26px;background:rgba(0,0,0,0.7);padding:10px 18px;border-radius:10px;color:white;z-index:200;display:none}
   </style>
 </head>
 <body>
@@ -71,8 +70,6 @@
     </div>
   </div>
 
-  <div id="mini-toast"></div>
-
   <audio id="bg-music" src="https://cdn.ai-music-generator.ai/NmM0YjJmZTUtNDk1ZC00YWM2LWEwMGQtMmJiNDZiZGI2MjM5.mp3" loop preload="auto"></audio>
 
   <script>
@@ -82,13 +79,9 @@
     const card=document.getElementById('main-card');
     const music=document.getElementById('bg-music');
     const body=document.getElementById('term-body');
-    const finalBox=document.getElementById('final');
+    const bg=document.getElementById('fireworks-bg');
     const popup=document.getElementById('popup');
     const poemEl=document.getElementById('poem');
-    const bg=document.getElementById('fireworks-bg');
-    const toast=document.getElementById('mini-toast');
-
-    function showMiniToast(msg,timeout=2500){toast.textContent=msg;toast.style.display='block';setTimeout(()=>toast.style.display='none',timeout);}
 
     function typeLine(text,cb,speed=30){
       const el=document.createElement('div');el.className='line';body.appendChild(el);
@@ -97,14 +90,17 @@
 
     function simulate(){
       const lines=["Allocating crypto engine...","Loading interpreter for .joit...","Feeding payload to sandbox...","Performing integrity checks...","Attempting decryption passes..."];
-      let i=0;function next(){if(i<lines.length){typeLine(lines[i],()=>{i++;next();});}else showFinal();}next();
+      let i=0;
+      function next(){if(i<lines.length){typeLine(lines[i],()=>{i++;next();});}else showFinal();}
+      next();
     }
 
     function showFinal(){
       typeLine('[system] --- DECRYPTION COMPLETE ---',()=>{
+        const finalBox=document.getElementById('final');
         finalBox.style.display='block';
         finalBox.innerHTML='<strong>AURA NON È PIÙ IN FASE BETA!</strong><br>Attendi le <span style="color:var(--accent)">03:00</span> per accedere alla piattaforma definitiva.<br><em>Da questo momento le demo sono scollegate dal server beta.</em><br><br><strong>Ci vediamo alle 3:01 per il download definitivo.</strong>';
-        setTimeout(showPopup,1500);
+        setTimeout(showPopup,2000);
       });
     }
 
@@ -124,21 +120,29 @@
       function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=0.05;p.life--;ctx.beginPath();ctx.globalAlpha=Math.max(p.life/120,0);ctx.fillStyle=p.color;ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();});for(let i=particles.length-1;i>=0;i--)if(particles[i].life<=0)particles.splice(i,1);requestAnimationFrame(draw);}draw();
     }
 
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(()=>console.log('Service Worker registrato'))
-        .catch(err=>console.error('Errore SW',err));
-    }
-
-    startBtn.addEventListener('click',()=>{
+    startBtn.addEventListener('click',async()=>{
       startScreen.style.display='none';
       card.style.display='flex';
-      music.volume=0.36;
-      music.play().catch(()=>{});
-      body.innerHTML='';
-      typeLine('Inizializzazione motore .joit — caricamento...',simulate);
+      music.volume=0.4;
+      await music.play().catch(()=>{});
       startFireworks(bg);
+      typeLine('Inizializzazione motore .joit — caricamento...',simulate);
     });
+
+    if('mediaSession' in navigator){
+      const svgCover = encodeURIComponent(`<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='512' height='512'><rect width='512' height='512' fill='url(#grad)'/><defs><linearGradient id='grad' x1='0' x2='1' y1='0' y2='1'><stop offset='0%' stop-color='#0ff'/><stop offset='100%' stop-color='#006'/></linearGradient></defs><text x='50%' y='50%' font-size='48' text-anchor='middle' fill='white' font-family='Poppins'>Aura</text></svg>`);
+      const coverUrl = `data:image/svg+xml;charset=utf-8,${svgCover}`;
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'Aura',
+        artist: 'Linda García (Prod. Icy030)',
+        album: 'Prod. Icy.030',
+        artwork: [
+          { src: coverUrl, sizes: '512x512', type: 'image/svg+xml' }
+        ]
+      });
+      navigator.mediaSession.setActionHandler('play',()=>music.play());
+      navigator.mediaSession.setActionHandler('pause',()=>music.pause());
+    }
   });
   </script>
 </body>
